@@ -6,10 +6,7 @@ from cs50 import SQL
 from flask import Flask, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from urllib.parse import urlparse
-import ollama 
-client = ollama.Client()
-model = "gemma3"
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -76,16 +73,9 @@ def onboarding():
     if session.get("user_id") is None:
         return redirect("/login")
     if request.method == "POST":
-        profile = request.form.get("profile")
-        target_domain = "linkedin.com"
-        parsed_url = urlparse(profile)  
-        netloc = parsed_url.netloc.lower()
-        if netloc == target_domain or netloc.endswith('.' + target_domain):
-            print("the right domain name")
-            return render_template("index.html")
-        print("wrong domain")
-
-        return render_template("onboarding.html",error = True)
+        category = request.form.get("category")
+        db.execute("UPDATE users SET skill = ? WHERE id = ?", category, session["user_id"])
+        return redirect("/")
     return render_template("onboarding.html")
 
 
@@ -112,6 +102,9 @@ def register():
 
         if db.execute("SELECT * FROM users WHERE email = ?", email):
             return render_template("register.html", error="Email already registered")
+
+        if db.execute("SELECT * FROM users WHERE name = ?", username):
+            return render_template("register.html", error="Username already taken")
 
         code = str(random.randint(100000, 999999))
         session["pending_email"] = email
