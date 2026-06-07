@@ -72,8 +72,8 @@ def onboarding():
     if session.get("user_id") is None:
         return redirect("/login")
     if request.method == "POST":
-        category = request.form.get("category")
-        db.execute("UPDATE users SET skill = ? WHERE id = ?", category, session["user_id"])
+        profile = request.form.get("profile")
+        db.execute("UPDATE users SET skill = ? WHERE id = ?", profile, session["user_id"])
         return redirect("/")
     return render_template("onboarding.html")
 
