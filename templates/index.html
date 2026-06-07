@@ -178,8 +178,8 @@
         for (let i = 0; i < 20; i++) {
             const p = document.createElement("div");
             p.className = "particle";
-            const s = Math.random() * 5 + 2;
-            p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*10+8}s;animation-delay:${Math.random()*10}s;`;
+            const s = Math.random() * 10 + 5;
+            p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*10+8}s;animation-delay:-${Math.random()*10}s;`;
             pc.appendChild(p);
         }
 
