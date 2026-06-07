@@ -1,12 +1,14 @@
 import os
 import random
 import smtplib
+import json
 from email.mime.text import MIMEText
 from cs50 import SQL
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from urllib.parse import urlparse   
+from groq import Groq
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -14,11 +16,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
 db = SQL("sqlite:///upward.db")
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY", "your_groq_key_here"))
 
 SMTP_EMAIL = "aissa.daoud2010@gmail.com"
 SMTP_PASSWORD = "rxpgfvfyxczunktx"
 SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
 
 def send_code(to_email, code):
     msg = MIMEText(f"Your Upward verification code is: {code}")
@@ -65,20 +67,6 @@ def login():
 @app.route("/login/google")
 def login_google():
     return "Google login coming soon!"
-
-
-@app.route("/onboarding", methods=["GET", "POST"])
-def onboarding():
-    if session.get("user_id") is None:
-        return redirect("/login")
-    if request.method == "POST":
-        profile = request.form.get("profile")
-        extracted_domain = urlparse(profile).netloc.lower().replace('www.', '')
-        if extracted_domain == "linkedin.com":
-            return redirect("/")
-        else:
-            return render_template("onboarding.html", error=True)
-    return render_template("onboarding.html")
 
 
 @app.route("/logout")
@@ -142,6 +130,87 @@ def verify():
             return render_template("verify.html", error="Wrong code, try again")
 
     return render_template("verify.html")
+
+
+@app.route("/onboarding", methods=["GET", "POST"])
+def onboarding():
+    if session.get("user_id") is None:
+        return redirect("/login")
+    if request.method == "POST":
+        raw = request.form.get("answers", "{}")
+        try:
+            answers = json.loads(raw)
+        except:
+            return render_template("onboarding.html", error=True)
+
+        summary = f"""
+Field: {answers.get('field', 'Unknown')}
+Education: {answers.get('q0', 'Unknown')}
+Experience: {answers.get('q1', 'Unknown')}
+Main goal: {answers.get('q2', 'Unknown')}
+Weekly time available: {answers.get('q3', 'Unknown')}
+Biggest challenge: {answers.get('q4', 'Unknown')}
+Region: {answers.get('q5', 'Unknown')}
+Country: {answers.get('q6', 'Unknown')}
+City: {answers.get('q7', 'not provided')}
+        """.strip()
+
+        session["career_advice"] = summary
+        return redirect("/advice")
+    return render_template("onboarding.html")
+
+
+@app.route("/advice")
+def advice():
+    if session.get("user_id") is None:
+        return redirect("/login")
+    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    username = user[0]["name"] if user else "User"
+    return render_template("advice.html", username=username)
+
+
+@app.route("/generate_advice", methods=["POST"])
+def generate_advice():
+    if session.get("user_id") is None:
+        return jsonify({"error": "Not logged in"}), 401
+
+    career_text = session.get("career_advice", "")
+    if not career_text:
+        return jsonify({"error": "No profile data found. Please complete onboarding first."}), 400
+
+    count = request.json.get("count", 3)
+    count = max(1, min(int(count), 10))
+
+    response = groq_client.chat.completions.create(
+        model="gemma2-9b-it",
+        messages=[{
+            "role": "user",
+            "content": f"""You are a career advisor. Based on this profile, give exactly {count} personalized career recommendations organized into clear sections.
+
+Profile:
+{career_text}
+
+For each recommendation include:
+- A section category (one of: "Skills to Learn", "Opportunities to Explore", "Courses & Resources", "Career Moves", "Local Opportunities")
+- A short title
+- A detailed body with actionable advice
+- 2-3 relevant links (real YouTube videos or free course URLs like coursera.org, freecodecamp.org, youtube.com)
+
+Respond ONLY with a valid JSON array, no markdown, no extra text:
+[{{"section": "section name", "title": "short title", "body": "detailed advice", "links": [{{"label": "link label", "url": "https://..."}}]}}]"""
+        }]
+    )
+
+    raw = response.choices[0].message.content.strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
+
+    try:
+        advice_list = json.loads(raw)
+    except:
+        parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
+        advice_list = [{"section": "Advice", "title": f"Recommendation {i+1}", "body": p, "links": []} for i, p in enumerate(parts[:count])]
+
+    return jsonify({"advice": advice_list})
 
 
 if __name__ == '__main__':
