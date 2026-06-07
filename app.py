@@ -6,11 +6,11 @@ from cs50 import SQL
 from flask import Flask, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from urllib.parse import urlparse   
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
 db = SQL("sqlite:///upward.db")
@@ -73,8 +73,11 @@ def onboarding():
         return redirect("/login")
     if request.method == "POST":
         profile = request.form.get("profile")
-        db.execute("UPDATE users SET skill = ? WHERE id = ?", profile, session["user_id"])
-        return redirect("/")
+        extracted_domain = urlparse(profile).netloc.lower().replace('www.', '')
+        if extracted_domain == "linkedin.com":
+            return redirect("/")
+        else:
+            return render_template("onboarding.html", error=True)
     return render_template("onboarding.html")
 
 
