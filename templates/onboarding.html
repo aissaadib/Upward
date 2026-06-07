@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
@@ -18,19 +17,45 @@
             padding: 24px;
             position: relative;
             overflow: hidden;
-            background: #061e20;
         }
 
-        canvas#water {
+        .bg {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
+            background: linear-gradient(135deg, #0d2b2e, #0a3d35, #112f32, #061e20, #0d3b2e);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            25%  { background-position: 100% 0%; }
+            50%  { background-position: 100% 100%; }
+            75%  { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: orbFloat linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            33%  { transform: translate(40px, -60px) scale(1.1); }
+            66%  { transform: translate(-30px, 40px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
         }
 
         .container-wrap {
             width: 100%;
-            max-width: 580px;
+            max-width: 620px;
             position: relative;
             z-index: 10;
         }
@@ -40,67 +65,70 @@
         .subtitle { color: #4a8f8a; font-size: 0.9rem; margin-bottom: 28px; }
 
         .choice-card {
-            background: rgba(10, 40, 44, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(46, 196, 160, 0.25);
-            border-radius: 18px;
-            padding: 22px 26px;
+            background: rgba(17, 47, 50, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid #1a5c5a;
+            border-radius: 16px;
+            padding: 20px 24px;
             margin-bottom: 14px;
+            transition: border-color 0.3s;
         }
+        .choice-card:focus-within { border-color: #2ec4a0; }
 
-        .input-wrap { display: flex; flex-direction: column; }
+        .input-wrap { flex: 1; display: flex; flex-direction: column; }
 
         .linkedin-input {
             width: 100%;
-            background: rgba(6, 30, 32, 0.7);
+            background: rgba(13, 43, 46, 0.8);
             border: 1.5px solid #1a5c5a;
             border-radius: 12px;
-            padding: 13px 16px;
+            padding: 12px 14px;
             color: #c8f5ee;
-            font-size: 0.92rem;
-            font-weight: 500;
+            font-size: 0.9rem;
+            font-weight: 600;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .linkedin-input::placeholder { color: #3a7070; }
+        .linkedin-input::placeholder { color: #4a8f8a; font-weight: 500; }
         .linkedin-input:focus {
             border-color: #2ec4a0;
-            box-shadow: 0 0 0 3px rgba(46,196,160,0.15);
+            box-shadow: 0 0 0 0.2rem rgba(46,196,160,0.2);
         }
 
-        .choice-desc { font-size: 0.78rem; color: #3a7070; margin-top: 10px; }
+        .choice-desc { font-size: 0.8rem; color: #4a8f8a; margin-top: 8px; }
 
         .btn-continue {
             width: 100%;
             background: #2ec4a0;
             border: none;
-            color: #061e20;
-            font-weight: 800;
+            color: #0d2b2e;
+            font-weight: 700;
             border-radius: 12px;
             padding: 14px;
             font-size: 0.95rem;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 8px;
             transition: background 0.2s, transform 0.1s;
-            letter-spacing: 0.02em;
         }
         .btn-continue:hover { background: #25a98a; transform: translateY(-1px); }
         .btn-continue:active { transform: translateY(0); }
 
         .back {
             display: inline-block;
-            color: #3a7070;
+            color: #4a8f8a;
             font-size: 0.85rem;
             text-decoration: none;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             transition: color 0.2s;
         }
         .back:hover { color: #2ec4a0; }
     </style>
 </head>
 <body>
-    <canvas id="water"></canvas>
+    <div class="bg"></div>
+    <div class="orb" style="width:400px;height:400px;background:#2ec4a0;top:-100px;left:-100px;animation-duration:18s;"></div>
+    <div class="orb" style="width:300px;height:300px;background:#0a6b5a;bottom:-80px;right:-80px;animation-duration:14s;animation-delay:-5s;"></div>
+    <div class="orb" style="width:250px;height:250px;background:#1a8c78;top:40%;left:60%;animation-duration:20s;animation-delay:-9s;"></div>
 
     <div class="container-wrap">
         <a href="/" class="back">← Back</a>
@@ -111,75 +139,13 @@
                 <div class="input-wrap">
                     <input type="url" name="profile" class="linkedin-input" placeholder="Paste your LinkedIn profile link" required>
                     {% if error %}
-                        <p style="color:#ff6b8a;font-size:0.82rem;margin-top:8px;">Please provide a valid LinkedIn link.</p>
+                        <p style="color:#ff6b8a;" class="small mt-2">Please provide a LinkedIn link to your profile!</p>
                     {% endif %}
-                    <div class="choice-desc">This allows us to understand your background and capabilities.</div>
+                    <div class="choice-desc">This will allow us to understand your capabilities.</div>
                 </div>
             </div>
             <button type="submit" class="btn-continue">Continue</button>
         </form>
     </div>
-
-    <script>
-        const canvas = document.getElementById('water');
-        const ctx = canvas.getContext('2d');
-        let W, H, t = 0;
-
-        function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-
-        function hsl(h, s, l, a = 1) {
-            return `hsla(${h},${s}%,${l}%,${a})`;
-        }
-
-        function drawWave(yBase, amp, freq, speed, phase, color) {
-            ctx.beginPath();
-            ctx.moveTo(0, H);
-            for (let x = 0; x <= W; x += 2) {
-                const y = yBase
-                    + Math.sin(x * freq + t * speed + phase) * amp
-                    + Math.sin(x * freq * 0.7 + t * speed * 1.3 + phase + 1) * amp * 0.5
-                    + Math.sin(x * freq * 1.4 + t * speed * 0.8 + phase + 2) * amp * 0.3;
-                ctx.lineTo(x, y);
-            }
-            ctx.lineTo(W, H);
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
-        }
-
-        function draw() {
-            t += 0.008;
-
-            ctx.fillStyle = '#061e20';
-            ctx.fillRect(0, 0, W, H);
-
-            const mid = H * 0.52;
-
-            drawWave(mid + 80,  30, 0.008, 0.6, 0,   hsl(168, 60, 14, 0.9));
-            drawWave(mid + 50,  40, 0.006, 0.5, 1.2, hsl(172, 65, 18, 0.85));
-            drawWave(mid + 20,  50, 0.005, 0.4, 2.5, hsl(175, 70, 22, 0.8));
-            drawWave(mid,       60, 0.004, 0.35, 0.8, hsl(178, 72, 26, 0.75));
-            drawWave(mid - 30,  55, 0.005, 0.45, 3.1, hsl(180, 68, 20, 0.7));
-            drawWave(mid - 60,  45, 0.006, 0.55, 1.8, hsl(182, 64, 16, 0.65));
-            drawWave(mid - 90,  35, 0.007, 0.65, 4.2, hsl(170, 58, 12, 0.55));
-
-            const shimmer = ctx.createLinearGradient(0, mid - 100, 0, mid + 100);
-            shimmer.addColorStop(0, 'rgba(46,196,160,0.0)');
-            shimmer.addColorStop(0.4 + Math.sin(t * 0.5) * 0.1, 'rgba(46,196,160,0.06)');
-            shimmer.addColorStop(1, 'rgba(46,196,160,0.0)');
-            ctx.fillStyle = shimmer;
-            ctx.fillRect(0, mid - 100, W, 200);
-
-            requestAnimationFrame(draw);
-        }
-
-        draw();
-    </script>
 </body>
 </html>
