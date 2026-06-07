@@ -9,6 +9,21 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from groq import Groq
 
+
+def load_local_env(path=".env"):
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as env_file:
+        for line in env_file:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_local_env()
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -16,10 +31,10 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
 db = SQL("sqlite:///upward.db")
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY", "your_groq_key_here"))
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-SMTP_EMAIL = "aissa.daoud2010@gmail.com"
-SMTP_PASSWORD = "rxpgfvfyxczunktx"
+SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 SMTP_SERVER = "smtp.gmail.com"
 
 def send_code(to_email, code):
