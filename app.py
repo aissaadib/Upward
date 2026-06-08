@@ -39,7 +39,7 @@ SMTP_SERVER = "smtp.gmail.com"
 
 def send_code(to_email, code):
     msg = MIMEText(f"Your Upward verification code is: {code}")
-    msg["Subject"] = "Upward – Verification Code"
+    msg["Subject"] = "Upward - Verification Code"
     msg["From"] = SMTP_EMAIL
     msg["To"] = to_email
     with smtplib.SMTP_SSL(SMTP_SERVER, 465) as server:
@@ -158,17 +158,31 @@ def onboarding():
         except:
             return render_template("onboarding.html", error=True)
 
-        summary = f"""
-Field: {answers.get('field', 'Unknown')}
-Education: {answers.get('q0', 'Unknown')}
-Experience: {answers.get('q1', 'Unknown')}
-Main goal: {answers.get('q2', 'Unknown')}
-Weekly time available: {answers.get('q3', 'Unknown')}
-Biggest challenge: {answers.get('q4', 'Unknown')}
-Region: {answers.get('q5', 'Unknown')}
-Country: {answers.get('q6', 'Unknown')}
-City: {answers.get('q7', 'not provided')}
-        """.strip()
+        labels = {
+            "field": "Main field",
+            "q0": "Education level",
+            "q1": "Experience level",
+            "q2": "Strongest skills",
+            "q3": "Tools already used",
+            "q4": "Favorite kind of work",
+            "q5": "Current goal",
+            "q6": "Preferred work style",
+            "q7": "Weekly learning time",
+            "q8": "Biggest challenge",
+            "q9": "Budget for learning",
+            "q10": "Preferred timeline",
+            "q11": "Region",
+            "q12": "Country",
+            "q13": "City",
+        }
+        lines = []
+        for key, label in labels.items():
+            value = answers.get(key, "Not provided")
+            if isinstance(value, list):
+                value = ", ".join(value)
+            lines.append(f"{label}: {value or 'Not provided'}")
+
+        summary = "\n".join(lines)
 
         session["career_advice"] = summary
         return redirect("/advice")
@@ -193,28 +207,34 @@ def generate_advice():
     if not career_text:
         return jsonify({"error": "No profile data found. Please complete onboarding first."}), 400
 
-    count = request.json.get("count", 3)
-    count = max(1, min(int(count), 10))
+    count = 5
 
-    response = groq_client.chat.completions.create(
-        model="gemma2-9b-it",
-        messages=[{
-            "role": "user",
-            "content": f"""You are a career advisor. Based on this profile, give exactly {count} personalized career recommendations organized into clear sections.
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{
+                "role": "user",
+                "content": f"""You are a practical career advisor. Based on this profile, choose exactly {count} concrete things this user can do with their current competence.
 
 Profile:
 {career_text}
 
-For each recommendation include:
-- A section category (one of: "Skills to Learn", "Opportunities to Explore", "Courses & Resources", "Career Moves", "Local Opportunities")
-- A short title
-- A detailed body with actionable advice
-- 2-3 relevant links (real YouTube videos or free course URLs like coursera.org, freecodecamp.org, youtube.com)
+Each suggestion must be specific, realistic for the user's level and location, and different from the others.
+
+For each suggestion include:
+- title: short role, project, or path name
+- category: one of "Build", "Learn", "Earn", "Apply", "Explore"
+- fit: one short sentence explaining why it fits the user's competence
+- outcome: what they could have after following the roadmap
+- roadmap: exactly 4 short steps, each starting with a strong action verb
+- links: exactly 3 useful links from reputable sites such as freecodecamp.org, coursera.org, edx.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, github.com, linkedin.com/learning
 
 Respond ONLY with a valid JSON array, no markdown, no extra text:
-[{{"section": "section name", "title": "short title", "body": "detailed advice", "links": [{{"label": "link label", "url": "https://..."}}]}}]"""
-        }]
-    )
+[{{"title": "suggestion title", "category": "Build", "fit": "why this fits", "outcome": "expected outcome", "roadmap": ["step 1", "step 2", "step 3", "step 4"], "links": [{{"label": "link label", "url": "https://..."}}]}}]"""
+            }]
+        )
+    except Exception as e:
+        return jsonify({"error": f"Could not generate advice from Groq: {e}"}), 502
 
     raw = response.choices[0].message.content.strip()
     raw = raw.replace("```json", "").replace("```", "").strip()
@@ -223,7 +243,14 @@ Respond ONLY with a valid JSON array, no markdown, no extra text:
         advice_list = json.loads(raw)
     except:
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
-        advice_list = [{"section": "Advice", "title": f"Recommendation {i+1}", "body": p, "links": []} for i, p in enumerate(parts[:count])]
+        advice_list = [{
+            "title": f"Suggestion {i+1}",
+            "category": "Explore",
+            "fit": p,
+            "outcome": "A clearer next step based on your profile.",
+            "roadmap": ["Choose one direction", "Learn the basics", "Build a small proof", "Share it and ask for feedback"],
+            "links": []
+        } for i, p in enumerate(parts[:count])]
 
     return jsonify({"advice": advice_list})
 
