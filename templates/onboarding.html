@@ -6,146 +6,646 @@
     <title>Onboarding - Upward</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #c8f5ee;
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-        }
 
-        .bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0;
-            background: linear-gradient(135deg, #0d2b2e, #0a3d35, #112f32, #061e20, #0d3b2e);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-        }
+:root{
+    --accent:#3ec3d5;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+    --sidebar:#23273c;
+}
 
-        @keyframes gradientShift {
-            0%   { background-position: 0% 50%; }
-            25%  { background-position: 100% 0%; }
-            50%  { background-position: 100% 100%; }
-            75%  { background-position: 0% 100%; }
-            100% { background-position: 0% 50%; }
-        }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.15;
-            animation: orbFloat linear infinite;
-            z-index: 0;
-        }
+html{
+    scroll-behavior:smooth;
+}
 
-        @keyframes orbFloat {
-            0%   { transform: translate(0, 0) scale(1); }
-            33%  { transform: translate(40px, -60px) scale(1.1); }
-            66%  { transform: translate(-30px, 40px) scale(0.9); }
-            100% { transform: translate(0, 0) scale(1); }
-        }
+body{
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,Segoe UI,sans-serif;
+}
 
-        .container-wrap {
-            width: 100%;
-            max-width: 620px;
-            position: relative;
-            z-index: 10;
-        }
+.page{
+    min-height:100vh;
+    padding:32px 20px 80px;
+}
 
-        h2 { font-size: 1.4rem; font-weight: 800; color: #c8f5ee; margin-bottom: 8px; }
-        h2 span { color: #2ec4a0; }
-        .subtitle { color: #4a8f8a; font-size: 0.9rem; margin-bottom: 28px; }
+.wrap{
+    width:min(920px,90%);
+    margin:auto;
+}
 
-        .choice-card {
-            background: rgba(17, 47, 50, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1.5px solid #1a5c5a;
-            border-radius: 16px;
-            padding: 20px 24px;
-            margin-bottom: 14px;
-            transition: border-color 0.3s;
-        }
-        .choice-card:focus-within { border-color: #2ec4a0; }
+.top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 
-        .input-wrap { flex: 1; display: flex; flex-direction: column; }
+    padding-bottom:24px;
 
-        .linkedin-input {
-            width: 100%;
-            background: rgba(13, 43, 46, 0.8);
-            border: 1.5px solid #1a5c5a;
-            border-radius: 12px;
-            padding: 12px 14px;
-            color: #c8f5ee;
-            font-size: 0.9rem;
-            font-weight: 600;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .linkedin-input::placeholder { color: #4a8f8a; font-weight: 500; }
-        .linkedin-input:focus {
-            border-color: #2ec4a0;
-            box-shadow: 0 0 0 0.2rem rgba(46,196,160,0.2);
-        }
+    border-bottom:1px solid var(--border);
 
-        .choice-desc { font-size: 0.8rem; color: #4a8f8a; margin-top: 8px; }
+    margin-bottom:48px;
+}
 
-        .btn-continue {
-            width: 100%;
-            background: #2ec4a0;
-            border: none;
-            color: #0d2b2e;
-            font-weight: 700;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .btn-continue:hover { background: #25a98a; transform: translateY(-1px); }
-        .btn-continue:active { transform: translateY(0); }
+.back-link{
+    color:var(--text-secondary);
+    text-decoration:none;
+    font-size:.95rem;
+}
 
-        .back {
-            display: inline-block;
-            color: #4a8f8a;
-            font-size: 0.85rem;
-            text-decoration: none;
-            margin-bottom: 24px;
-            transition: color 0.2s;
-        }
-        .back:hover { color: #2ec4a0; }
-    </style>
+.back-link:hover{
+    color:var(--accent);
+}
+
+.step-pill{
+    background:#eef8fa;
+    color:var(--accent);
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-size:.8rem;
+    font-weight:700;
+}
+
+.panel{
+    background:none;
+    border:none;
+    padding:0;
+}
+
+.progress-track{
+    height:6px;
+    background:#e9edf1;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:48px;
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    transition:.25s;
+}
+
+.screen{
+    display:none;
+}
+
+.screen.active{
+    display:block;
+}
+
+.kicker{
+    color:var(--accent);
+
+    font-size:.75rem;
+
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.14em;
+
+    margin-bottom:10px;
+}
+
+.title{
+    font-size:clamp(2.5rem,6vw,4rem);
+
+    line-height:1.05;
+
+    letter-spacing:-2px;
+
+    font-weight:900;
+
+    margin-bottom:14px;
+}
+
+.title span{
+    color:var(--accent);
+}
+
+.sub{
+    color:var(--text-secondary);
+
+    max-width:700px;
+
+    line-height:1.7;
+
+    font-size:1.05rem;
+
+    margin-bottom:40px;
+}
+
+/* FIELD SELECTION */
+
+.field-grid{
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:14px;
+}
+
+.field-btn{
+    border:1px solid var(--border);
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:20px;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    transition:.15s ease;
+}
+
+.field-btn:hover{
+    border-color:var(--accent);
+}
+
+.field-btn.selected{
+    border-color:var(--accent);
+    background:#eef8fa;
+}
+
+.field-icon{
+    width:36px;
+    height:36px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin-bottom:12px;
+
+    font-size:1.3rem;
+}
+
+.field-label{
+    font-weight:700;
+    margin-bottom:4px;
+}
+
+.field-note{
+    color:var(--text-secondary);
+    font-size:.85rem;
+    line-height:1.5;
+}
+
+/* INPUTS */
+
+.custom-field-wrap{
+    display:flex;
+    gap:12px;
+    margin-top:20px;
+}
+
+.text-input{
+    width:100%;
+
+    padding:14px 16px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    background:white;
+
+    color:var(--text);
+
+    font-size:.95rem;
+}
+
+.text-input::placeholder{
+    color:#9ca3af;
+}
+
+.text-input:focus{
+    outline:none;
+    border-color:var(--accent);
+}
+
+.btn-custom{
+    padding:14px 18px;
+
+    border:1px solid var(--border);
+
+    background:white;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    white-space:nowrap;
+}
+
+.btn-custom:hover{
+    border-color:var(--accent);
+}
+
+/* QUESTIONS */
+
+.question-head{
+    margin-bottom:32px;
+}
+
+.question-label{
+    font-size:clamp(2rem,5vw,3rem);
+
+    line-height:1.08;
+
+    font-weight:900;
+
+    letter-spacing:-1px;
+}
+
+.question-sub{
+    margin-top:12px;
+
+    color:var(--text-secondary);
+
+    line-height:1.7;
+
+    max-width:700px;
+}
+
+.badge-field{
+    display:inline-flex;
+
+    margin-top:18px;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    background:#eef8fa;
+
+    color:var(--accent);
+
+    font-size:.8rem;
+
+    font-weight:700;
+}
+
+/* OPTIONS */
+
+.options-list{
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(240px,1fr));
+
+    gap:12px;
+}
+
+.option-btn{
+    border:1px solid var(--border);
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:16px;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    transition:.15s ease;
+
+    min-height:60px;
+}
+
+.option-btn:hover{
+    border-color:var(--accent);
+}
+
+.option-btn.selected{
+    border-color:var(--accent);
+    background:#eef8fa;
+}
+
+.option-btn.multi::after{
+    content:"+";
+    float:right;
+    color:var(--accent);
+    font-weight:900;
+}
+
+.helper{
+    margin-top:12px;
+    color:var(--text-secondary);
+    font-size:.85rem;
+}
+
+/* NAV */
+
+.nav-row{
+    display:flex;
+    gap:12px;
+
+    margin-top:36px;
+}
+
+.btn-back-step{
+    width:60px;
+
+    border:1px solid var(--border);
+
+    background:white;
+
+    color:var(--text);
+
+    border-radius:12px;
+
+    cursor:pointer;
+}
+
+.btn-next{
+    flex:1;
+
+    border:none;
+
+    background:var(--sidebar);
+
+    color:white;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    font-weight:700;
+
+    opacity:.4;
+
+    pointer-events:none;
+}
+
+.btn-next.active{
+    opacity:1;
+    pointer-events:auto;
+}
+
+.btn-next.active:hover{
+    opacity:.95;
+}
+
+@media(max-width:700px){
+
+    .custom-field-wrap{
+        flex-direction:column;
+    }
+
+    .title{
+        font-size:2.6rem;
+    }
+
+    .question-label{
+        font-size:2rem;
+    }
+
+    .options-list{
+        grid-template-columns:1fr;
+    }
+
+}
+
+</style>
 </head>
 <body>
     <div class="bg"></div>
-    <div class="orb" style="width:400px;height:400px;background:#2ec4a0;top:-100px;left:-100px;animation-duration:18s;"></div>
-    <div class="orb" style="width:300px;height:300px;background:#0a6b5a;bottom:-80px;right:-80px;animation-duration:14s;animation-delay:-5s;"></div>
-    <div class="orb" style="width:250px;height:250px;background:#1a8c78;top:40%;left:60%;animation-duration:20s;animation-delay:-9s;"></div>
-
-    <div class="container-wrap">
-        <a href="/" class="back">← Back</a>
-        <h2>Link your <span>LinkedIn</span></h2>
-        <p class="subtitle">We will personalize your experience based on your profile and capabilities.</p>
-        <form action="/onboarding" method="POST">
-            <div class="choice-card">
-                <div class="input-wrap">
-                    <input type="url" name="profile" class="linkedin-input" placeholder="Paste your LinkedIn profile link" required>
-                    {% if error %}
-                        <p style="color:#ff6b8a;" class="small mt-2">Please provide a LinkedIn link to your profile!</p>
-                    {% endif %}
-                    <div class="choice-desc">This will allow us to understand your capabilities.</div>
-                </div>
+    <main class="page">
+        <div class="wrap">
+            <div class="top-row">
+                <a href="/" class="back-link">&larr; Back</a>
+                <div class="step-pill" id="step-pill">Profile setup</div>
             </div>
-            <button type="submit" class="btn-continue">Continue</button>
-        </form>
-    </div>
+
+            <section class="panel">
+                <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+                <div class="screen active" id="screen-field">
+                    <div class="kicker">Start with your direction</div>
+                    <h1 class="title">What is your <span>main field?</span></h1>
+                    <p class="sub">Choose the closest area, or type your own. The next questions will make the AI recommendations much more specific to your actual competence.</p>
+                    <div class="field-grid">
+                        <button class="field-btn" type="button" onclick="selectField('Technology and Coding', event)"><div class="field-icon">&#128187;</div><div class="field-label">Technology and Coding</div><div class="field-note">Apps, web, data, AI</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Business and Finance', event)"><div class="field-icon">&#128200;</div><div class="field-label">Business and Finance</div><div class="field-note">Sales, markets, operations</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Art and Design', event)"><div class="field-icon">&#127912;</div><div class="field-label">Art and Design</div><div class="field-note">Visuals, brands, products</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Science and Research', event)"><div class="field-icon">&#128300;</div><div class="field-label">Science and Research</div><div class="field-note">Analysis, labs, papers</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Medicine and Health', event)"><div class="field-icon">&#9877;</div><div class="field-label">Medicine and Health</div><div class="field-note">Care, wellness, biology</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Education and Teaching', event)"><div class="field-icon">&#127979;</div><div class="field-label">Education and Teaching</div><div class="field-note">Training, tutoring, content</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Media and Communication', event)"><div class="field-icon">&#127909;</div><div class="field-label">Media and Communication</div><div class="field-note">Writing, social, video</div></button>
+                        <button class="field-btn" type="button" onclick="selectField('Engineering', event)"><div class="field-icon">&#9881;</div><div class="field-label">Engineering</div><div class="field-note">Systems, hardware, making</div></button>
+                    </div>
+                    <div class="custom-field-wrap">
+                        <input type="text" class="text-input" id="custom-field-input" placeholder="Or type your own field...">
+                        <button class="btn-custom" type="button" onclick="useCustomField()">Use this</button>
+                    </div>
+                    <div class="nav-row">
+                        <button class="btn-next" id="btn-field-next" type="button" onclick="startQuestions()">Continue</button>
+                    </div>
+                </div>
+
+                <div class="screen" id="screen-questions">
+                    <div class="question-head">
+                        <div>
+                            <div class="kicker" id="question-kicker">Profile detail</div>
+                            <div class="question-label" id="q-label"></div>
+                            <div class="question-sub" id="q-sub"></div>
+                        </div>
+                        <div class="badge-field" id="field-badge"></div>
+                    </div>
+                    <div id="q-options"></div>
+                    <div class="nav-row">
+                        <button class="btn-back-step" type="button" onclick="prevQuestion()">&larr;</button>
+                        <button class="btn-next" id="btn-q-next" type="button" onclick="nextQuestion()">Continue</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <form id="submit-form" action="/onboarding" method="POST" style="display:none;">
+        <input type="hidden" name="answers" id="answers-input">
+    </form>
+
+    <script>
+        const questions = [
+            { type: "options", q: "What is your current education level?", sub: "This helps set the difficulty of the roadmap.", options: ["Still in high school", "Undergraduate student", "Graduate student", "Recently graduated", "Working professional", "Self-taught"] },
+            { type: "options", q: "How much real experience do you have?", sub: "Choose the closest answer, even if your experience came from personal projects.", options: ["Just starting", "Less than 1 year", "1 to 3 years", "3 to 5 years", "More than 5 years"] },
+            { type: "multi", q: "Which skills do you already have?", sub: "Pick everything that honestly applies.", options: ["Writing or communication", "Research", "Math or analysis", "Programming basics", "Design sense", "Sales or persuasion", "Organization", "Leadership", "Problem solving", "Content creation"] },
+            { type: "text", q: "Name tools, apps, or languages you can already use.", sub: "Examples: Python, Excel, Figma, Canva, AutoCAD, Photoshop, Notion, SQL.", placeholder: "Type tools separated by commas...", optional: false },
+            { type: "options", q: "What type of work gives you energy?", sub: "The AI will use this to avoid paths that sound good but feel wrong.", options: ["Building practical things", "Helping people directly", "Analyzing information", "Creating visuals or stories", "Selling and negotiating", "Leading and organizing", "Researching deeply"] },
+            { type: "options", q: "What do you want most right now?", sub: "Pick the result you care about first.", options: ["Get an internship", "Land my first job", "Earn money with small projects", "Build a portfolio", "Switch careers", "Choose a direction", "Improve in my current role"] },
+            { type: "options", q: "How do you prefer to work?", sub: "This affects the kind of suggestions and roadmap steps.", options: ["Remote", "In person", "Hybrid", "Freelance", "Startup or small team", "Stable company", "I am flexible"] },
+            { type: "options", q: "How much time can you invest weekly?", sub: "Be realistic so the roadmap can be doable.", options: ["Less than 2 hours", "2 to 5 hours", "5 to 10 hours", "10 to 15 hours", "More than 15 hours"] },
+            { type: "options", q: "What blocks you the most?", sub: "The suggestions will include a path around this obstacle.", options: ["I do not know where to start", "I lack confidence", "I lack technical skills", "I do not have enough time", "I do not have money for courses", "I do not have connections", "I need better English or communication"] },
+            { type: "options", q: "What is your learning budget?", sub: "Free and low-cost paths are possible; this just helps filter links.", options: ["Free only", "Low cost if worth it", "I can pay for a strong course", "Employer or school may pay", "Not sure"] },
+            { type: "options", q: "When do you want to see progress?", sub: "This helps the AI choose between quick wins and longer paths.", options: ["In 2 weeks", "In 1 month", "In 3 months", "In 6 months", "No rush, I want the best path"] },
+            { type: "options", q: "Where are you based?", sub: "Select your region for location-relevant advice.", options: ["Africa", "Middle East", "Europe", "North America", "South America", "Asia", "Oceania"] },
+            { type: "text", q: "Which country are you in?", sub: "This helps the AI suggest realistic opportunities and search terms.", placeholder: "e.g. Morocco, France, USA...", optional: false },
+            { type: "text", q: "Which city or region?", sub: "Optional, but useful for local opportunities.", placeholder: "e.g. Casablanca, Paris, New York...", optional: true },
+        ];
+
+        let selectedField = null;
+        let currentQ = 0;
+        let answers = {};
+
+        function setProgress() {
+            const total = questions.length + 1;
+            const done = document.getElementById("screen-field").classList.contains("active") ? 0 : currentQ + 1;
+            document.getElementById("progress-fill").style.width = `${Math.round((done / total) * 100)}%`;
+            document.getElementById("step-pill").textContent = document.getElementById("screen-field").classList.contains("active") ? "Profile setup" : `Question ${currentQ + 1} of ${questions.length}`;
+        }
+
+        function selectField(field, event) {
+            selectedField = field;
+            document.querySelectorAll(".field-btn").forEach(b => b.classList.remove("selected"));
+            event.currentTarget.classList.add("selected");
+            document.getElementById("custom-field-input").value = "";
+            document.getElementById("btn-field-next").classList.add("active");
+        }
+
+        function useCustomField() {
+            const val = document.getElementById("custom-field-input").value.trim();
+            if (!val) return;
+            selectedField = val;
+            document.querySelectorAll(".field-btn").forEach(b => b.classList.remove("selected"));
+            document.getElementById("btn-field-next").classList.add("active");
+        }
+
+        document.getElementById("custom-field-input").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") useCustomField();
+        });
+
+        function startQuestions() {
+            if (!selectedField) return;
+            answers.field = selectedField;
+            document.getElementById("field-badge").textContent = selectedField;
+            currentQ = 0;
+            showQuestion(0);
+            document.getElementById("screen-field").classList.remove("active");
+            document.getElementById("screen-questions").classList.add("active");
+            setProgress();
+        }
+
+        function showQuestion(index) {
+            const q = questions[index];
+            document.getElementById("q-label").textContent = q.q;
+            document.getElementById("q-sub").textContent = q.sub;
+            document.getElementById("question-kicker").textContent = q.type === "multi" ? "Choose all that apply" : "Profile detail";
+
+            const opts = document.getElementById("q-options");
+            opts.innerHTML = "";
+
+            if (q.type === "options" || q.type === "multi") {
+                const list = document.createElement("div");
+                list.className = "options-list";
+                const saved = answers[`q${index}`] || (q.type === "multi" ? [] : "");
+                q.options.forEach(opt => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "option-btn" + (q.type === "multi" ? " multi" : "") + ((q.type === "multi" ? saved.includes(opt) : saved === opt) ? " selected" : "");
+                    btn.textContent = opt;
+                    btn.onclick = () => q.type === "multi" ? toggleMulti(btn, opt, index) : selectOption(btn, opt, index);
+                    list.appendChild(btn);
+                });
+                opts.appendChild(list);
+                if (q.type === "multi") {
+                    const helper = document.createElement("div");
+                    helper.className = "helper";
+                    helper.textContent = "Choose at least one. You can add more detail in the next question.";
+                    opts.appendChild(helper);
+                }
+            } else {
+                const input = document.createElement("input");
+                input.type = "text";
+                input.className = "text-input";
+                input.placeholder = q.placeholder;
+                input.value = answers[`q${index}`] || "";
+                input.oninput = () => {
+                    answers[`q${index}`] = input.value.trim();
+                    updateNextState(q, index);
+                };
+                opts.appendChild(input);
+                input.focus();
+                if (q.optional) {
+                    const helper = document.createElement("div");
+                    helper.className = "helper";
+                    helper.textContent = "You can skip this one.";
+                    opts.appendChild(helper);
+                }
+            }
+
+            document.getElementById("btn-q-next").textContent = index === questions.length - 1 ? "Generate my 5 paths" : "Continue";
+            updateNextState(q, index);
+            setProgress();
+        }
+
+        function updateNextState(q, index) {
+            const nextBtn = document.getElementById("btn-q-next");
+            const value = answers[`q${index}`];
+            const valid = q.optional || (Array.isArray(value) ? value.length > 0 : !!value);
+            nextBtn.classList.toggle("active", valid);
+        }
+
+        function selectOption(btn, opt, index) {
+            document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            answers[`q${index}`] = opt;
+            updateNextState(questions[index], index);
+        }
+
+        function toggleMulti(btn, opt, index) {
+            const selected = answers[`q${index}`] || [];
+            const exists = selected.includes(opt);
+            answers[`q${index}`] = exists ? selected.filter(item => item !== opt) : selected.concat(opt);
+            btn.classList.toggle("selected", !exists);
+            updateNextState(questions[index], index);
+        }
+
+        function nextQuestion() {
+            if (!document.getElementById("btn-q-next").classList.contains("active")) return;
+            if (currentQ < questions.length - 1) {
+                currentQ++;
+                showQuestion(currentQ);
+            } else {
+                document.getElementById("answers-input").value = JSON.stringify(answers);
+                document.getElementById("submit-form").submit();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQ > 0) {
+                currentQ--;
+                showQuestion(currentQ);
+            } else {
+                document.getElementById("screen-questions").classList.remove("active");
+                document.getElementById("screen-field").classList.add("active");
+                setProgress();
+            }
+        }
+
+        setProgress();
+    </script>
 </body>
 </html>
