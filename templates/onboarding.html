@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Onboarding - Upward</title>
-
 <style>
 :root{
     --accent:#3ec3d5;
@@ -14,368 +13,360 @@
     --border:#e1e0e6;
     --sidebar:#23273c;
 }
-
 *{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-    min-height:100vh;
-    background:var(--bg);
-    font-family:Inter,Segoe UI,sans-serif;
-    color:var(--text);
-}
-
+body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif;color:var(--text);}
 .page{padding:32px 20px 80px;}
 .wrap{width:min(920px,90%);margin:auto;}
-
-.top-row{
-    display:flex;
-    justify-content:space-between;
-    padding-bottom:24px;
-    border-bottom:1px solid var(--border);
-    margin-bottom:40px;
-}
-
-.back-link{
-    text-decoration:none;
-    color:var(--text-secondary);
-}
+.top-row{display:flex;justify-content:space-between;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:40px;}
+.back-link{text-decoration:none;color:var(--text-secondary);}
 .back-link:hover{color:var(--accent);}
-
-.step-pill{
-    background:#eef8fa;
-    color:var(--accent);
-    padding:8px 14px;
-    border-radius:999px;
-    font-weight:700;
-    font-size:.8rem;
-}
-
-.progress-track{
-    height:6px;
-    background:#e9edf1;
-    border-radius:999px;
-    overflow:hidden;
-    margin-bottom:40px;
-}
-
-.progress-fill{
-    height:100%;
-    width:0%;
-    background:var(--accent);
-    transition:.25s;
-}
-
-.screen{display:none;}
-.screen.active{display:block;}
-
-.title{
-    font-size:clamp(2.3rem,5vw,3.5rem);
-    font-weight:900;
-    line-height:1.05;
-    margin-bottom:10px;
-}
-
-.sub{
-    color:var(--text-secondary);
-    margin-bottom:30px;
-    max-width:700px;
-    line-height:1.7;
-}
-
-/* OPTIONS */
-.options-list{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:12px;
-}
-
-.option-btn{
-    padding:14px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:white;
-    cursor:pointer;
-    text-align:left;
-}
-
-.option-btn.selected{
-    border-color:var(--accent);
-    background:#eef8fa;
-}
-
-/* INPUT */
-.text-input{
-    width:100%;
-    padding:14px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:white;
-    margin-top:10px;
-}
-
-.text-input:focus{
-    outline:none;
-    border-color:var(--accent);
-}
-
-/* NAV */
-.nav-row{
-    display:flex;
-    gap:12px;
-    margin-top:30px;
-}
-
-.btn-next{
-    flex:1;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    background:var(--sidebar);
-    color:white;
-    opacity:.4;
-    pointer-events:none;
-    font-weight:700;
-}
-
-.btn-next.active{
-    opacity:1;
-    pointer-events:auto;
-}
-
-.btn-back{
-    width:60px;
-    border:1px solid var(--border);
-    background:white;
-    border-radius:12px;
-    cursor:pointer;
-}
+.step-pill{background:#eef8fa;color:var(--accent);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.8rem;}
+.progress-track{height:6px;background:#e9edf1;border-radius:999px;overflow:hidden;margin-bottom:40px;}
+.progress-fill{height:100%;width:0%;background:var(--accent);transition:.25s;}
+.title{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;line-height:1.1;margin-bottom:10px;}
+.sub{color:var(--text-secondary);margin-bottom:28px;max-width:700px;line-height:1.7;font-size:.95rem;}
+.options-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+.option-btn{padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;cursor:pointer;text-align:left;font-size:.9rem;transition:.15s;color:var(--text);}
+.option-btn:hover{border-color:var(--accent);}
+.option-btn.selected{border-color:var(--accent);background:#eef8fa;font-weight:700;}
+.multi-hint{font-size:.78rem;color:var(--text-secondary);margin-bottom:12px;}
+.text-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;}
+.text-input:focus{border-color:var(--accent);}
+.skip-hint{font-size:.78rem;color:var(--text-secondary);margin-top:8px;}
+.nav-row{display:flex;gap:12px;margin-top:32px;}
+.btn-next{flex:1;padding:14px;border:none;border-radius:12px;background:var(--sidebar);color:white;opacity:.35;pointer-events:none;font-weight:700;font-size:.95rem;cursor:pointer;}
+.btn-next.active{opacity:1;pointer-events:auto;}
+.btn-next.active:hover{background:#1e2240;}
+.btn-back{width:56px;border:1.5px solid var(--border);background:white;border-radius:12px;cursor:pointer;font-size:1rem;transition:.15s;}
+.btn-back:hover{border-color:var(--accent);}
 </style>
 </head>
-
 <body>
-
 <div class="page">
 <div class="wrap">
-
     <div class="top-row">
         <a href="/" class="back-link">← Back</a>
         <div class="step-pill" id="step-pill">Profile setup</div>
     </div>
-
     <div class="progress-track">
         <div class="progress-fill" id="progress"></div>
     </div>
-
     <form id="form" action="/onboarding" method="POST">
         <input type="hidden" name="answers" id="answers-input">
     </form>
-
     <div id="screen"></div>
-
 </div>
 </div>
 
 <script>
+const NONE_OPTION = "None";
 
-/* =========================
-   REAL COUNTRY VALIDATION
-========================= */
-
-const validCountries = [
-    "morocco","france","usa","united states","uk","germany","spain",
-    "italy","canada","brazil","india","japan","china","australia",
-    "uae","saudi arabia","egypt","turkey","portugal","netherlands"
-];
-
-function isCountryValid(c){
-    return validCountries.includes((c||"").toLowerCase().trim());
-}
-
-/* =========================
-   QUESTIONS SYSTEM
-========================= */
-
-const questions = [
+const allQuestions = [
     {
+        key:"field",
         type:"options",
         q:"What is your main field?",
-        options:[
-            "Technology and Coding",
-            "Business and Finance",
-            "Art and Design",
-            "Science",
-            "Education",
-            "Media",
-            "Engineering"
-        ]
+        sub:"Pick the area that best describes your direction.",
+        options:["Technology & Coding","Business & Finance","Art & Design","Science & Research","Medicine & Health","Education & Teaching","Law & Politics","Media & Communication","Engineering","Not sure yet"],
+        other:true
     },
-
     {
+        key:"q0",
         type:"options",
         q:"What is your current level?",
-        options:[
-            "Beginner",
-            "Intermediate",
-            "Advanced",
-            "Professional"
-        ]
+        sub:"Be honest — this shapes everything that follows.",
+        options:["Complete beginner","Some basics","Intermediate","Advanced","Professional / working in the field"],
+        optionFilter:{ school:["Professional / working in the field"] }
     },
-
     {
-        type:"multi",
-        q:"Which tools do you know?",
-        options:[
-            "Python","JavaScript","HTML/CSS","Excel","SQL",
-            "Figma","Git","Photoshop","Canva","Notion"
-        ]
-    },
-
-    {
-        type:"text",
-        q:"Which tool are you BEST at?",
-        placeholder:"e.g. Python, Figma, Excel..."
-    },
-
-    {
+        key:"q1",
         type:"options",
-        q:"How much time per week?",
-        options:["<2h","2-5h","5-10h","10-20h","20h+"]
+        q:"What is your education status?",
+        sub:"Pick the one that applies right now.",
+        options:["Still in high school","Undergraduate student","Graduate student","Recently graduated","Working professional","Self-taught / no formal education"]
     },
-
     {
+        key:"q2",
+        type:"multi",
+        q:"Which tools or skills do you already have?",
+        sub:"Select all that apply — or pick None if you're starting fresh.",
+        options:["Python","JavaScript","HTML / CSS","SQL","Excel / Sheets","Figma","Git / GitHub","Photoshop","Canva","Video editing","Writing","Public speaking","Project management", NONE_OPTION]
+    },
+    {
+        key:"q3",
         type:"text",
-        q:"Which country are you in?",
+        q:"What is the one skill you are strongest at?",
+        sub:"Even if it's not in the list above.",
+        placeholder:"e.g. Python, drawing, writing, Excel..."
+    },
+    {
+        key:"q4",
+        type:"options",
+        q:"What kind of work do you enjoy most?",
+        sub:"Pick the one that feels most natural.",
+        options:["Building and making things","Analyzing data and solving problems","Teaching or helping others","Creating visual content","Writing and communicating","Leading teams and managing","Researching and learning","Selling and persuading"]
+    },
+    {
+        key:"q5",
+        type:"options",
+        q:"What is your main goal right now?",
+        sub:"Pick the one that matters most to you today.",
+        options:["Land my first job or internship","Freelance and work independently","Start my own project or business","Switch to a different career","Get better at my current role","Figure out what I actually want to do"],
+        optionFilter:{
+            school:["Get better at my current role","Freelance and work independently"],
+            undergrad:["Get better at my current role"]
+        },
+        subByTier:{
+            school:"Pick what you're aiming for while still in school."
+        }
+    },
+    {
+        key:"q6",
+        type:"options",
+        q:"What is your biggest blocker?",
+        sub:"Pick the one that holds you back the most.",
+        options:["I don't know where to start","I don't have the right skills","I don't have money to invest","I don't have time","I don't have connections or a network","I struggle with motivation","I'm in a country with limited opportunities"]
+    },
+    {
+        key:"q7",
+        type:"options",
+        q:"How much money can you invest in learning?",
+        sub:"Be realistic with your budget.",
+        options:["Nothing — free only","Under $20 / month","$20–$50 / month","$50–$150 / month","More than $150 / month"],
+        schoolVariant:{
+            q:"How much can you spend on learning resources?",
+            sub:"Allowance, part-time earnings, or family support — whatever is realistic for you.",
+            options:["Nothing — free only","Under $10 / month","$10–$25 / month","$25–$50 / month","More than $50 / month"]
+        }
+    },
+    {
+        key:"q8",
+        type:"options",
+        q:"How much time per week can you commit?",
+        sub:"Pick what is realistic, not ideal.",
+        options:["Less than 2 hours","2 to 5 hours","5 to 10 hours","10 to 20 hours","More than 20 hours"]
+    },
+    {
+        key:"q9",
+        type:"options",
+        q:"What timeline are you working with?",
+        sub:"When do you need results?",
+        options:["As fast as possible (1–3 months)","Short term (3–6 months)","Medium term (6–12 months)","Long term (1–2 years)","I am playing the long game (2+ years)"]
+    },
+    {
+        key:"q10",
+        type:"options",
+        q:"How do you prefer to work?",
+        sub:"This helps us match you with compatible paths.",
+        options:["Alone and independently","In a small team","In a large organization","Remotely from anywhere","On-site or in person","I don't have a preference"],
+        skipWhen:["school"]
+    },
+    {
+        key:"q11",
+        type:"options",
+        q:"What region are you in?",
+        sub:"For location-relevant opportunities.",
+        options:["Africa","Middle East","Europe","North America","South America","Asia","Oceania"]
+    },
+    {
+        key:"q12",
+        type:"text",
+        q:"Which country?",
+        sub:"Helps us find local opportunities and salary data.",
+        subByTier:{
+            school:"Helps us find opportunities and programs relevant to where you live.",
+            undergrad:"Helps us find local internships, programs, and opportunities.",
+            grad:"Helps us find local opportunities and entry-level salary ranges."
+        },
         placeholder:"e.g. Morocco, France, USA..."
     },
-
     {
+        key:"q13",
         type:"text",
         q:"Which city or region?",
-        placeholder:"Optional..."
+        sub:"Optional — for even more specific advice.",
+        placeholder:"e.g. Casablanca, Paris, New York...",
+        optional:true
     }
 ];
+
+const EDUCATION_TIERS = {
+    "Still in high school":"school",
+    "Undergraduate student":"undergrad",
+    "Graduate student":"grad",
+    "Recently graduated":"grad",
+    "Working professional":"professional",
+    "Self-taught / no formal education":"self_taught"
+};
 
 let i = 0;
 let answers = {};
 
+function getTier(){
+    return EDUCATION_TIERS[answers.q1] || null;
+}
+
+function getActiveQuestions(){
+    const tier = getTier();
+    return allQuestions
+        .filter(q => !(q.skipWhen && tier && q.skipWhen.includes(tier)))
+        .map(q => {
+            const copy = {...q, options: q.options ? [...q.options] : undefined};
+            if(tier === "school" && q.schoolVariant){
+                Object.assign(copy, q.schoolVariant);
+                if(q.schoolVariant.options) copy.options = [...q.schoolVariant.options];
+            }
+            if(q.optionFilter && tier && q.optionFilter[tier]){
+                copy.options = copy.options.filter(o => !q.optionFilter[tier].includes(o));
+            }
+            if(q.subByTier && tier && q.subByTier[tier]) copy.sub = q.subByTier[tier];
+            return copy;
+        });
+}
+
+function pruneAnswers(){
+    const active = getActiveQuestions();
+    const activeKeys = new Set(active.map(q => q.key));
+    Object.keys(answers).forEach(k => { if(!activeKeys.has(k)) delete answers[k]; });
+    active.forEach(q => {
+        const val = answers[q.key];
+        if(!val) return;
+        if(q.type === "options" && !q.options.includes(val)) delete answers[q.key];
+        if(q.type === "multi" && Array.isArray(val)){
+            answers[q.key] = val.filter(v => q.options.includes(v));
+            if(answers[q.key].length === 0) delete answers[q.key];
+        }
+    });
+}
+
 function render(){
+    const qs = getActiveQuestions();
+    if(i >= qs.length) i = Math.max(0, qs.length - 1);
+    const q = qs[i];
+    document.getElementById("step-pill").textContent = `Question ${i+1} / ${qs.length}`;
+    document.getElementById("progress").style.width = `${(i/qs.length)*100}%`;
 
-    const q = questions[i];
+    let html = `<h1 class="title">${q.q}</h1><p class="sub">${q.sub}</p>`;
 
-    document.getElementById("step-pill").textContent =
-        `Question ${i+1} / ${questions.length}`;
-
-    let html = `<h1 class="title">${q.q}</h1>`;
-
-    if(q.type==="options" || q.type==="multi"){
-        html += `<div class="options-list">` +
-        q.options.map(opt=>`
-            <button type="button"
-                class="option-btn"
-                onclick="selectOption('${opt}')">
-                ${opt}
-            </button>
-        `).join("") +
-        `</div>`;
+    if(q.type === "options"){
+        html += `<div class="options-list">`;
+        q.options.forEach(opt => {
+            const sel = answers[q.key] === opt ? " selected" : "";
+            html += `<button type="button" class="option-btn${sel}" onclick="selectOption('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
+        });
+        html += `</div>`;
+        if(q.other){
+            html += `<div style="margin-top:12px;display:flex;gap:10px;">
+                <input class="text-input" id="other-input" placeholder="Or type your own..." style="margin-top:0;" value="${(answers[q.key] && !q.options.includes(answers[q.key])) ? answers[q.key] : ''}">
+                <button type="button" onclick="useOther()" style="padding:12px 18px;border:1.5px solid var(--border);border-radius:12px;background:white;cursor:pointer;font-weight:700;white-space:nowrap;color:var(--text);">Use this</button>
+            </div>`;
+        }
+    } else if(q.type === "multi"){
+        const selected = answers[q.key] || [];
+        html += `<p class="multi-hint">Select all that apply — or pick None</p><div class="options-list">`;
+        q.options.forEach(opt => {
+            const sel = selected.includes(opt) ? " selected" : "";
+            html += `<button type="button" class="option-btn${sel}" onclick="toggleMulti('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
+        });
+        html += `</div>`;
+    } else {
+        const val = answers[q.key] || "";
+        html += `<input class="text-input" id="text-input" placeholder="${q.placeholder}" value="${val}" oninput="updateText(this.value)">`;
+        if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
     }
-    else{
-        html += `
-            <input class="text-input"
-                id="text"
-                placeholder="${q.placeholder}"
-                oninput="updateText(this.value)">
-        `;
-    }
 
-    html += `
-    <div class="nav-row">
+    html += `<div class="nav-row">
         <button class="btn-back" type="button" onclick="back()">←</button>
-        <button class="btn-next" id="next" type="button" onclick="next()">Continue</button>
+        <button class="btn-next${isValid(q) ? ' active' : ''}" id="btn-next" type="button" onclick="next()">${i === getActiveQuestions().length-1 ? 'Build my profile' : 'Continue'}</button>
     </div>`;
 
     document.getElementById("screen").innerHTML = html;
-
-    updateProgress();
-    updateButton();
 }
 
-function selectOption(val){
-    answers[`q${i}`] = val;
-    document.querySelectorAll(".option-btn").forEach(b=>{
-        b.classList.remove("selected");
-        if(b.textContent.trim()===val) b.classList.add("selected");
-    });
-    updateButton();
+function isValid(q){
+    const val = answers[q.key];
+    if(q.optional) return true;
+    if(q.type === "multi") return val && val.length > 0;
+    return !!val;
+}
+
+function selectOption(val, btn){
+    const key = getActiveQuestions()[i].key;
+    answers[key] = val;
+    if(key === "q1") pruneAnswers();
+    document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.add("active");
+}
+
+function toggleMulti(val, btn){
+    const key = getActiveQuestions()[i].key;
+    if(!answers[key]) answers[key] = [];
+    const arr = answers[key];
+
+    if(val === NONE_OPTION){
+        if(arr.includes(NONE_OPTION)){
+            arr.splice(arr.indexOf(NONE_OPTION), 1);
+            btn.classList.remove("selected");
+        } else {
+            answers[key] = [NONE_OPTION];
+            document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+        }
+    } else {
+        const noneIdx = arr.indexOf(NONE_OPTION);
+        if(noneIdx > -1){
+            arr.splice(noneIdx, 1);
+            document.querySelectorAll(".option-btn").forEach(b => {
+                if(b.textContent === NONE_OPTION) b.classList.remove("selected");
+            });
+        }
+        const idx = arr.indexOf(val);
+        if(idx > -1){ arr.splice(idx,1); btn.classList.remove("selected"); }
+        else { arr.push(val); btn.classList.add("selected"); }
+    }
+
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.toggle("active", arr.length > 0);
 }
 
 function updateText(val){
-    answers[`q${i}`] = val;
-    updateButton();
+    answers[getActiveQuestions()[i].key] = val;
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.toggle("active", !!val || !!getActiveQuestions()[i].optional);
 }
 
-function updateButton(){
-    const q = questions[i];
-    const val = answers[`q${i}`];
-
-    const valid = q.type==="options"
-        ? !!val
-        : !!val;
-
-    const btn = document.getElementById("next");
-    if(btn){
-        btn.classList.toggle("active", valid);
-    }
-}
-
-function updateProgress(){
-    document.getElementById("progress").style.width =
-        `${((i)/questions.length)*100}%`;
+function useOther(){
+    const val = document.getElementById("other-input")?.value.trim();
+    if(!val) return;
+    answers[getActiveQuestions()[i].key] = val;
+    document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("other-input").style.borderColor = "var(--accent)";
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.add("active");
 }
 
 function next(){
-
-    const q = questions[i];
-    const val = answers[`q${i}`];
-
-    if(!val && !q.optional) return;
-
+    const qs = getActiveQuestions();
+    const q = qs[i];
+    if(!isValid(q)) return;
     i++;
-
-    if(i >= questions.length){
-        finish();
-        return;
-    }
-
+    if(i >= qs.length){ finish(); return; }
     render();
 }
 
 function back(){
-    if(i>0){
-        i--;
-        render();
-    }
+    if(i > 0){ i--; render(); }
 }
 
 function finish(){
-
-    const country = answers["q5"];
-
-    if(!isCountryValid(country)){
-        alert("Please enter a valid country.");
-        i = 5;
-        render();
-        return;
-    }
-
-    document.getElementById("answers-input").value =
-        JSON.stringify(answers);
-
+    document.getElementById("progress").style.width = "100%";
+    document.getElementById("answers-input").value = JSON.stringify(answers);
     document.getElementById("form").submit();
 }
 
 render();
-
 </script>
-
 </body>
 </html>

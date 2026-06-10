@@ -13,14 +13,13 @@ from groq import Groq
 def load_local_env(path=".env"):
     if not os.path.exists(path):
         return
-    with open(path, encoding="utf-8") as env_file:
-        for line in env_file:
+    with open(path, encoding="utf-8") as f:
+        for line in f:
             line = line.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, value = line.split("=", 1)
             os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
 
 load_local_env()
 
@@ -33,19 +32,51 @@ Session(app)
 db = SQL("sqlite:///upward.db")
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
+SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-SMTP_SERVER = "smtp.gmail.com"
+SMTP_SERVER   = "smtp.gmail.com"
+
 
 def send_code(to_email, code):
     msg = MIMEText(f"Your Upward verification code is: {code}")
     msg["Subject"] = "Upward - Verification Code"
-    msg["From"] = SMTP_EMAIL
-    msg["To"] = to_email
+    msg["From"]    = SMTP_EMAIL
+    msg["To"]      = to_email
     with smtplib.SMTP_SSL(SMTP_SERVER, 465) as server:
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
         server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
 
+
+def build_profile_summary(answers):
+    """
+    Maps raw onboarding answers into a structured profile string
+    that will be injected into the AI prompt.
+    """
+    skills = answers.get("q2", [])
+    if isinstance(skills, list):
+        skills = ", ".join(skills) if skills else "None listed"
+
+    lines = [
+        f"Main field: {answers.get('field', 'Not provided')}",
+        f"Current level: {answers.get('q0', 'Not provided')}",
+        f"Education status: {answers.get('q1', 'Not provided')}",
+        f"Existing tools and skills: {skills}",
+        f"Strongest skill: {answers.get('q3', 'Not provided')}",
+        f"Preferred type of work: {answers.get('q4', 'Not provided')}",
+        f"Main goal: {answers.get('q5', 'Not provided')}",
+        f"Biggest blocker: {answers.get('q6', 'Not provided')}",
+        f"Monthly learning budget: {answers.get('q7', 'Not provided')}",
+        f"Weekly time available: {answers.get('q8', 'Not provided')}",
+        f"Timeline for results: {answers.get('q9', 'Not provided')}",
+        f"Preferred work style: {answers.get('q10', 'Not provided')}",
+        f"Region: {answers.get('q11', 'Not provided')}",
+        f"Country: {answers.get('q12', 'Not provided')}",
+        f"City: {answers.get('q13', 'Not provided')}",
+    ]
+    return "\n".join(lines)
+
+
+# ─── Routes ──────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -60,20 +91,15 @@ def index():
 def login():
     session.clear()
     if request.method == "POST":
-        email = request.form.get("email")
+        email    = request.form.get("email")
         password = request.form.get("password")
-
         if not email or not password:
             return render_template("login.html", error="Fill up all fields")
-
         rows = db.execute("SELECT * FROM users WHERE email = ?", email)
-
         if len(rows) != 1:
             return render_template("login.html", error="No account with that email")
-
         if not check_password_hash(rows[0]["hash"], password):
             return render_template("login.html", error="Invalid password")
-
         session["user_id"] = rows[0]["id"]
         return redirect("/")
     return render_template("login.html")
@@ -94,34 +120,27 @@ def logout():
 def register():
     session.clear()
     if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
+        username     = request.form.get("username")
+        email        = request.form.get("email")
+        password     = request.form.get("password")
         confirmation = request.form.get("confirmation")
-
         if not username or not email or not password or not confirmation:
             return render_template("register.html", error="Fill up all fields")
-
         if password != confirmation:
             return render_template("register.html", error="Passwords do not match")
-
         if db.execute("SELECT * FROM users WHERE email = ?", email):
             return render_template("register.html", error="Email already registered")
-
         if db.execute("SELECT * FROM users WHERE name = ?", username):
             return render_template("register.html", error="Username already taken")
-
         code = str(random.randint(100000, 999999))
-        session["pending_email"] = email
+        session["pending_email"]    = email
         session["pending_username"] = username
-        session["pending_hash"] = generate_password_hash(password)
-        session["verify_code"] = code
-
+        session["pending_hash"]     = generate_password_hash(password)
+        session["verify_code"]      = code
         try:
             send_code(email, code)
         except Exception as e:
             return render_template("register.html", error=f"Failed to send email: {e}")
-
         return redirect("/verify")
     return render_template("register.html")
 
@@ -130,7 +149,6 @@ def register():
 def verify():
     if "pending_email" not in session:
         return redirect("/register")
-
     if request.method == "POST":
         entered = request.form.get("code")
         if entered == session.get("verify_code"):
@@ -143,7 +161,6 @@ def verify():
             return redirect("/")
         else:
             return render_template("verify.html", error="Wrong code, try again")
-
     return render_template("verify.html")
 
 
@@ -158,33 +175,12 @@ def onboarding():
         except:
             return render_template("onboarding.html", error=True)
 
-        labels = {
-            "field": "Main field",
-            "q0": "Education level",
-            "q1": "Experience level",
-            "q2": "Strongest skills",
-            "q3": "Tools already used",
-            "q4": "Favorite kind of work",
-            "q5": "Current goal",
-            "q6": "Preferred work style",
-            "q7": "Weekly learning time",
-            "q8": "Biggest challenge",
-            "q9": "Budget for learning",
-            "q10": "Preferred timeline",
-            "q11": "Region",
-            "q12": "Country",
-            "q13": "City",
-        }
-        lines = []
-        for key, label in labels.items():
-            value = answers.get(key, "Not provided")
-            if isinstance(value, list):
-                value = ", ".join(value)
-            lines.append(f"{label}: {value or 'Not provided'}")
+        # Store raw answers for future use
+        session["user_answers"] = answers
 
-        summary = "\n".join(lines)
+        # Build the structured profile summary for the AI
+        session["career_profile"] = build_profile_summary(answers)
 
-        session["career_advice"] = summary
         return redirect("/advice")
     return render_template("onboarding.html")
 
@@ -203,38 +199,48 @@ def generate_advice():
     if session.get("user_id") is None:
         return jsonify({"error": "Not logged in"}), 401
 
-    career_text = session.get("career_advice", "")
-    if not career_text:
-        return jsonify({"error": "No profile data found. Please complete onboarding first."}), 400
+    profile = session.get("career_profile", "")
+    if not profile:
+        return jsonify({"error": "No profile found. Please complete onboarding first."}), 400
 
-    count = 5
+    # ── WIP AI PROMPT ─────────────────────────────────────────
+    # This prompt will be refined as the product grows.
+    # The profile variable contains all user answers structured
+    # as key: value lines ready to be injected here.
+    prompt = f"""You are a practical career advisor helping a real person plan their next steps.
+
+Here is their profile:
+{profile}
+
+Based on this, identify exactly 5 concrete things this person can realistically do with their current competence and situation.
+
+Rules:
+- Be specific to their field, level, country, and budget
+- Do NOT suggest things that require skills they don't have yet
+- Challenge unrealistic expectations honestly
+- Each suggestion must be different (don't repeat the same path)
+- Roadmap steps must be actionable month-by-month actions
+
+For each suggestion respond with:
+- title: a short name for the path or project
+- category: one of "Build", "Learn", "Earn", "Apply", "Explore"
+- fit: one sentence explaining why this matches their profile specifically
+- outcome: what they will have after completing the roadmap
+- roadmap: exactly 4 steps, each a concrete monthly action starting with a verb
+- risks: 2 honest challenges or things that could go wrong
+- links: 3 real URLs from reputable sites (freecodecamp.org, coursera.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, edx.org, github.com)
+
+Respond ONLY with a valid JSON array. No markdown. No explanation:
+[{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]"""
+    # ─────────────────────────────────────────────────────────
 
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{
-                "role": "user",
-                "content": f"""You are a practical career advisor. Based on this profile, choose exactly {count} concrete things this user can do with their current competence.
-
-Profile:
-{career_text}
-
-Each suggestion must be specific, realistic for the user's level and location, and different from the others.
-
-For each suggestion include:
-- title: short role, project, or path name
-- category: one of "Build", "Learn", "Earn", "Apply", "Explore"
-- fit: one short sentence explaining why it fits the user's competence
-- outcome: what they could have after following the roadmap
-- roadmap: exactly 4 short steps, each starting with a strong action verb
-- links: exactly 3 useful links from reputable sites such as freecodecamp.org, coursera.org, edx.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, github.com, linkedin.com/learning
-
-Respond ONLY with a valid JSON array, no markdown, no extra text:
-[{{"title": "suggestion title", "category": "Build", "fit": "why this fits", "outcome": "expected outcome", "roadmap": ["step 1", "step 2", "step 3", "step 4"], "links": [{{"label": "link label", "url": "https://..."}}]}}]"""
-            }]
+            messages=[{"role": "user", "content": prompt}]
         )
     except Exception as e:
-        return jsonify({"error": f"Could not generate advice from Groq: {e}"}), 502
+        return jsonify({"error": f"Could not reach AI: {e}"}), 502
 
     raw = response.choices[0].message.content.strip()
     raw = raw.replace("```json", "").replace("```", "").strip()
@@ -244,13 +250,14 @@ Respond ONLY with a valid JSON array, no markdown, no extra text:
     except:
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
         advice_list = [{
-            "title": f"Suggestion {i+1}",
+            "title": f"Suggestion {idx+1}",
             "category": "Explore",
             "fit": p,
             "outcome": "A clearer next step based on your profile.",
-            "roadmap": ["Choose one direction", "Learn the basics", "Build a small proof", "Share it and ask for feedback"],
+            "roadmap": ["Start with research", "Learn the basics", "Build a small proof", "Share and get feedback"],
+            "risks": ["Requires consistency", "Competitive field"],
             "links": []
-        } for i, p in enumerate(parts[:count])]
+        } for idx, p in enumerate(parts[:5])]
 
     return jsonify({"advice": advice_list})
 
