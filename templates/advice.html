@@ -82,6 +82,18 @@ body{
     border-radius:12px;
     text-decoration:none;
     font-weight:700;
+    border:none;
+    cursor:pointer;
+    font-size:.95rem;
+}
+
+.btn-lock{
+    margin-top:20px;
+    background:var(--accent);
+}
+
+.btn-lock:hover{
+    background:#2eb3c5;
 }
 
 /* SYSTEM GRID */
@@ -312,7 +324,29 @@ function render(){
                 ${esc(r.label)}
             </a>
         `).join("")}
+
+        <button type="button" class="btn btn-lock" onclick="choosePlan(${active})">
+            Choose as my main plan
+        </button>
     `;
+}
+
+async function choosePlan(index){
+    const suggestion = data[index];
+    if(!suggestion) return;
+
+    const res = await fetch("/plan/select",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(suggestion)
+    });
+
+    const json = await res.json();
+    if(!res.ok){
+        alert(json.error || "Could not select this path.");
+        return;
+    }
+    window.location.href = json.redirect || "/plan/extend";
 }
 
 async function generate(){
