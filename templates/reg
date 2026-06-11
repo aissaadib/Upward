@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register - Upward</title>
+<title>Login - Upward</title>
 
 <style>
 
@@ -57,9 +57,12 @@ body{
 input{
     width:100%;
     padding:14px 16px;
+
     border:1px solid var(--border);
     border-radius:12px;
+
     background:white;
+
     font-size:.95rem;
 }
 
@@ -71,12 +74,17 @@ input:focus{
 .btn{
     width:100%;
     border:none;
+
     padding:14px;
+
     border-radius:12px;
+
     background:var(--sidebar);
     color:white;
+
     font-weight:700;
     cursor:pointer;
+
     margin-top:10px;
 }
 
@@ -113,7 +121,7 @@ input:focus{
     </h1>
 
     <p class="subtitle">
-        Create your account.
+        Welcome back.
     </p>
 
     <form action="/register" method="POST">
@@ -136,39 +144,29 @@ input:focus{
                 required>
         </div>
 
+        
         <div class="form-group">
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                autocomplete="new-password"
-                required>
+        <input
+            type="password"
+            name="confirmation"
+            placeholder="Confirm password"
+            autocomplete="new-password"
+            required>
         </div>
-
-        <div class="form-group">
-            <input
-                type="password"
-                name="confirmation"
-                placeholder="Confirm password"
-                autocomplete="new-password"
-                required>
-        </div>
-
         {% if error %}
         <p class="error">
             {{ error }}
         </p>
         {% endif %}
-
         <button class="btn" type="submit">
-            Create Account
+            Create account
         </button>
 
     </form>
 
     <p class="footer">
-        Already have an account?
-        <a href="/login">Login</a>
+        Don't have an account?
+        <a href="/login">login</a>
     </p>
 
 </div>
