@@ -345,25 +345,34 @@ async function choosePlan(index){
     const suggestion = data[index];
     if(!suggestion) return;
 
-    const res = await fetch("/plan/select",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(suggestion)
-    });
+    try {
+        const res = await fetch("/plan/select", {
+            method: "POST",
+            credentials: "include", 
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(suggestion)
+        });
 
-    const json = await res.json();
-    if(!res.ok){
-        alert(json.error || "Could not select this path.");
-        return;
+        const json = await res.json();
+
+        if(!res.ok || !json.redirect){
+            throw new Error(json.error || "Redirect missing");
+        }
+
+        window.location.href = json.redirect;
+
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong selecting your plan.");
     }
-    window.location.href = json.redirect || "/plan/extend";
 }
 
 async function generate(){
-    const res = await fetch("/generate_advice",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({count:5})
+    const res = await fetch("/generate_advice", {
+        method: "POST",
+        credentials: "include",   
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({count:5})
     });
 
     const json = await res.json();

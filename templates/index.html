@@ -280,6 +280,17 @@ body{
     .feature-grid{
         gap:30px;
     }
+    .leave-plan-wrap{
+    margin-top:20px;
+}
+
+.leave-warning{
+    font-size:.9rem;
+    color:var(--text-secondary);
+    max-width:650px;
+    margin-bottom:12px;
+    line-height:1.6;
+}
 
 }
 </style>
@@ -325,28 +336,32 @@ body{
 
         <div class="cta">
             {% if locked_plan %}
-            <a href="/plan" class="btn">Continue my plan</a>
-            {% else %}
-            <a href="/onboarding" class="btn">
-                Build My Profile
-            </a>
-            {% endif %}
-        </div>
-        {% if locked_plan %}
-        {% set p = locked_plan.extended or {} %}
+            {% set p = locked_plan.extended or {} %}
         {% set basic = locked_plan.basic or {} %}
             <section class="pinned-plan">
                 <div class="pinned-label">📌 Your main plan</div>
                 <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
                 <p class="pinned-meta">{{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}</p>
                 <div class="pinned-actions">
-                    <a href="/plan" class="btn">View full roadmap</a>
-                    <form action="/plan/leave" method="POST" style="display:inline;" onsubmit="return confirm('Leave this plan and find something else?');">
-                        <button type="submit" class="btn btn-leave">Leave this plan</button>
-                    </form>
+                    <a href="/plan/extend" class="btn">View full roadmap</a>
+                    <div class="leave-plan-wrap">
+    <p class="leave-warning">
+        Leaving your plan will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.
+    </p>
+
+    <form action="/plan/leave" method="POST" onsubmit="return confirm('Leave this plan and permanently delete your current roadmap?');">
+        <button type="submit" class="btn btn-leave">Leave this plan</button>
+    </form>
+</div>
                 </div>
             </section>
-        {% endif %}
+            {% else %}
+            <a href="/onboarding" class="btn">
+                Build My Profile
+            </a>
+            {% endif %}
+        </div>
+        
 
     </section>
 

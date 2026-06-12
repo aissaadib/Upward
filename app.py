@@ -109,7 +109,6 @@ def build_profile_summary(answers):
         f"Portfolio status: {answers.get('q8b', 'Not provided')}",
         f"Confidence level: {answers.get('q8c', 'Not provided')}",
         f"Country: {answers.get('q11', 'Not provided')}",
-        f"City: {answers.get('q12', 'Not provided')}",
     ]
     return "\n".join(lines)
 
@@ -469,7 +468,7 @@ def plan_leave():
     db.execute("DELETE FROM locked_plans WHERE user_id = ?", session["user_id"])
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)
-    return redirect("/advice")
+    return redirect("/")
 
 
 if __name__ == '__main__':
