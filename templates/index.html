@@ -212,33 +212,29 @@ body{
 }
 
 .pinned-plan{
-    background:white;
-    border:2px solid var(--accent);
-    border-radius:20px;
-    padding:28px 32px;
-    margin-bottom:40px;
-    box-shadow:0 8px 30px rgba(62,195,213,.12);
+    margin-top:60px;
+    padding-top:40px;
+    border-top:1px solid var(--border);
 }
 
 .pinned-label{
     font-size:.75rem;
     font-weight:800;
-    letter-spacing:.12em;
+    letter-spacing:.15em;
     text-transform:uppercase;
     color:var(--accent);
-    margin-bottom:10px;
+    margin-bottom:12px;
 }
 
 .pinned-plan h2{
-    font-size:1.8rem;
-    margin-bottom:8px;
-    letter-spacing:-1px;
+    font-size:2rem;
+    margin-bottom:18px;
 }
 
 .pinned-meta{
     color:var(--text-secondary);
-    margin-bottom:20px;
-    max-width:600px;
+    max-width:700px;
+    margin-bottom:28px;
 }
 
 .pinned-actions{
@@ -313,22 +309,7 @@ body{
 
 <main class="container">
 
-    {% if locked_plan %}
-    {% set p = locked_plan.extended or {} %}
-    {% set basic = locked_plan.basic or {} %}
-    <section class="pinned-plan">
-        <div class="pinned-label">📌 Your main plan</div>
-        <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
-        <p class="pinned-meta">{{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}</p>
-        <div class="pinned-actions">
-            <a href="/plan" class="btn">View full roadmap</a>
-            <a href="/advice" class="btn btn-outline">Explore other paths</a>
-            <form action="/plan/leave" method="POST" style="display:inline;" onsubmit="return confirm('Leave this plan and find something else?');">
-                <button type="submit" class="btn btn-leave">Leave this plan</button>
-            </form>
-        </div>
-    </section>
-    {% endif %}
+    
 
     <section class="hero">
 
@@ -351,6 +332,21 @@ body{
             </a>
             {% endif %}
         </div>
+        {% if locked_plan %}
+        {% set p = locked_plan.extended or {} %}
+        {% set basic = locked_plan.basic or {} %}
+            <section class="pinned-plan">
+                <div class="pinned-label">📌 Your main plan</div>
+                <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
+                <p class="pinned-meta">{{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}</p>
+                <div class="pinned-actions">
+                    <a href="/plan" class="btn">View full roadmap</a>
+                    <form action="/plan/leave" method="POST" style="display:inline;" onsubmit="return confirm('Leave this plan and find something else?');">
+                        <button type="submit" class="btn btn-leave">Leave this plan</button>
+                    </form>
+                </div>
+            </section>
+        {% endif %}
 
     </section>
 
