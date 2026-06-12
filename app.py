@@ -101,9 +101,15 @@ def build_profile_summary(answers):
         f"Weekly time available: {answers.get('q8', 'Not provided')}",
         f"Timeline for results: {answers.get('q9', 'Not provided')}",
         f"Preferred work style: {answers.get('q10', 'Not provided')}",
-        f"Region: {answers.get('q11', 'Not provided')}",
-        f"Country: {answers.get('q12', 'Not provided')}",
-        f"City: {answers.get('q13', 'Not provided')}",
+        f"Career priority: {answers.get('q6a', 'Not provided')}",
+        f"Preferred environment: {answers.get('q6b', 'Not provided')}",
+        f"Risk tolerance: {answers.get('q6c', 'Not provided')}",
+        f"5-year success vision: {answers.get('q6d', 'Not provided')}",
+        f"Learning style: {answers.get('q8a', 'Not provided')}",
+        f"Portfolio status: {answers.get('q8b', 'Not provided')}",
+        f"Confidence level: {answers.get('q8c', 'Not provided')}",
+        f"Country: {answers.get('q11', 'Not provided')}",
+        f"City: {answers.get('q12', 'Not provided')}",
     ]
     return "\n".join(lines)
 

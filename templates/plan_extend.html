@@ -277,6 +277,8 @@ ul li::before{
     font-weight:700;
 }
 .resource{
+    color:rgb(105, 203, 255);
+
     display:flex;
 
     justify-content:space-between;
@@ -438,7 +440,7 @@ ul li::before{
 
     <div id="loading" class="loading">
         <div class="spinner"></div>
-        <p>Generating your extended plan…</p>
+        <p>creating the perfect plan you…</p>
     </div>
 
     <div id="content" style="display:none;"></div>
@@ -508,13 +510,6 @@ function renderPlan(p){
             <div class="section-title">Success metrics</div>
             <ul>${metrics.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>
         </div>` : ""}
-
-        ${pitfalls.length ? `
-        <div class="card">
-            <div class="section-title">Avoid these pitfalls</div>
-            ${pitfalls.map(x=>`<div class="risk">${esc(x)}</div>`).join("")}
-        </div>` : ""}
-
         ${risks.length ? `
         <div class="card">
             <div class="section-title">Risks & reality check</div>
