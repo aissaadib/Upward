@@ -357,8 +357,14 @@ async function generate(){
     });
 
     const json = await res.json();
-    data = json.advice || [];
 
+    if(json.error){
+        document.getElementById("paths").innerHTML = 
+            `<p style="color:#ff5460;font-size:.9rem;">${json.error}</p>`;
+        return;
+    }
+
+    data = json.advice || [];
     active = 0;
     render();
 }
