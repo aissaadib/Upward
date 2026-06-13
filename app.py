@@ -214,11 +214,9 @@ def onboarding():
         except:
             return render_template("onboarding.html", error=True)
 
-        # Store raw answers for future use
         session["user_answers"] = answers
-
-        # Build the structured profile summary for the AI
         session["career_profile"] = build_profile_summary(answers)
+        session.modified = True  # ← add this
 
         return redirect("/advice")
     return render_template("onboarding.html")
@@ -255,19 +253,19 @@ Based on this, identify exactly 5 concrete things this person can realistically 
 
 Rules:
 - Be specific to their field, level, country, and budget
-- Do NOT suggest things that require skills they don't have yet
+- Do NOT suggest things that require skills they don't have yet but suggest learning skills that will improve there devlopement
 - Challenge unrealistic expectations honestly
 - Each suggestion must be different (don't repeat the same path)
-- Roadmap steps must be actionable month-by-month actions
+- Roadmap steps must be actionable month-by-month actions with detailed title and step to achieve it
 
 For each suggestion respond with:
 - title: a short name for the path or project
 - category: one of "Build", "Learn", "Earn", "Apply", "Explore"
 - fit: one sentence explaining why this matches their profile specifically
-- outcome: what they will have after completing the roadmap
+- outcome: what they will have after completing the roadmap and other paths they can take
 - roadmap: exactly 4 steps, each a concrete monthly action starting with a verb
 - risks: 2 honest challenges or things that could go wrong
-- links: 3 real URLs from reputable sites (freecodecamp.org, coursera.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, edx.org, github.com)
+- links: 3 real URLs from reputable sites (freecodecamp.org, coursera.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, edx.org, github.com...ETC)
 
 Respond ONLY with a valid JSON array. No markdown. No explanation:
 [{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]"""
@@ -309,11 +307,14 @@ def plan_select():
         return jsonify({"error": "Invalid suggestion"}), 400
     session["pending_plan"] = suggestion
     session.pop("pending_extended_plan", None)
+    session.modified = True  # ← add this
     return jsonify({"redirect": "/plan/extend"})
-
 
 @app.route("/plan/extend")
 def plan_extend():
+    plan = session.get("pending_plan")
+    print(plan)
+    print(session)
     if session.get("user_id") is None:
         return redirect("/login")
     if not session.get("pending_plan"):
