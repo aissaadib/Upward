@@ -1,3 +1,5 @@
+#imports
+
 import os
 import random
 import smtplib
@@ -8,6 +10,9 @@ from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from groq import Groq
+
+# Environment Setup
+# Loads variables from .env during local development.
 
 
 def load_local_env(path=".env"):
@@ -22,13 +27,13 @@ def load_local_env(path=".env"):
             os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 load_local_env()
-
+# Flask Configuration
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
-
+# Database & External Services
 db = SQL("sqlite:///upward.db")
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
@@ -36,7 +41,8 @@ SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 SMTP_SERVER   = "smtp.gmail.com"
 
-
+# Email Verification Utilities
+# Handles signup verification emails.
 def send_code(to_email, code):
     msg = MIMEText(f"Your Upward verification code is: {code}")
     msg["Subject"] = "Upward - Verification Code"
@@ -73,6 +79,9 @@ def get_locked_plan(user_id):
         "locked_at": row["locked_at"],
     }
 
+
+# AI Helpers
+# Utilities for parsing and formatting AI data.
 
 def parse_ai_json(raw):
     raw = raw.strip().replace("```json", "").replace("```", "").strip()
@@ -183,7 +192,7 @@ def register():
         return redirect("/verify")
     return render_template("register.html")
 
-
+#verify user
 @app.route("/verify", methods=["GET", "POST"])
 def verify():
     if "pending_email" not in session:
@@ -249,23 +258,49 @@ def generate_advice():
 Here is their profile:
 {profile}
 
-Based on this, identify exactly 5 concrete things this person can realistically do with their current competence and situation.
+Based on this profile, identify EXACTLY 5 realistic and distinct opportunities, career paths, projects, learning tracks, income opportunities, or exploration routes that this person can pursue.
 
-Rules:
-- Be specific to their field, level, country, and budget
-- Do NOT suggest things that require skills they don't have yet but suggest learning skills that will improve there devlopement
-- Challenge unrealistic expectations honestly
-- Each suggestion must be different (don't repeat the same path)
-- Roadmap steps must be actionable month-by-month actions with detailed title and step to achieve it
+CORE RULES
 
-For each suggestion respond with:
-- title: a short name for the path or project
-- category: one of "Build", "Learn", "Earn", "Apply", "Explore"
-- fit: one sentence explaining why this matches their profile specifically
-- outcome: what they will have after completing the roadmap and other paths they can take
-- roadmap: exactly 4 steps, each a concrete monthly action starting with a verb
-- risks: 2 honest challenges or things that could go wrong
-- links: 3 real URLs from reputable sites (freecodecamp.org, coursera.org, roadmap.sh, developer.mozilla.org, youtube.com, kaggle.com, edx.org, github.com...ETC)
+Tailor every recommendation to the profile provided.
+Do not generate generic advice.
+Do not recommend paths that require qualifications, experience, capital, equipment, or connections that the person clearly does not have.
+If additional skills are needed, include them as part of the roadmap instead of assuming they already exist.
+Be realistic about effort, difficulty, and expected outcomes.
+Challenge unrealistic expectations honestly.
+Prefer opportunities that can be started immediately.
+Every suggestion must be substantially different.
+Never repeat the same idea with different wording.
+Focus on opportunities with strong long-term value and clear progression.
+
+ROADMAP REQUIREMENTS
+
+The roadmap must be a practical progression plan.
+
+Exactly 4 steps.
+Each step must:
+start with a strong action verb
+have a clear objective
+explain what should be achieved
+build naturally on the previous step
+
+Bad:
+"Learn Python"
+
+Good:
+"Complete a beginner Python course and build a small project demonstrating core concepts."
+
+Each roadmap should end with a tangible result such as:
+
+a project
+a portfolio piece
+applications submitted
+a freelance profile
+a business validation
+a certification
+an audience
+revenue
+a research output
 
 Respond ONLY with a valid JSON array. No markdown. No explanation:
 [{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]"""
