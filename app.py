@@ -10,7 +10,7 @@ from flask import Flask, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from groq import Groq
-
+from pathlib import Path
 # Environment Setup
 # Loads variables from .env during local development.
 
@@ -200,8 +200,8 @@ def verify():
     if request.method == "POST":
         entered = request.form.get("code")
         if entered == session.get("verify_code"):
-            db.execute("INSERT INTO users (name, email, hash) VALUES (?, ?, ?)",
-                       session["pending_username"], session["pending_email"], session["pending_hash"])
+            db.execute("INSERT INTO users (name, email, hash, locked) VALUES (?, ?, ?, ?)",
+                       session["pending_username"], session["pending_email"], session["pending_hash"], False)
             user_id = db.execute("SELECT id FROM users WHERE email = ?",
                                  session["pending_email"])[0]["id"]
             session.clear()
@@ -225,7 +225,7 @@ def onboarding():
 
         session["user_answers"] = answers
         session["career_profile"] = build_profile_summary(answers)
-        session.modified = True  # ← add this
+        session.modified = True 
 
         return redirect("/advice")
     return render_template("onboarding.html")
@@ -235,8 +235,13 @@ def onboarding():
 def advice():
     if session.get("user_id") is None:
         return redirect("/login")
+    
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    with open("output.txt", "w") as file:
+        pass  
+    with open("debug.txt", "w") as file:
+        pass  
     return render_template("advice.html", username=username)
 
 
@@ -315,6 +320,8 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
         return jsonify({"error": f"Could not reach AI: {e}"}), 502
 
     raw = response.choices[0].message.content.strip()
+    with open("debug_ai.txt", "w", encoding="utf-8") as f:
+        f.write(raw)
     try:
         advice_list = parse_ai_json(raw)
     except:
@@ -330,6 +337,16 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
         } for idx, p in enumerate(parts[:5])]
 
     session["last_advice"] = advice_list
+    for item in advice_list:
+        item.setdefault("title", "Untitled Path")
+        item.setdefault("category", "Explore")
+        item.setdefault("fit", "")
+        item.setdefault("outcome", "")
+        item.setdefault("roadmap", [])
+        item.setdefault("risks", [])
+        item.setdefault("links", [])
+    if len(advice_list):
+        print("need more advice")
     return jsonify({"advice": advice_list})
 
 
@@ -337,26 +354,61 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
 def plan_select():
     if session.get("user_id") is None:
         return jsonify({"error": "Not logged in"}), 401
+
     suggestion = request.get_json(silent=True) or {}
+
     if not suggestion.get("title"):
         return jsonify({"error": "Invalid suggestion"}), 400
+
     session["pending_plan"] = suggestion
     session.pop("pending_extended_plan", None)
-    session.modified = True  # ← add this
+
+    session.modified = True
+
+    user_id = session["user_id"]
+
+    locked = db.execute(
+        "SELECT locked FROM users WHERE id = ?",
+        user_id
+    )
+
+    session["locked"] = locked[0]["locked"] if locked else 0
+
     return jsonify({"redirect": "/plan/extend"})
 
 @app.route("/plan/extend")
 def plan_extend():
-    plan = session.get("pending_plan")
-    print(plan)
-    print(session)
+
     if session.get("user_id") is None:
         return redirect("/login")
-    if not session.get("pending_plan"):
+
+    plan = session.get("pending_plan")
+
+    if not plan:
         return redirect("/advice")
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+
+    user_id = session["user_id"]
+
+    locked = db.execute(
+        "SELECT locked FROM users WHERE id = ?",
+        user_id
+    )
+
+    locked_value = locked[0]["locked"] if locked else 0
+
+    user = db.execute(
+        "SELECT name FROM users WHERE id = ?",
+        user_id
+    )
+
     username = user[0]["name"] if user else "User"
-    return render_template("plan_extend.html", username=username, suggestion=session["pending_plan"])
+
+    return render_template(
+        "plan_extend.html",
+        username=username,
+        suggestion=plan,
+        locked=locked_value
+    )
 
 
 @app.route("/generate_extended_plan", methods=["POST"])
@@ -461,7 +513,9 @@ Rules:
 def plan_lock():
     if session.get("user_id") is None:
         return redirect("/login")
-
+    session["locked"] = True
+    
+    locked = db.execute("SELECT id FROM locked_plans WHERE user_id = ?", user_id)
     user_id = session["user_id"]
     basic = session.get("pending_plan")
     extended = session.get("pending_extended_plan")
@@ -482,6 +536,7 @@ def plan_lock():
 
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)
+    db.execute("UPDATE users SET locked = True")
     return redirect("/")
 
 

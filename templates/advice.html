@@ -307,7 +307,9 @@ function render(){
         "Needs portfolio work"
     ];
 
-    const resources = d.links || [];
+    const resources = Array.isArray(d.links)
+    ? d.links
+    : [];
 
     box.innerHTML = `
         <h2>${esc(d.title)}</h2>
