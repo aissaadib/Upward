@@ -1,5 +1,97 @@
-[{"title":"Tech Writer for Open-Source Projects","category":"Content Creation","fit":"Beginner","outcome":"Published tech blog posts about Python","roadmap":["Contribute to open-source Python projects on GitHub for 2 weeks","Complete the Google Developer Certified - Python Programmer certification online course in 2-4 weeks","Build and manage a personal website to showcase contributed content and connect with fellow tech writers in 1-2 weeks","Write and submit 2-3 tech blog posts to popular Python open-source project blogs within 1-3 months"],"risks":["High competition for tech writing work","May not lead to immediate financial gain"],"links":[{"label":"Google Developer Certified - Python Programmer","url":"https://developers.google.com/certified/python-programmer"}]},
-{"title":"French Language Tech Blogging","category":"Content Creation","fit":"Beginner","outcome":"Published tech blog posts in French targeting a French-speaking audience","roadmap":["Create a free blog on WordPress and set up French-language settings in 1 week","Complete a beginner French language and culture course for 2-4 weeks","Write and submit 2-3 French-language tech blog posts to popular French tech blogs within 1-3 months","Participate in a French-language online tech community and engage with fellow enthusiasts for 1-3 months"],"risks":["Limited audience for French-language content in France","May not lead to immediate financial gain"],"links":[{"label":"Coursera - French Language and Culture Course","url":"https://www.coursera.org/specializations/french-language-and-culture"}]},
-{"title":"French Language Tech Translation","category":"Freelance Work","fit":"Beginner","outcome":"Obtained translation work for tech projects targeting a French-speaking audience","roadmap":["Complete a beginner course on Google Translate for technical translation in 1-2 weeks","Participate in a French-language online translation community for tech projects in 2-4 weeks","Build a portfolio of translated tech documents or articles targeting a French-speaking audience within 1-2 months","Submit translation services to French-language tech project managers or entrepreneurs within 1-2 months"],"risks":["High competition for translation work","May require additional skills and qualifications like CAT tools"],"links":[{"label":"Google Translate for Technical Translation","url":"https://support.google.com/translate/answer/6140167"}]},
-{"title":"Python Coding Tutorials for YouTube or Twitch","category":"Content Creation","fit":"Beginner","outcome":"Published a consistent series of Python coding tutorials on YouTube or Twitch","roadmap":["Set up a YouTube or Twitch channel and record 2 practice coding sessions in 1-2 weeks","Complete a beginner video production or streaming course in 2-4 weeks","Create and publish 2-3 Python coding tutorial videos or streams targeting an English-speaking audience within 1-2 months","Optimize YouTube or Twitch channel for audience engagement and subscriber acquisition within 1-2 months"],"risks":["High competition for views on YouTube or Twitch","May not lead to immediate financial gain"],"links":[{"label":"Twitch - Setting up a channel","url":"https://streamlabs.com/support/kb/1112-setting-up-your-first-channel"}]},
-{"title":"Python Project Development for Local Businesses","category":"Development","fit":"Beginner","outcome":"Collaborated with a local business on a Python project","roadmap":["Contact 2-3 local businesses in France and set up a project planning meeting in 1-2 weeks","Complete a beginner project management course for 2-4 weeks","Meet with local businesses to discuss project feasibility and potential collaboration within 1-2 months","Collaborate with local businesses to develop a Python project and provide maintenance support within 1-3 months"],"risks":["May not lead to immediate financial gain due to low business demand or project complexity","May require additional skills like communication and project estimation"]}]
+[
+  {
+    "title": "Data Analyst with Python",
+    "category": "Entry-Level Professional",
+    "fit": "High-income, structured environment",
+    "outcome": "Job application",
+    "roadmap": [
+      "Complete a beginner Python course",
+      "Build a simple data analysis project using Python libraries and apply it to a real-world scenario",
+      "Create a portfolio piece using data visualization tools like Matplotlib and Seaborn",
+      "Submit job applications to entry-level data analyst roles or freelance profiles to data analyst clients"
+    ],
+    "risks": ["Limited job opportunities for non-EU applicants in Morocco"],
+    "links": [
+      {
+        "label": "Python Data Analysis Tutorial",
+        "url": "https://www.datacamp.com/tracks/data-science-with-python"
+      }
+    ]
+  },
+  {
+    "title": "Web Development with Python",
+    "category": "Software Development",
+    "fit": "High-income, creative workstyle",
+    "outcome": "Web project live",
+    "roadmap": [
+      "Learn Flask or Django framework for building web applications with Python",
+      "Create a personal website or blog using the chosen framework",
+      "Build a small web project demonstrating core Python concepts and web development best practices",
+      "Publish the web project online and showcase it in a portfolio or networking events"
+    ],
+    "risks": ["Steep learning curve for web development"],
+    "links": [
+      {
+        "label": "Flask Documentation",
+        "url": "https://flask.palletsprojects.com/en/2.0.x/"
+      }
+    ]
+  },
+  {
+    "title": "Machine Learning with Python",
+    "category": "Artificial Intelligence",
+    "fit": "High-income, structured environment",
+    "outcome": "Research output",
+    "roadmap": [
+      "Learn scikit-learn and TensorFlow libraries for machine learning",
+      "Build a simple machine learning project using a real-world dataset",
+      "Publish a research output on a platform like GitHub or ResearchGate",
+      "Participate in machine learning competitions on platforms like Kaggle"
+    ],
+    "risks": ["Limited job opportunities for non-EU applicants in Morocco"],
+    "links": [
+      {
+        "label": "Scikit-learn Documentation",
+        "url": "https://scikit-learn.org/stable/"
+      }
+    ]
+  },
+  {
+    "title": "Automation and Scripting",
+    "category": "Automation and DevOps",
+    "fit": "High-income, structured environment",
+    "outcome": "Freelance profile",
+    "roadmap": [
+      "Learn Bash and Python for automation and scripting",
+      "Build a small project demonstrating automation and scripting best practices",
+      "Offer freelance services to automate tasks for clients",
+      "Grow a freelance profile and expand services to more clients"
+    ],
+    "risks": ["Limited demand for automation services in Morocco"],
+    "links": [
+      {
+        "label": "Bash Documentation",
+        "url": "https://www.gnu.org/software/bash/"
+      }
+    ]
+  },
+  {
+    "title": "Data Science for Business",
+    "category": "Business Intelligence",
+    "fit": "High-income, business environment",
+    "outcome": "Business validation",
+    "roadmap": [
+      "Learn business intelligence tools like Tableau and Power BI",
+      "Create a presentation demonstrating data visualization best practices",
+      "Offer services to business clients to analyze and present data",
+      "Grow a client base and achieve business validation"
+    ],
+    "risks": ["Limited demand for business services in Morocco"],
+    "links": [
+      {
+        "label": "Tableau Documentation",
+        "url": "https://help.tableau.com/current/pro/en-us/index.htm"
+      }
+    ]
+  }
+]
