@@ -447,6 +447,12 @@ ul li::before{
     <div id="error" class="error" style="display:none;"></div>
 </div>
 
+{% if plan_data %}
+<script>
+window.planData = {{ plan_data | tojson }};
+</script>
+{% endif %}
+
 <script>
 function esc(s){
     return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -521,29 +527,27 @@ function renderPlan(p){
             <div class="section-title">Key resources</div>
             ${links.map(r=>`<a class="resource" href="${esc(r.url)}" target="_blank">${esc(r.label)}${r.when ? ` <span style="color:var(--text-secondary);">(${esc(r.when)})</span>` : ""}</a>`).join("")}
         </div>` : ""}
-        
-            <div class="actions">
-                <form action="/plan/lock" method="POST" style="display:inline;">
-                    <button type="submit" class="btn btn-primary">Pin as my main plan</button>
-                </form>
-                <a href="/advice" class="btn btn-ghost">Pick a different path</a>
-            </div>
-       
     `;
 }
 
 async function load(){
-    try{
-        const res = await fetch("/generate_extended_plan",{method:"POST",headers:{"Content-Type":"application/json"}});
-        const json = await res.json();
-        if(!res.ok) throw new Error(json.error || "Failed to generate plan");
+    if(window.planData){
         document.getElementById("loading").style.display = "none";
         document.getElementById("content").style.display = "block";
-        renderPlan(json.plan);
-    }catch(e){
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("error").style.display = "block";
-        document.getElementById("error").textContent = e.message;
+        renderPlan(window.planData);
+    }else{
+        try{
+            const res = await fetch("/generate_extended_plan",{method:"POST",headers:{"Content-Type":"application/json"}});
+            const json = await res.json();
+            if(!res.ok) throw new Error(json.error || "Failed to generate plan");
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("content").style.display = "block";
+            renderPlan(json.plan);
+        }catch(e){
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("error").style.display = "block";
+            document.getElementById("error").textContent = e.message;
+        }
     }
 }
 

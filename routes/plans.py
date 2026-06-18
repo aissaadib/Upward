@@ -1,8 +1,7 @@
-from app import app, db, groq_client
-from flask import render_template, redirect, session, jsonify
+from app import app, db, groq_client, login_required
+from flask import render_template, redirect, request, session, jsonify
 import json
 from services.ai import parse_ai_json
-from flask import Flask, redirect, render_template, request, session, jsonify
 def init_db():
     db.execute("""
         CREATE TABLE IF NOT EXISTS locked_plans (
@@ -27,20 +26,14 @@ def get_locked_plan(user_id):
     }
 
 @app.route("/plan/select", methods=["POST"])
+@login_required
 def plan_select():
-    if session.get("user_id") is None:
-        return jsonify({"error": "Not logged in"}), 401
-
     suggestion = request.get_json(silent=True) or {}
-    with open("output.txt", "w", encoding="utf-8") as file:
-        file.write(str(suggestion))
     if not suggestion.get("title"):
         return jsonify({"error": "Invalid suggestion"}), 400
-    
+
     session["pending_plan"] = suggestion
     session.pop("pending_extended_plan", None)
-    with open("actsession.txt", "w", encoding="utf-8") as file:
-        file.write(str(session["pending_plan"]))
     session.modified = True
 
     user_id = session["user_id"]
@@ -56,17 +49,12 @@ def plan_select():
 
 
 @app.route("/plan/extend")
+@login_required
 def plan_extend():
-    # with open("actsession.txt", "r", encoding="utf-8") as file:
-    #     session["pending_plan"] = file.read()
     plan = session.get("pending_plan")
-    if session.get("user_id") is None:
-        return redirect("/login")
-    with open("sesson.txt", "w", encoding="utf-8") as file:
-        file.write(str(plan))
-    
-    if  len(str(plan)) <= 0:
-        return redirect("/advice")  
+
+    if not plan:
+        return redirect("/advice")
 
     user_id = session["user_id"]
 
@@ -93,10 +81,8 @@ def plan_extend():
 
 
 @app.route("/generate_extended_plan", methods=["POST"])
+@login_required
 def generate_extended_plan():
-    if session.get("user_id") is None:
-        return jsonify({"error": "Not logged in"}), 401
-
     profile = session.get("career_profile", "")
     suggestion = session.get("pending_plan")
     if not profile or not suggestion:
@@ -190,9 +176,8 @@ Rules:
     return jsonify({"plan": extended})
 
 @app.route("/plan/lock", methods=["POST"])
+@login_required
 def plan_lock():
-    if session.get("user_id") is None:
-        return redirect("/login")
     session["locked"] = True
     
     #locked = db.execute("SELECT id FROM locked_plans WHERE user_id = ?", user_id)
@@ -216,27 +201,26 @@ def plan_lock():
 
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)
-    db.execute("UPDATE users SET locked = True")
+    db.execute("UPDATE users SET locked = True WHERE id = ?", user_id)
     return redirect("/")
 
 
 @app.route("/plan")
+@login_required
 def plan_view():
-    if session.get("user_id") is None:
-        return redirect("/login")
     locked = get_locked_plan(session["user_id"])
     if not locked:
         return redirect("/advice")
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
-    return render_template("plan.html", username=username, plan=locked)
+    suggestion = locked["extended"] or locked["basic"]
+    return render_template("plan_extend.html", username=username, suggestion=suggestion, locked=True, plan_data=locked["extended"] or locked["basic"], plan=locked)
 
 
 
 @app.route("/plan/leave", methods=["POST"])
+@login_required
 def plan_leave():
-    if session.get("user_id") is None:
-        return redirect("/login")
     db.execute("DELETE FROM locked_plans WHERE user_id = ?", session["user_id"])
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)

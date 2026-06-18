@@ -1,33 +1,18 @@
-from app import app, db, groq_client
+from app import app, db, groq_client, login_required
 from flask import render_template, redirect, session, jsonify
 from services.ai import parse_ai_json
 
 @app.route("/advice")
+@login_required
 def advice():
-    with open("output.txt", "w", encoding="utf-8") as file:
-        pass
-    with open("actsession.txt", "w", encoding="utf-8") as file:
-        pass
-    with open("sesson.txt","w",encoding="utf-8") as file:
-        pass
-    if session.get("user_id") is None:
-        return redirect("/login")
-    
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
-    with open("output.txt", "w") as file:
-        pass  
-    with open("session.txt", "w") as file:
-        pass  
-    with open("debug_ai.txt", "w") as file:
-        pass  
     return render_template("advice.html", username=username)
 
 
 @app.route("/generate_advice", methods=["POST"])
+@login_required
 def generate_advice():
-    if session.get("user_id") is None:
-        return jsonify({"error": "Not logged in"}), 401
 
     profile = session.get("career_profile", "")
     if not profile:
@@ -99,8 +84,6 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
         return jsonify({"error": f"Could not reach AI: {e}"}), 502
 
     raw = response.choices[0].message.content.strip()
-    with open("debug_ai.txt", "w", encoding="utf-8") as f:
-        f.write(raw)
     try:
         advice_list = parse_ai_json(raw)
     except:

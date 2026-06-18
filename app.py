@@ -1,7 +1,8 @@
 import os
 import json
+from functools import wraps
 from cs50 import SQL
-from flask import Flask, session
+from flask import Flask, session, redirect, jsonify, request
 from flask_session import Session
 from groq import Groq
 
@@ -19,9 +20,23 @@ def load_local_env(path=".env"):
 
 load_local_env()
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("user_id") is None:
+            if request.is_json:
+                return jsonify({"error": "Not logged in"}), 401
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 app = Flask(__name__)
-app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_PERMANENT"] = True
+app.config["SESSION_PERMANENT_LIFETIME"] = 86400  # 24 hours
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_FILE_DIR"] = "flask_session"
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
