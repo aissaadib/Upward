@@ -1,8 +1,32 @@
-from app import app, db
+from app import app
 from flask import render_template, request, redirect, session
+import os
 import random
+import smtplib
+import json
+from email.mime.text import MIMEText
+from cs50 import SQL
+from flask import Flask, redirect, render_template, request, session, jsonify
+from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from services.email import send_code
+from groq import Groq
+from pathlib import Path
+
+db = SQL("sqlite:///upward.db")
+SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+SMTP_SERVER   = "smtp.gmail.com"
+
+# Email Verification Utilities
+# Handles signup verification emails.
+def send_code(to_email, code):
+    msg = MIMEText(f"Your Upward verification code is: {code}")
+    msg["Subject"] = "Upward - Verification Code"
+    msg["From"]    = SMTP_EMAIL
+    msg["To"]      = to_email
+    with smtplib.SMTP_SSL(SMTP_SERVER, 465) as server:
+        server.login(SMTP_EMAIL, SMTP_PASSWORD)
+        server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -53,11 +77,6 @@ def register():
 def logout():
     session.clear()
     return redirect("/login")
-
-
-@app.route("/login/google")
-def login_google():
-    return "Google login coming soon!"
 
 @app.route("/verify", methods=["GET", "POST"])
 def verify():

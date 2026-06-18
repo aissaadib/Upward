@@ -4,6 +4,12 @@ from services.ai import parse_ai_json
 
 @app.route("/advice")
 def advice():
+    with open("output.txt", "w", encoding="utf-8") as file:
+        pass
+    with open("actsession.txt", "w", encoding="utf-8") as file:
+        pass
+    with open("sesson.txt","w",encoding="utf-8") as file:
+        pass
     if session.get("user_id") is None:
         return redirect("/login")
     

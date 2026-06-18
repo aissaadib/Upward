@@ -32,13 +32,15 @@ def plan_select():
         return jsonify({"error": "Not logged in"}), 401
 
     suggestion = request.get_json(silent=True) or {}
-
+    with open("output.txt", "w", encoding="utf-8") as file:
+        file.write(str(suggestion))
     if not suggestion.get("title"):
         return jsonify({"error": "Invalid suggestion"}), 400
-
+    
     session["pending_plan"] = suggestion
     session.pop("pending_extended_plan", None)
-
+    with open("actsession.txt", "w", encoding="utf-8") as file:
+        file.write(str(session["pending_plan"]))
     session.modified = True
 
     user_id = session["user_id"]
@@ -55,12 +57,15 @@ def plan_select():
 
 @app.route("/plan/extend")
 def plan_extend():
+    # with open("actsession.txt", "r", encoding="utf-8") as file:
+    #     session["pending_plan"] = file.read()
+    plan = session.get("pending_plan")
     if session.get("user_id") is None:
         return redirect("/login")
-
-    plan = session.get("pending_plan")
+    with open("sesson.txt", "w", encoding="utf-8") as file:
+        file.write(str(plan))
     
-    if not plan:
+    if  len(str(plan)) <= 0:
         return redirect("/advice")  
 
     user_id = session["user_id"]
