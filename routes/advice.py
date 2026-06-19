@@ -96,7 +96,12 @@ AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHO
     raw = response.choices[0].message.content.strip()
     try:
         advice_list = parse_ai_json(raw)
-    except:
+        # Validate that we got a list with at least one item
+        if not isinstance(advice_list, list) or len(advice_list) == 0:
+            raise ValueError("AI did not return a valid list")
+    except Exception as e:
+        print(f"AI JSON parsing failed: {e}")
+        print(f"Raw response: {raw[:500]}")
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
         advice_list = [{
             "title": f"Suggestion {idx+1}",

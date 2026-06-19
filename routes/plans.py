@@ -146,7 +146,12 @@ Rules:
     raw = response.choices[0].message.content.strip()
     try:
         extended = parse_ai_json(raw)
-    except:
+        # Validate that we got a dict with required fields
+        if not isinstance(extended, dict) or not extended.get("title"):
+            raise ValueError("AI did not return a valid plan object")
+    except Exception as e:
+        print(f"AI JSON parsing failed for extended plan: {e}")
+        print(f"Raw response: {raw[:500]}")
         extended = {
             "title": suggestion.get("title", "Your plan"),
             "summary": suggestion.get("fit", "A structured path based on your profile."),
