@@ -43,6 +43,15 @@ ul{padding-left:18px;line-height:1.8;color:var(--text-secondary);}
 .btn{display:inline-block;padding:14px 22px;border-radius:12px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-size:.95rem;}
 .btn-ghost{background:white;border:1.5px solid var(--border);color:var(--text);}
 .btn-danger{background:#fff3f3;border:1.5px solid #ffcdd2;color:var(--danger);}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
+.modal-card{background:var(--danger);color:white;padding:32px;border-radius:16px;max-width:400px;width:90%;text-align:center;}
+.modal-card h2{font-size:1.5rem;margin-bottom:12px;}
+.modal-card p{margin-bottom:24px;line-height:1.6;opacity:0.9;}
+.modal-actions{display:flex;gap:12px;justify-content:center;}
+.modal-btn-cancel{background:rgba(255,255,255,0.2);color:white;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:700;}
+.modal-btn-cancel:hover{background:rgba(255,255,255,0.3);}
+.modal-btn-confirm{background:white;color:var(--danger);border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:700;}
+.modal-btn-confirm:hover{background:#f0f0f0;}
 </style>
 </head>
 <body>
@@ -159,10 +168,35 @@ ul{padding-left:18px;line-height:1.8;color:var(--text-secondary);}
 
     <div class="actions">
         <a href="/" class="btn btn-ghost">Back to home</a>
-        <form action="/plan/leave" method="POST" style="display:inline;" onsubmit="return confirm('Leave this plan and explore other paths?');">
-            <button type="submit" class="btn btn-danger">Leave this plan</button>
-        </form>
+        <button type="button" class="btn btn-danger" onclick="showLeaveModal()">Leave this plan</button>
     </div>
 </div>
+
+<div class="modal-overlay" id="leaveModal">
+    <div class="modal-card">
+        <h2>Leave this plan?</h2>
+        <p>This will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.</p>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="hideLeaveModal()">Cancel</button>
+            <button class="modal-btn-confirm" onclick="confirmLeave()">Leave plan</button>
+        </div>
+    </div>
+</div>
+
+<form action="/plan/leave" method="POST" id="leaveForm" style="display:none;"></form>
+
+<script>
+function showLeaveModal() {
+    document.getElementById('leaveModal').style.display = 'flex';
+}
+
+function hideLeaveModal() {
+    document.getElementById('leaveModal').style.display = 'none';
+}
+
+function confirmLeave() {
+    document.getElementById('leaveForm').submit();
+}
+</script>
 </body>
 </html>

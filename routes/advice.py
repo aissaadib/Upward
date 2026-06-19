@@ -27,7 +27,7 @@ def generate_advice():
 Here is their profile:
 {profile}
 
-Based on this profile, identify EXACTLY 5 realistic and distinct opportunities, career paths, projects, learning tracks, income opportunities, or exploration routes that this person can pursue.
+Based on this profile, identify EXACTLY  7 realistic and distinct opportunities, career paths, projects, learning tracks, income opportunities, or exploration routes that this person can pursue.
 
 CORE RULES
 
@@ -72,7 +72,17 @@ revenue
 a research output
 
 Respond ONLY with a valid JSON array. No markdown. No explanation:
-[{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]"""
+[{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]
+
+AND REMEBER TO REVISE THE RESULTS YOU GAVE 1-2 TIMES AND SEE IF THE CORESPOND TO WHAT THESE RULES SAY 
+
+EACH PARAGRAPH OF THE FULL PLAN SHOULD HAVE DIFFRENT CONTENT NO REPETETION
+
+AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHOSEN
+
+
+
+"""
     # ─────────────────────────────────────────────────────────
 
     try:
