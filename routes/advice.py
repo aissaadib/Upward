@@ -7,6 +7,7 @@ from services.ai import parse_ai_json
 def advice():
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    db.execute("UPDATE users SET locked = False WHERE id = ?", session["user_id"])
     return render_template("advice.html", username=username)
 
 
@@ -88,10 +89,12 @@ AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHO
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+            timeout=30.0
         )
     except Exception as e:
-        return jsonify({"error": f"Could not reach AI: {e}"}), 502
+        print(f"Groq API error: {e}")
+        return jsonify({"error": "AI service temporarily unavailable. Please try again."}), 502
 
     raw = response.choices[0].message.content.strip()
     try:
@@ -124,5 +127,13 @@ AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHO
         item.setdefault("links", [])
     if len(advice_list):
         print("need more advice")
+
+    
+
+
+
+
+
+
     return jsonify({"advice": advice_list})
 

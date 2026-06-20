@@ -138,10 +138,12 @@ Rules:
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+            timeout=30.0
         )
     except Exception as e:
-        return jsonify({"error": f"Could not reach AI: {e}"}), 502
+        print(f"Groq API error for extended plan: {e}")
+        return jsonify({"error": "AI service temporarily unavailable. Please try again."}), 502
 
     raw = response.choices[0].message.content.strip()
     try:

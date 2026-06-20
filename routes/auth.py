@@ -1,21 +1,11 @@
-from app import app
+from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required
 from flask import render_template, request, redirect, session
 import os
 import random
 import smtplib
 import json
 from email.mime.text import MIMEText
-from cs50 import SQL
-from flask import Flask, redirect, render_template, request, session, jsonify
-from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
-from groq import Groq
-from pathlib import Path
-
-db = SQL("sqlite:///upward.db")
-SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-SMTP_SERVER   = "smtp.gmail.com"
 
 # Email Verification Utilities
 # Handles signup verification emails.
@@ -74,9 +64,14 @@ def register():
     return render_template("register.html")
 
 @app.route("/logout")
+@login_required
 def logout():
     session.clear()
     return redirect("/login")
+
+@app.route("/login/google")
+def login_google():
+    return redirect("/")
 
 @app.route("/verify", methods=["GET", "POST"])
 def verify():

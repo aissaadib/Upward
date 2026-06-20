@@ -449,7 +449,7 @@ ul li::before{
 
 {% if plan_data %}
 <script>
-window.planData = {{ plan_data | tojson }};
+    window.planData = {{ plan_data | tojson }};
 </script>
 {% endif %}
 
@@ -529,9 +529,11 @@ function renderPlan(p){
         </div>` : ""}
 
         <div class="actions">
+            {% if not locked %}
             <form action="/plan/lock" method="POST" style="display:inline;">
                 <button type="submit" class="btn btn-primary">Pin as my main plan</button>
             </form>
+            {% endif %}
         </div>
     `;
 }
