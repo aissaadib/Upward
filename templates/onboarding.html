@@ -39,6 +39,10 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 .btn-next.active:hover{background:#1e2240;}
 .btn-back{width:56px;border:1.5px solid var(--border);background:white;border-radius:12px;cursor:pointer;font-size:1rem;transition:.15s;}
 .btn-back:hover{border-color:var(--accent);}
+.file-input{display:none;}
+.file-upload-btn{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;cursor:pointer;text-align:center;font-weight:600;transition:.15s;}
+.file-upload-btn:hover{border-color:var(--accent);background:#eefcff;}
+.file-selected{margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:600;}
 </style>
 </head>
 <body>
@@ -51,8 +55,9 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
     <div class="progress-track">
         <div class="progress-fill" id="progress"></div>
     </div>
-    <form id="form" action="/onboarding" method="POST">
+    <form id="form" action="/onboarding" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="answers" id="answers-input">
+        <input type="file" name="resume_file" id="resume-file-input" style="display:none;">
     </form>
     <div id="screen"></div>
 </div>
@@ -227,6 +232,14 @@ const allQuestions = [
     ]
 },
 {
+    key:"q8b_upload",
+    type:"file",
+    q:"Upload your resume or portfolio (optional)",
+    sub:"This helps us understand your background better. PDF files only.",
+    showWhen: {key: "q8b", not: "Nothing yet"},
+    optional: true
+},
+{
     key:"q8c",
     type:"options",
     q:"How confident are you in your current abilities?",
@@ -288,7 +301,15 @@ function getTier(){
 function getActiveQuestions(){
     const tier = getTier();
     return allQuestions
-        .filter(q => !(q.skipWhen && tier && q.skipWhen.includes(tier)))
+        .filter(q => {
+            if(q.skipWhen && tier && q.skipWhen.includes(tier)) return false;
+            if(q.showWhen){
+                const prevAnswer = answers[q.showWhen.key];
+                if(q.showWhen.not && prevAnswer === q.showWhen.not) return false;
+                if(q.showWhen.eq && prevAnswer !== q.showWhen.eq) return false;
+            }
+            return true;
+        })
         .map(q => {
             const copy = {...q, options: q.options ? [...q.options] : undefined};
             if(tier === "school" && q.schoolVariant){
@@ -348,6 +369,11 @@ function render(){
             html += `<button type="button" class="option-btn${sel}" onclick="toggleMulti('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
         });
         html += `</div>`;
+    } else if(q.type === "file"){
+        html += `<input type="file" id="file-input" accept=".pdf" class="file-input" onchange="updateFile(this)">`;
+        html += `<button type="button" class="file-upload-btn" onclick="document.getElementById('file-input').click()">${answers[q.key] ? 'Change file' : 'Choose PDF file'}</button>`;
+        if(answers[q.key]) html += `<p class="file-selected">Selected: ${answers[q.key].name}</p>`;
+        if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
     } else {
         const val = answers[q.key] || "";
         html += `<input class="text-input" id="text-input" placeholder="${q.placeholder}" value="${val}" oninput="updateText(this.value)">`;
@@ -366,6 +392,7 @@ function isValid(q){
     const val = answers[q.key];
     if(q.optional) return true;
     if(q.type === "multi") return val && val.length > 0;
+    if(q.type === "file") return !!val;
     return !!val;
 }
 
@@ -416,6 +443,20 @@ function updateText(val){
     if(nb) nb.classList.toggle("active", !!val || !!getActiveQuestions()[i].optional);
 }
 
+function updateFile(input){
+    const file = input.files[0];
+    if(file){
+        answers[getActiveQuestions()[i].key] = file;
+        document.querySelector(".file-selected")?.remove();
+        const p = document.createElement("p");
+        p.className = "file-selected";
+        p.textContent = `Selected: ${file.name}`;
+        input.parentNode.insertBefore(p, input.nextSibling);
+        const nb = document.getElementById("btn-next");
+        if(nb) nb.classList.add("active");
+    }
+}
+
 function useOther(){
     const val = document.getElementById("other-input")?.value.trim();
     if(!val) return;
@@ -442,6 +483,17 @@ function back(){
 function finish(){
     document.getElementById("progress").style.width = "100%";
     document.getElementById("answers-input").value = JSON.stringify(answers);
+
+    // Handle file upload
+    const fileInput = document.getElementById("file-input");
+    const hiddenFileInput = document.getElementById("resume-file-input");
+    if(fileInput && fileInput.files[0] && hiddenFileInput){
+        const file = fileInput.files[0];
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        hiddenFileInput.files = dataTransfer.files;
+    }
+
     document.getElementById("form").submit();
 }
 

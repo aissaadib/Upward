@@ -30,4 +30,9 @@ def build_profile_summary(answers):
         f"Confidence level: {answers.get('q8c', 'Not provided')}",
         f"Country: {answers.get('q11', 'Not provided')}",
     ]
+
+    # Add resume text if available
+    if answers.get('resume_text'):
+        lines.append(f"\nResume/Portfolio content:\n{answers['resume_text'][:2000]}")  # Limit to 2000 chars
+
     return "\n".join(lines)

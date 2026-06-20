@@ -106,15 +106,27 @@ AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHO
         print(f"AI JSON parsing failed: {e}")
         print(f"Raw response: {raw[:500]}")
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
-        advice_list = [{
-            "title": f"Suggestion {idx+1}",
-            "category": "Explore",
-            "fit": p,
-            "outcome": "A clearer next step based on your profile.",
-            "roadmap": ["Start with research", "Learn the basics", "Build a small proof", "Share and get feedback"],
-            "risks": ["Requires consistency", "Competitive field"],
-            "links": []
-        } for idx, p in enumerate(parts[:5])]
+        if not parts:
+            # If no parts at all, provide a generic fallback
+            advice_list = [{
+                "title": "Explore your field",
+                "category": "Research",
+                "fit": "Start by researching different roles and opportunities in your chosen field to understand what interests you most.",
+                "outcome": "A clearer understanding of available paths and requirements.",
+                "roadmap": ["Research job descriptions", "Identify required skills", "Talk to people in the field", "Create a learning plan"],
+                "risks": ["Information overload", "Changing interests"],
+                "links": []
+            }]
+        else:
+            advice_list = [{
+                "title": f"Suggestion {idx+1}",
+                "category": "Explore",
+                "fit": p,
+                "outcome": "A clearer next step based on your profile.",
+                "roadmap": ["Start with research", "Learn the basics", "Build a small proof", "Share and get feedback"],
+                "risks": ["Requires consistency", "Competitive field"],
+                "links": []
+            } for idx, p in enumerate(parts[:5])]
 
     session["last_advice"] = advice_list
     for item in advice_list:
