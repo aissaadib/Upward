@@ -527,14 +527,13 @@ function renderPlan(p){
             <div class="section-title">Key resources</div>
             ${links.map(r=>`<a class="resource" href="${esc(r.url)}" target="_blank">${esc(r.label)}${r.when ? ` <span style="color:var(--text-secondary);">(${esc(r.when)})</span>` : ""}</a>`).join("")}
         </div>` : ""}
-
-        <div class="actions">
-            {% if not locked %}
-            <form action="/plan/lock" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-primary">Pin as my main plan</button>
-            </form>
-            {% endif %}
-        </div>
+        {% if locked == 0 %}
+            <div class="actions">    
+                <form action="/plan/lock" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-primary">Pin as my main plan</button>
+                </form>       
+            </div>
+        {% endif %}
     `;
 }
 

@@ -81,7 +81,7 @@ def verify():
         entered = request.form.get("code")
         if entered == session.get("verify_code"):
             db.execute("INSERT INTO users (name, email, hash, locked) VALUES (?, ?, ?, ?)",
-                       session["pending_username"], session["pending_email"], session["pending_hash"], False)
+                       session["pending_username"], session["pending_email"], session["pending_hash"], 0)
             user_id = db.execute("SELECT id FROM users WHERE email = ?",
                                  session["pending_email"])[0]["id"]
             session.clear()

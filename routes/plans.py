@@ -208,20 +208,21 @@ def plan_lock():
 
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)
-    db.execute("UPDATE users SET locked = True WHERE id = ?", user_id)
+    db.execute("UPDATE users SET locked = 1 WHERE id = ?", user_id)
     return redirect("/")
 
 
 @app.route("/plan")
 @login_required
 def plan_view():
-    locked = get_locked_plan(session["user_id"])
-    if not locked:
+    locked_plan = get_locked_plan(session["user_id"])
+    if not locked_plan:
         return redirect("/advice")
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name, locked FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
-    suggestion = locked["extended"] or locked["basic"]
-    return render_template("plan_extend.html", username=username, suggestion=suggestion, locked=True, plan_data=locked["extended"] or locked["basic"], plan=locked)
+    locked_value = user[0]["locked"] if user else 0
+    suggestion = locked_plan["extended"] or locked_plan["basic"]
+    return render_template("plan_extend.html", username=username, suggestion=suggestion, locked=locked_value, plan_data=locked_plan["extended"] or locked_plan["basic"], plan=locked_plan)
 
 
 
@@ -229,6 +230,7 @@ def plan_view():
 @login_required
 def plan_leave():
     db.execute("DELETE FROM locked_plans WHERE user_id = ?", session["user_id"])
+    db.execute("UPDATE users SET locked = 0 WHERE id = ?", session["user_id"])
     session.pop("pending_plan", None)
     session.pop("pending_extended_plan", None)
     return redirect("/")

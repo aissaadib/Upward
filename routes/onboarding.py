@@ -18,7 +18,7 @@ def onboarding():
         session.modified = True
 
         user_id = session["user_id"]
-        db.execute("UPDATE users SET locked = False WHERE id = ?", user_id)
+        db.execute("UPDATE users SET locked = 0 WHERE id = ?", user_id)
 
         return redirect("/advice")
     return render_template("onboarding.html")

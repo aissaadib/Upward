@@ -7,7 +7,7 @@ from services.ai import parse_ai_json
 def advice():
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
-    db.execute("UPDATE users SET locked = False WHERE id = ?", session["user_id"])
+    db.execute("UPDATE users SET locked = 0 WHERE id = ?", session["user_id"])
     return render_template("advice.html", username=username)
 
 
