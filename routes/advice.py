@@ -28,7 +28,7 @@ def generate_advice():
 Here is their profile:
 {profile}
 
-Based on this profile, identify EXACTLY  7 realistic and distinct opportunities, career paths, projects, learning tracks, income opportunities, or exploration routes that this person can pursue.
+Based on this profile, identify EXACTLY 7 realistic and distinct opportunities, career paths, projects, learning tracks, income opportunities, or exploration routes that this person can pursue.
 
 CORE RULES
 
@@ -42,6 +42,8 @@ Prefer opportunities that can be started immediately.
 Every suggestion must be substantially different.
 Never repeat the same idea with different wording.
 Focus on opportunities with strong long-term value and clear progression.
+
+CRITICAL: Each suggestion must have UNIQUE and SPECIFIC content. Do not repeat the same title, category, or description across different suggestions. Each "fit" field must contain distinct, actionable information specific to that particular opportunity.
 
 ROADMAP REQUIREMENTS
 
@@ -75,13 +77,11 @@ a research output
 Respond ONLY with a valid JSON array. No markdown. No explanation:
 [{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]
 
-AND REMEBER TO REVISE THE RESULTS YOU GAVE 1-2 TIMES AND SEE IF THE CORESPOND TO WHAT THESE RULES SAY 
-
-EACH PARAGRAPH OF THE FULL PLAN SHOULD HAVE DIFFRENT CONTENT NO REPETETION
-
-AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHOSEN
-
-
+REVIEW YOUR OUTPUT BEFORE SUBMITTING:
+1. Are all 7 titles unique?
+2. Does each "fit" field contain specific, distinct information?
+3. Are there no repeated phrases or descriptions?
+4. Is each suggestion tailored to the specific profile provided?
 
 """
     # ─────────────────────────────────────────────────────────
@@ -127,6 +127,21 @@ AND SUGGEST SKILLS OR TOOLS THAT WILL HELP THE USER GET BETTER IN THE CAREER CHO
                 "risks": ["Requires consistency", "Competitive field"],
                 "links": []
             } for idx, p in enumerate(parts[:5])]
+
+    # Validate for repetitive content
+    titles = [item.get("title", "").lower().strip() for item in advice_list]
+    unique_titles = set(titles)
+    if len(unique_titles) < len(titles) * 0.7:  # If more than 30% of titles are duplicates
+        print("Detected repetitive titles, regenerating with fallback")
+        advice_list = [{
+            "title": f"Path {i+1}: {['Freelance', 'Full-time job', 'Internship', 'Contract work', 'Remote work', 'Part-time', 'Volunteer'][i%7]}",
+            "category": ["Technology", "Business", "Creative", "Healthcare", "Education", "Finance", "Marketing"][i%7],
+            "fit": f"A structured approach to building skills and experience in this area, tailored to your background and goals.",
+            "outcome": "Clear progression toward your career objectives with measurable milestones.",
+            "roadmap": ["Research requirements", "Learn essential skills", "Build portfolio", "Apply for opportunities"],
+            "risks": ["Competition", "Skill gaps", "Time commitment"],
+            "links": []
+        } for i in range(7)]
 
     session["last_advice"] = advice_list
     for item in advice_list:
