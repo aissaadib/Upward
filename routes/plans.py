@@ -185,7 +185,7 @@ Rules:
 @app.route("/plan/lock", methods=["POST"])
 @login_required
 def plan_lock():
-    session["locked"] = True
+    session["locked"] = 1
     
     #locked = db.execute("SELECT id FROM locked_plans WHERE user_id = ?", user_id)
     user_id = session["user_id"]
