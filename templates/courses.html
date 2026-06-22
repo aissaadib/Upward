@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courses - Upward</title>
+
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+}
+
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.brand{
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.nav-link{
+    font-size:1rem;
+    font-weight:700;
+    text-decoration:none;
+    color:var(--text-secondary);
+}
+
+.nav-link.active,
+.nav-link:hover{
+    color:var(--accent);
+}
+
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+}
+
+.logout{
+    text-decoration:none;
+    color:var(--text-secondary);
+    font-size:.9rem;
+}
+
+.logout:hover{
+    color:var(--accent);
+}
+
+.container{
+    width:min(1100px,90%);
+    margin:auto;
+}
+
+.hero{
+    padding:60px 0 20px;
+}
+
+.hero h1{
+    font-size:clamp(2.2rem,6vw,3rem);
+    letter-spacing:-1.5px;
+}
+
+.hero p{
+    margin-top:12px;
+    max-width:650px;
+    color:var(--text-secondary);
+    font-size:1.05rem;
+}
+
+.section{
+    padding:40px 0 80px;
+}
+
+.course-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:24px;
+    margin-top:30px;
+}
+
+.course-card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    transition:.2s;
+}
+
+.course-card:hover{
+    border-color:var(--accent);
+    box-shadow:0 6px 20px rgba(30,34,64,.06);
+}
+
+.course-title{
+    font-size:1.15rem;
+    font-weight:800;
+    margin-bottom:10px;
+}
+
+.course-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:14px;
+}
+
+.tag{
+    font-size:.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    background:#eafcff;
+    color:var(--accent);
+    padding:4px 10px;
+    border-radius:999px;
+}
+
+.course-content{
+    color:var(--text-secondary);
+    font-size:.92rem;
+    flex-grow:1;
+    margin-bottom:16px;
+}
+
+.course-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+}
+
+.course-price{
+    font-weight:800;
+    font-size:1.05rem;
+    color:var(--sidebar);
+}
+
+.course-id{
+    font-size:.75rem;
+    color:var(--text-secondary);
+}
+
+.empty-state{
+    margin-top:40px;
+    padding:60px 20px;
+    text-align:center;
+    background:white;
+    border:1px dashed var(--border);
+    border-radius:16px;
+    color:var(--text-secondary);
+}
+
+@media(max-width:768px){
+    .navbar{
+        padding:0 18px;
+    }
+    .nav-left{
+        gap:14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="nav-left">
+        <a href="/" class="brand">
+            Up<span>ward</span>
+        </a>
+        <a href="/courses" class="nav-link active">
+            Courses
+        </a>
+    </div>
+
+    <div class="nav-right">
+
+        <span class="username">
+            {{ username }}
+        </span>
+
+        <a href="/logout" class="logout">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+<main class="container">
+
+    <section class="hero">
+        <h1>Courses</h1>
+        <p>Browse the courses available right now.</p>
+    </section>
+
+    <section class="section">
+
+        {% if courses %}
+        <div class="course-grid">
+            {% for item in courses %}
+            <div class="course-card">
+
+                <div class="course-title">{{ item.title }}</div>
+
+                {% if item.tags %}
+                <div class="course-tags">
+                    {% for tag in item.tags.split(',') %}
+                        <span class="tag">{{ tag.strip() }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <p class="course-content">{{ item.content | truncate(140) }}</p>
+
+                <div class="course-footer">
+                    <span class="course-price">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="course-id">#{{ item.id }}</span>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            No courses are available yet. Check back soon.
+        </div>
+        {% endif %}
+
+    </section>
+
+</main>
+
+</body>
+</html>

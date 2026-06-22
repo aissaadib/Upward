@@ -64,6 +64,22 @@ body{
     color:var(--accent);
 }
 
+.course{
+    margin-top: 3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+.course :hover
+{
+    font-size:1.65rem;
+    color: #3ec3d5;
+    text-decoration: underline;
+
+
+}
 .nav-right{
     display:flex;
     align-items:center;
@@ -299,11 +315,14 @@ body{
 <body>
 
 <nav class="navbar">
-
-    <a href="/" class="brand">
-        Up<span>ward</span>
-    </a>
-
+    <div style="display: flex; gap: 20px;">
+        <a href="/" class="brand">
+            Up<span>ward</span>
+        </a>
+        <a href="/courses" class="course">
+           courses
+        </a>
+    </div>    
     <div class="nav-right">
 
         <span class="username">
