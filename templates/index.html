@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <title>Upward</title>
 
 <style>
@@ -22,6 +23,10 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
+}
+
+a:hover{
+    text-decoration:none;
 }
 
 html{
@@ -72,13 +77,9 @@ body{
     text-decoration:none;
     color:inherit;
 }
-.course :hover
+.course:hover
 {
-    font-size:1.65rem;
     color: #3ec3d5;
-    text-decoration: underline;
-
-
 }
 .nav-right{
     display:flex;
@@ -276,7 +277,7 @@ body{
 }
 
 .btn-leave:hover{
-    background:#ffe8ea;
+    background:#ff0015;
 }
 
 @media(max-width:768px){
@@ -319,8 +320,9 @@ body{
         <a href="/" class="brand">
             Up<span>ward</span>
         </a>
+    
         <a href="/courses" class="course">
-           courses
+           Courses
         </a>
     </div>    
     <div class="nav-right">

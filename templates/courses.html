@@ -67,15 +67,17 @@ body{
 }
 
 .nav-link{
-    font-size:1rem;
-    font-weight:700;
+    margin-top: 3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
     text-decoration:none;
-    color:var(--text-secondary);
+    color:inherit;
 }
 
 .nav-link.active,
 .nav-link:hover{
-    color:var(--accent);
+    color: #3ec3d5;
 }
 
 .nav-right{
@@ -196,6 +198,23 @@ body{
     color:var(--text-secondary);
 }
 
+.btn-primary{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    transition:.2s;
+}
+
+.btn-primary:hover{
+    background:#2eb3c5;
+}
+
 .empty-state{
     margin-top:40px;
     padding:60px 20px;
@@ -214,6 +233,7 @@ body{
         gap:14px;
     }
 }
+
 </style>
 </head>
 
@@ -225,9 +245,11 @@ body{
         <a href="/" class="brand">
             Up<span>ward</span>
         </a>
+       
         <a href="/courses" class="nav-link active">
             Courses
         </a>
+        <a href="/test" class="btn btn-primary">Create a Course</a>
     </div>
 
     <div class="nav-right">

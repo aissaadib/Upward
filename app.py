@@ -53,6 +53,7 @@ from routes.advice import *
 from routes.plans import *
 from routes.onboarding import *
 from routes.courses import *
+from routes.test import *
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
