@@ -290,7 +290,7 @@ body{
                 </div>
                 {% endif %}
 
-                <p class="course-content">{{ item.content | truncate(140) }}</p>
+                <p class="course-content">{{ item.description | truncate(140) }}</p>
 
                 <div class="course-footer">
                     <span class="course-price">${{ "%.2f"|format(item.price) }}</span>

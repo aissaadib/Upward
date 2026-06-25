@@ -6,17 +6,11 @@ def init_db():
     db.execute("""
         CREATE TABLE IF NOT EXISTS courses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            category TEXT,
-            price REAL DEFAULT 0.0,
+            owner_id INTEGER,
+            title TEXT,
+            description TEXT,
             tags TEXT,
-            content TEXT NOT NULL,
-            outcomes TEXT,
-            prerequisites TEXT,
-            duration INTEGER DEFAULT 4,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            price INTEGER
         )
     """)
 init_db()

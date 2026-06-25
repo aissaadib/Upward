@@ -56,7 +56,7 @@ def rate_resume():
 RESUME:
 {resume_text[:3000]}
 
-Rate the person on a scale of 1-10 for EACH of these categories:
+Rate the person on a scale of 1-5 for EACH of these categories:
 
 1. Subject mastery - Do they deeply understand the topic? Can they answer follow-up questions?
 2. Ability to explain clearly - Can they simplify complex ideas without confusing people?
@@ -70,24 +70,24 @@ Rate the person on a scale of 1-10 for EACH of these categories:
 
 Respond ONLY with valid JSON (no markdown):
 {{
-  "subject_mastery": 8.5,
-  "explanation_ability": 9.0,
-  "communication_skills": 8.0,
-  "practical_experience": 7.5,
-  "patience_empathy": 8.5,
-  "teaching_experience": 6.0,
-  "proof_of_results": 7.0,
-  "passion_enthusiasm": 8.0,
-  "credibility": 7.5,
+  "subject_mastery": 4.25,
+  "explanation_ability": 4.5,
+  "communication_skills": 4.0,
+  "practical_experience": 3.75,
+  "patience_empathy": 4.25,
+  "teaching_experience": 3.0,
+  "proof_of_results": 3.5,
+  "passion_enthusiasm": 4.0,
+  "credibility": 3.75,
   "reasoning": "Brief explanation of the overall assessment",
   "strengths": ["2-3 key strengths for teaching"],
   "areas_for_improvement": ["1-2 areas to improve"]
 }}
 
 Rules:
-- Each rating must be a number between 1.0 and 10.0
+- Each rating must be a number between 1.0 and 5.0
 - Be objective and fair based on resume content
-- If information is missing, rate conservatively (5.0-6.0)
+- If information is missing, rate conservatively (2.5-3.0)
 - Consider both formal education and practical experience
 - For teaching experience, look for mentoring, tutoring, leadership roles"""
 
@@ -105,11 +105,11 @@ Rules:
 
         # Calculate weighted teaching score
         # Teaching Score = 40% explanation ability + 30% subject mastery + 20% patience/communication + 10% credentials
-        explanation = float(rating_data.get("explanation_ability", 5.0))
-        subject = float(rating_data.get("subject_mastery", 5.0))
-        patience = float(rating_data.get("patience_empathy", 5.0))
-        communication = float(rating_data.get("communication_skills", 5.0))
-        credibility = float(rating_data.get("credibility", 5.0))
+        explanation = float(rating_data.get("explanation_ability", 2.5))
+        subject = float(rating_data.get("subject_mastery", 2.5))
+        patience = float(rating_data.get("patience_empathy", 2.5))
+        communication = float(rating_data.get("communication_skills", 2.5))
+        credibility = float(rating_data.get("credibility", 2.5))
 
         # Calculate weighted score
         weighted_score = (
@@ -119,8 +119,8 @@ Rules:
             (credibility * 0.10)
         )
 
-        # Clamp rating between 1 and 10
-        rating = max(1.0, min(10.0, weighted_score))
+        # Clamp rating between 1 and 5
+        rating = max(1.0, min(5.0, weighted_score))
 
         # Add calculated rating to rating_data
         rating_data["rating"] = round(rating, 1)
@@ -148,7 +148,7 @@ Rules:
         print(f"AI rating error: {e}")
         # Fallback to default rating
         user_id = session["user_id"]
-        db.execute("UPDATE users SET rating = 5.0 WHERE id = ?", user_id)
+        db.execute("UPDATE users SET rating = 2.5 WHERE id = ?", user_id)
         session["teaching_major"] = major
         return redirect("/customize_course")
 
@@ -162,7 +162,7 @@ def customize_course():
     # Get user's current rating from database
     user_id = session["user_id"]
     user = db.execute("SELECT rating FROM users WHERE id = ?", user_id)
-    rating = user[0]["rating"] if user else 5.0
+    rating = user[0]["rating"] if user else 2.5
     
     return render_template(
         "customize_course.html",
@@ -177,19 +177,15 @@ def customize_course():
 @login_required
 def create_course():
     title = request.form.get("title", "").strip()
-    category = request.form.get("category", "").strip()
+    description = request.form.get("description", "").strip()
     price = request.form.get("price", "0")
     tags = request.form.get("tags", "").strip()
-    content = request.form.get("content", "").strip()
-    outcomes = request.form.get("outcomes", "").strip()
-    prerequisites = request.form.get("prerequisites", "").strip()
-    duration = request.form.get("duration", "4")
 
-    if not title or not content:
+    if not title or not description:
         return render_template("customize_course.html", 
             username=session.get("username", "User"),
             error="Title and description are required",
-            rating=session.get("teaching_rating", {}).get("rating", 5.0),
+            rating=session.get("teaching_rating", {}).get("rating", 2.5),
             major=session.get("teaching_major", "Unknown"),
             rating_data=session.get("teaching_rating", {}))
 
@@ -198,13 +194,13 @@ def create_course():
     except ValueError:
         price = 0.0
 
-    user_id = session["user_id"]
+    owner_id = session["user_id"]
     
     # Insert course into database
     db.execute(
-        """INSERT INTO courses (user_id, title, category, price, tags, content, outcomes, prerequisites, duration)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        user_id, title, category, price, tags, content, outcomes, prerequisites, duration
+        """INSERT INTO courses (owner_id, title, description, tags, price)
+           VALUES (?, ?, ?, ?, ?)""",
+        owner_id, title, description, tags, price
     )
 
     return redirect("/courses")
