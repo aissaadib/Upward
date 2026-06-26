@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teaching Assessment - Upward</title>
+<title>Add Lesson - {{ course.title }}</title>
 
 <style>
-
 :root{
     --accent:#3ec3d5;
     --bg:#f7f7fa;
@@ -14,6 +13,7 @@
     --text-secondary:#6b7280;
     --border:#e1e0e6;
     --sidebar:#23273c;
+    --danger:#ff5460;
 }
 
 *{
@@ -30,10 +30,6 @@ a:hover{
     text-decoration:none;
 }
 
-.footer a:hover{
-    text-decoration:underline;
-}
-
 body{
     background:var(--bg);
     font-family:Inter,Segoe UI,sans-serif;
@@ -43,33 +39,13 @@ body{
 }
 
 .container{
-    max-width:600px;
+    max-width:640px;
     margin:0 auto;
 }
 
 .logo-wrap{
     text-align:center;
     margin-bottom:32px;
-}
-
-.logo-box{
-    width:72px;
-    height:72px;
-
-    margin:0 auto 18px;
-
-    border-radius:18px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    background:var(--accent);
-
-    color:white;
-
-    font-size:1.8rem;
-    font-weight:900;
 }
 
 .brand{
@@ -105,19 +81,30 @@ body{
     margin-bottom:28px;
 }
 
+.breadcrumb{
+    text-align:center;
+    font-size:.85rem;
+    color:var(--text-secondary);
+    margin-bottom:20px;
+}
+
+.breadcrumb a{
+    color:var(--accent);
+    text-decoration:none;
+    font-weight:700;
+}
+
+.breadcrumb a:hover{
+    text-decoration:underline;
+}
+
 .notice{
     background:#f8fbfc;
-
     border:1px solid var(--border);
-
     border-radius:16px;
-
     padding:16px;
-
     margin-bottom:24px;
-
     text-align:center;
-
     color:var(--text-secondary);
     font-size:.95rem;
     line-height:1.5;
@@ -137,13 +124,11 @@ body{
 .form-control{
     width:100%;
     padding:14px 16px;
-
     border:1px solid var(--border);
     border-radius:12px;
-
     background:white;
-
     font-size:.95rem;
+    font-family:Inter,Segoe UI,sans-serif;
 }
 
 .form-control:focus{
@@ -151,15 +136,17 @@ body{
     border-color:var(--accent);
 }
 
+textarea.form-control{
+    min-height:140px;
+    resize:vertical;
+}
+
 .file-upload{
     width:100%;
     padding:24px;
-
     border:2px dashed var(--border);
     border-radius:12px;
-
     background:#f8fbfc;
-
     text-align:center;
     cursor:pointer;
     transition:.2s;
@@ -190,67 +177,47 @@ body{
 .btn-main{
     width:100%;
     border:none;
-
     padding:14px;
-
     margin-top:16px;
-
     border-radius:12px;
-
     background:var(--sidebar);
-
     color:white;
-
     font-weight:700;
     cursor:pointer;
-
     transition:.2s;
+    font-size:.95rem;
 }
 
 .btn-main:hover{
     opacity:.95;
 }
 
-.btn-main:disabled{
-    opacity:.5;
-    cursor:not-allowed;
+.btn-secondary{
+    display:inline-block;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    text-decoration:none;
+    cursor:pointer;
+    border:1.5px solid var(--border);
+    background:white;
+    color:var(--text);
+    font-size:.9rem;
+    transition:.2s;
+}
+
+.btn-secondary:hover{
+    border-color:var(--accent);
 }
 
 .error-box{
     background:#fff5f5;
     color:#dc2626;
-
     border:1px solid #fecaca;
-
     border-radius:12px;
-
     padding:12px;
-
-    margin-top:14px;
-
+    margin-bottom:20px;
     text-align:center;
-}
-
-.loading{
-    text-align:center;
-    padding:20px;
-    color:var(--text-secondary);
-}
-
-.spinner{
-    width:40px;
-    height:40px;
-    border:4px solid #e8ecf0;
-    border-top:4px solid var(--accent);
-    border-radius:50%;
-    margin:0 auto 16px;
-    animation:spin .8s linear infinite;
-}
-
-@keyframes spin{
-    to{
-        transform:rotate(360deg);
-    }
 }
 
 .footer{
@@ -265,18 +232,7 @@ body{
 }
 
 @media (max-width:600px){
-
-    .verify-card{
-        padding:28px;
-    }
-
     .title{
-        font-size:1.5rem;
-    }
-
-    .logo-box{
-        width:64px;
-        height:64px;
         font-size:1.5rem;
     }
 }
@@ -294,16 +250,19 @@ body{
             Up<span>ward</span>
         </a>
     </h1>
-
 </div>
-<h2 class="title">Teaching <span>Assessment</span></h2>
+
+<div class="breadcrumb">
+    <a href="/courses">Courses</a> /
+    <a href="/lessons/{{ course.id }}">{{ course.title }}</a> /
+    Add Lesson
+</div>
+
+<h2 class="title">Add a <span>Lesson</span></h2>
 <p class="subtitle">
-    Upload your resume to get rated on your ability to teach or provide instruction in your field.
+    Create a new lesson for <strong>{{ course.title }}</strong>.
+    Enter a title, add content directly, or upload a PDF/TXT file.
 </p>
-
-<div class="notice">
-    Your resume will be analyzed by AI to determine your teaching capability (1-5 stars). This rating will be displayed publicly on your profile.
-</div>
 
 {% if error %}
 <div class="error-box">
@@ -311,61 +270,71 @@ body{
 </div>
 {% endif %}
 
-<form method="POST" enctype="multipart/form-data" id="uploadForm">
+<form method="POST" action="/create_lesson/{{ course.id }}" enctype="multipart/form-data">
 
     <div class="form-group">
-        <label class="form-label">Teaching Field (What do you want to teach?)</label>
-        <input type="text" name="major" class="form-control" placeholder="e.g., Computer Science, Mathematics, English" required>
+        <label class="form-label">Lesson Title</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g., Introduction to Variables" required>
     </div>
 
     <div class="form-group">
-        <label class="form-label">Upload Resume (PDF or TXT)</label>
-        <label class="file-upload">
-            <input type="file" name="resume" accept=".pdf,.txt" required id="resumeInput" aria-required="true">
-            <div class="file-upload-text">
+        <label class="form-label">Content (optional)</label>
+        <textarea name="content" class="form-control" placeholder="Write lesson content here, or upload a file below..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Upload Lesson File (PDF or TXT)</label>
+        <label class="file-upload" id="fileDropZone">
+            <input type="file" name="lesson_pdf" accept=".pdf,.txt" id="lessonInput">
+            <div class="file-upload-text" id="fileUploadText">
                 <strong>Click to upload</strong> or drag and drop
             </div>
         </label>
     </div>
 
-    <button type="submit" class="btn-main" id="submitBtn">
-        Submit for Assessment
-    </button>
+    <button type="submit" class="btn-main">Create Lesson</button>
 
 </form>
-
-{% if loading %}
-<div class="loading">
-    <div class="spinner"></div>
-    <p>Analyzing your resume...</p>
-</div>
-
-<form id="ratingForm" method="POST" action="/rate_resume">
-    <input type="hidden" name="resume_text" value="{{ resume_text }}">
-    <input type="hidden" name="major" value="{{ major }}">
-</form>
-
-<script>
-document.getElementById('ratingForm').submit();
-</script>
-{% endif %}
 
 <div class="footer">
-    <a href="/courses">← Back to Courses</a>
+    <a href="/lessons/{{ course.id }}">← Back to {{ course.title }}</a>
 </div>
 
 </div>
 
 <script>
-const fileInput = document.getElementById('resumeInput');
-const fileUpload = document.querySelector('.file-upload');
-const fileUploadText = document.querySelector('.file-upload-text');
+const fileInput = document.getElementById('lessonInput');
+const fileDropZone = document.getElementById('fileDropZone');
+const fileUploadText = document.getElementById('fileUploadText');
 
 fileInput.addEventListener('change', function(e) {
     if (e.target.files.length > 0) {
         fileUploadText.innerHTML = '<strong>' + e.target.files[0].name + '</strong>';
-        fileUpload.style.borderColor = 'var(--accent)';
-        fileUpload.style.background = '#eefcff';
+        fileDropZone.style.borderColor = 'var(--accent)';
+        fileDropZone.style.background = '#eefcff';
+    }
+});
+
+// Drag and drop support
+fileDropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    fileDropZone.style.borderColor = 'var(--accent)';
+    fileDropZone.style.background = '#eefcff';
+});
+
+fileDropZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    fileDropZone.style.borderColor = 'var(--border)';
+    fileDropZone.style.background = '#f8fbfc';
+});
+
+fileDropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    fileDropZone.style.borderColor = 'var(--accent)';
+    fileDropZone.style.background = '#eefcff';
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileUploadText.innerHTML = '<strong>' + e.dataTransfer.files[0].name + '</strong>';
     }
 });
 </script>

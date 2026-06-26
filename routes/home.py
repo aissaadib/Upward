@@ -6,8 +6,7 @@ from routes.plans import get_locked_plan
 @login_required
 def index():
     user_id = session["user_id"]
-    user = db.execute("SELECT name, rating FROM users WHERE id = ?", user_id)
+    user = db.execute("SELECT name FROM users WHERE id = ?", user_id)
     username = user[0]["name"] if user else "User"
-    rating = user[0]["rating"] if user and user[0]["rating"] else None
     locked_plan = get_locked_plan(user_id)
-    return render_template("index.html", username=username, locked_plan=locked_plan, rating=rating)
+    return render_template("index.html", username=username, locked_plan=locked_plan)

@@ -50,46 +50,72 @@ def rate_resume():
     if not resume_text or not major:
         return {"error": "Missing resume or major"}, 400
 
-    # AI prompt to rate teaching capability based on 9 categories
-    prompt = f"""You are an expert evaluator of teaching capability. Analyze this resume and rate the person's ability to teach or provide instruction in the field of "{major}".
+    prompt = f"""You are an extremely strict evaluator of teaching readiness.
+
+Your goal is NOT to estimate potential.
+Your goal is to evaluate whether the candidate has demonstrated sufficient evidence to teach professionally.
+
+FIELD:
+{major}
 
 RESUME:
 {resume_text[:3000]}
 
-Rate the person on a scale of 1-5 for EACH of these categories:
+Rate the candidate on these categories from 1.0 to 5.0.
 
-1. Subject mastery - Do they deeply understand the topic? Can they answer follow-up questions?
-2. Ability to explain clearly - Can they simplify complex ideas without confusing people?
-3. Communication skills - Speaking, writing, listening, adapting language to the student's level.
-4. Practical experience - Have they actually used the skills in real projects/work?
-5. Patience & empathy - Do they stay calm when students struggle?
-6. Teaching experience - Tutoring, mentoring, workshops, TA roles, etc.
-7. Proof of results - Testimonials, student outcomes, portfolio, previous successes.
-8. Passion/enthusiasm - Do they genuinely enjoy teaching?
-9. Credibility - Degrees, certifications, awards.
+Scoring scale:
+1.0-1.9 = No evidence
+2.0-2.9 = Weak or indirect evidence
+3.0-3.9 = Solid evidence
+4.0-4.4 = Strong documented evidence
+4.5-5.0 = Exceptional evidence with measurable impact
 
-Respond ONLY with valid JSON (no markdown):
+IMPORTANT RULES:
+- Never assume skills.
+- Only score what is explicitly demonstrated.
+- Missing information should lower scores.
+- Ratings above 4.0 require strong evidence.
+- Ratings above 4.5 require exceptional evidence.
+- Most candidates should fall between 2.0 and 3.8.
+
+Categories:
+
+1. Subject mastery
+2. Ability to explain clearly
+3. Communication skills
+4. Practical experience
+5. Patience & empathy
+6. Teaching experience
+7. Proof of results
+8. Passion/enthusiasm
+9. Credibility
+
+For explanation ability:
+Require presentations, documentation writing, tutoring, workshops, mentoring, public speaking, etc.
+
+For patience/empathy:
+Require mentoring, volunteering, coaching, leadership, customer support or collaborative roles.
+
+For proof of results:
+Require testimonials, measurable impact, successful student outcomes, public reviews or portfolio achievements.
+
+Respond ONLY with valid JSON:
+
 {{
-  "subject_mastery": 4.25,
-  "explanation_ability": 4.5,
-  "communication_skills": 4.0,
-  "practical_experience": 3.75,
-  "patience_empathy": 4.25,
-  "teaching_experience": 3.0,
-  "proof_of_results": 3.5,
-  "passion_enthusiasm": 4.0,
-  "credibility": 3.75,
-  "reasoning": "Brief explanation of the overall assessment",
-  "strengths": ["2-3 key strengths for teaching"],
-  "areas_for_improvement": ["1-2 areas to improve"]
+  "subject_mastery": 3.5,
+  "explanation_ability": 3.0,
+  "communication_skills": 3.0,
+  "practical_experience": 3.5,
+  "patience_empathy": 2.5,
+  "teaching_experience": 2.0,
+  "proof_of_results": 2.5,
+  "passion_enthusiasm": 3.0,
+  "credibility": 3.5,
+  "reasoning": "Brief explanation",
+  "strengths": ["strength 1", "strength 2"],
+  "areas_for_improvement": ["improvement 1", "improvement 2"]
 }}
-
-Rules:
-- Each rating must be a number between 1.0 and 5.0
-- Be objective and fair based on resume content
-- If information is missing, rate conservatively (2.5-3.0)
-- Consider both formal education and practical experience
-- For teaching experience, look for mentoring, tutoring, leadership roles"""
+"""
 
     try:
         response = groq_client.chat.completions.create(
@@ -97,48 +123,101 @@ Rules:
             messages=[{"role": "user", "content": prompt}],
             timeout=30.0
         )
+
         raw = response.choices[0].message.content.strip()
         rating_data = parse_ai_json(raw)
 
         if not isinstance(rating_data, dict):
             raise ValueError("Invalid rating response")
 
-        # Calculate weighted teaching score
-        # Teaching Score = 40% explanation ability + 30% subject mastery + 20% patience/communication + 10% credentials
-        explanation = float(rating_data.get("explanation_ability", 2.5))
-        subject = float(rating_data.get("subject_mastery", 2.5))
-        patience = float(rating_data.get("patience_empathy", 2.5))
-        communication = float(rating_data.get("communication_skills", 2.5))
-        credibility = float(rating_data.get("credibility", 2.5))
+        # Extract scores safely
+        subject = float(rating_data.get("subject_mastery", 2.0))
+        explanation = float(rating_data.get("explanation_ability", 2.0))
+        communication = float(rating_data.get("communication_skills", 2.0))
+        practical = float(rating_data.get("practical_experience", 2.0))
+        patience = float(rating_data.get("patience_empathy", 2.0))
+        teaching = float(rating_data.get("teaching_experience", 2.0))
+        proof = float(rating_data.get("proof_of_results", 2.0))
+        passion = float(rating_data.get("passion_enthusiasm", 2.0))
+        credibility = float(rating_data.get("credibility", 2.0))
 
-        # Calculate weighted score
+        # Clamp all values between 1 and 5
+        scores = [
+            subject, explanation, communication,
+            practical, patience, teaching,
+            proof, passion, credibility
+        ]
+
+        scores = [max(1.0, min(5.0, s)) for s in scores]
+
+        (
+            subject,
+            explanation,
+            communication,
+            practical,
+            patience,
+            teaching,
+            proof,
+            passion,
+            credibility
+        ) = scores
+
+        # Base weighted score
         weighted_score = (
-            (explanation * 0.40) +
-            (subject * 0.30) +
-            ((patience + communication) / 2 * 0.20) +
-            (credibility * 0.10)
+            (subject * 0.22) +
+            (explanation * 0.18) +
+            (communication * 0.10) +
+            (practical * 0.18) +
+            (patience * 0.05) +
+            (teaching * 0.15) +
+            (proof * 0.07) +
+            (passion * 0.03) +
+            (credibility * 0.02)
         )
 
-        # Clamp rating between 1 and 5
-        rating = max(1.0, min(5.0, weighted_score))
+        # Penalties
+        penalty = 0
 
-        # Add calculated rating to rating_data
+        if teaching <= 2:
+            penalty += 0.4
+
+        if proof <= 2:
+            penalty += 0.3
+
+        if practical <= 2:
+            penalty += 0.3
+
+        if subject <= 2.5:
+            penalty += 0.6
+
+        # Prevent inflated scores
+        if weighted_score > 4 and subject < 4:
+            penalty += 0.4
+
+        if weighted_score > 4 and teaching < 3:
+            penalty += 0.4
+
+        if weighted_score > 4.5 and proof < 4:
+            penalty += 0.5
+
+        # Final score
+        rating = max(1.0, min(5.0, weighted_score - penalty))
+
         rating_data["rating"] = round(rating, 1)
+
         rating_data["weighted_breakdown"] = {
-            "explanation_ability": round(explanation * 0.40, 2),
-            "subject_mastery": round(subject * 0.30, 2),
-            "patience_communication": round(((patience + communication) / 2 * 0.20), 2),
-            "credibility": round(credibility * 0.10, 2)
+            "subject_mastery": round(subject * 0.22, 2),
+            "explanation_ability": round(explanation * 0.18, 2),
+            "communication_skills": round(communication * 0.10, 2),
+            "practical_experience": round(practical * 0.18, 2),
+            "patience_empathy": round(patience * 0.05, 2),
+            "teaching_experience": round(teaching * 0.15, 2),
+            "proof_of_results": round(proof * 0.07, 2),
+            "passion_enthusiasm": round(passion * 0.03, 2),
+            "credibility": round(credibility * 0.02),
+            "penalty": round(penalty, 2)
         }
 
-        # Update user rating in database
-        user_id = session["user_id"]
-        db.execute(
-            "UPDATE users SET rating = ? WHERE id = ?",
-            rating, user_id
-        )
-
-        # Store rating data in session for customization page
         session["teaching_rating"] = rating_data
         session["teaching_major"] = major
 
@@ -146,12 +225,11 @@ Rules:
 
     except Exception as e:
         print(f"AI rating error: {e}")
-        # Fallback to default rating
-        user_id = session["user_id"]
-        db.execute("UPDATE users SET rating = 2.5 WHERE id = ?", user_id)
-        session["teaching_major"] = major
-        return redirect("/customize_course")
 
+        session["teaching_rating"] = {"rating": 2.0}
+        session["teaching_major"] = major
+
+        return redirect("/customize_course")
 
 @app.route("/customize_course", methods=["GET"])
 @login_required
@@ -159,10 +237,8 @@ def customize_course():
     rating_data = session.get("teaching_rating", {})
     major = session.get("teaching_major", "Unknown")
     
-    # Get user's current rating from database
-    user_id = session["user_id"]
-    user = db.execute("SELECT rating FROM users WHERE id = ?", user_id)
-    rating = user[0]["rating"] if user else 2.5
+    # Get user's current rating from session
+    rating = session.get("teaching_rating", {}).get("rating", 2.5)
     
     return render_template(
         "customize_course.html",
@@ -196,11 +272,14 @@ def create_course():
 
     owner_id = session["user_id"]
     
+    # Get the user's rating for this topic from session
+    course_rating = session.get("teaching_rating", {}).get("rating", 2.5)
+    
     # Insert course into database
     db.execute(
-        """INSERT INTO courses (owner_id, title, description, tags, price)
-           VALUES (?, ?, ?, ?, ?)""",
-        owner_id, title, description, tags, price
+        """INSERT INTO courses (owner_id, title, description, tags, price, rating)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        owner_id, title, description, tags, price, course_rating
     )
 
     return redirect("/courses")

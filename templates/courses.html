@@ -198,6 +198,15 @@ body{
     color:var(--text-secondary);
 }
 
+.course-rating{
+    font-weight:700;
+    font-size:.95rem;
+    color:#ffd700;
+    display:flex;
+    align-items:center;
+    gap:4px;
+}
+
 .btn-primary{
     background:var(--accent);
     color:white;
@@ -280,7 +289,7 @@ body{
             {% for item in courses %}
             <div class="course-card">
 
-                <div class="course-title">{{ item.title }}</div>
+                <div class="course-title"><a href="/lessons/{{ item.id }}" style="text-decoration:none;color:inherit;">{{ item.title }}</a></div>
 
                 {% if item.tags %}
                 <div class="course-tags">
@@ -290,10 +299,18 @@ body{
                 </div>
                 {% endif %}
 
-                <p class="course-content">{{ item.description | truncate(140) }}</p>
+                <p class="course-content"><a href="/lessons/{{ item.id }}" style="text-decoration:none;color:inherit;">{{ item.description | truncate(140) }}</a></p>
 
                 <div class="course-footer">
                     <span class="course-price">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="course-rating">
+                        {% if item.rating %}
+                            ★ {{ "%.1f"|format(item.rating) }}
+                        {% else %}
+                            ★ --
+                        {% endif %}
+                    </span>
+                    <a href="/lessons/{{ item.id }}" style="text-decoration:none;color:var(--accent);font-weight:700;font-size:.85rem;">View →</a>
                     <span class="course-id">#{{ item.id }}</span>
                 </div>
 

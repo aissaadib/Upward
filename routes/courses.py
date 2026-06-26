@@ -10,7 +10,8 @@ def init_db():
             title TEXT,
             description TEXT,
             tags TEXT,
-            price INTEGER
+            price INTEGER,
+            rating INTEGER
         )
     """)
 init_db()
