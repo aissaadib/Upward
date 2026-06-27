@@ -297,7 +297,7 @@ body{
         {% if lessons %}
         <div class="lesson-grid">
             {% for lesson in lessons %}
-            <div class="lesson-card">
+            <a href="/lessons/display/{{ lesson.num }}" class="lesson-card" style="text-decoration:none; color:inherit;">
                 <div class="lesson-header">
                     <div class="lesson-title">{{ lesson.title }}</div>
                     <div class="lesson-number">Lesson {{ loop.index }}</div>
@@ -307,7 +307,7 @@ body{
                 {% else %}
                 <p class="lesson-content" style="font-style:italic; color:var(--text-secondary);">No content yet.</p>
                 {% endif %}
-            </div>
+            </a>
             {% endfor %}
         </div>
         {% else %}

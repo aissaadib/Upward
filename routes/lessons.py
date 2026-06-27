@@ -1,6 +1,7 @@
-from app import app, db, login_required
+from app import app, db, login_required, groq_client
 from flask import render_template, request, session, redirect
 import PyPDF2
+from services.ai import parse_ai_json
 
 # Ensure lessons table exists with all columns
 def init_lessons_db():
@@ -128,3 +129,81 @@ def create_lesson(course_id):
     )
 
     return redirect(f"/lessons/{course_id}")
+
+
+def format_lesson_with_ai(content):
+    """Format lesson content using AI for consistent structure"""
+    try:
+        prompt = f"""You are an educational content formatter. Format the following lesson content into a well-structured, readable format WITHOUT summarizing or rewriting it. Keep the EXACT content but organize it better.
+
+LESSON CONTENT:
+{content}
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "title": "Extract or create a clear main title from the content",
+  "sections": [
+    {{
+      "type": "main_heading" or "sub_heading",
+      "heading": "Section heading text",
+      "content": "The exact content for this section, preserve all details"
+    }}
+  ]
+}}
+
+Rules:
+- DO NOT summarize, rewrite, or change the meaning
+- Keep ALL original content intact
+- Only add structure: identify logical sections and add headings
+- Use "main_heading" for major topic breaks
+- Use "sub_heading" for subsections within a topic
+- If the content has no clear sections, create one section with type "main_heading" and all content
+- Preserve all details, examples, and explanations exactly as written
+- Just organize the existing content better"""
+
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            timeout=30.0
+        )
+        raw = response.choices[0].message.content.strip()
+        result = parse_ai_json(raw)
+        if isinstance(result, dict):
+            return result
+        return None
+    except Exception as e:
+        print(f"AI formatting error: {e}")
+        return None
+
+
+@app.route("/lessons/display/<int:lesson_id>")
+@login_required
+def lesson_display(lesson_id):
+    # Get lesson details
+    lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
+    if not lesson:
+        return redirect("/courses")
+    lesson = lesson[0]
+
+    # Get course details
+    course = db.execute("SELECT * FROM courses WHERE id = ?", lesson["course_id"])
+    if not course:
+        return redirect("/courses")
+    course = course[0]
+
+    # Get username
+    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    username = user[0]["name"] if user else "User"
+
+    # Format content with AI if content exists
+    formatted_content = None
+    if lesson.get("content"):
+        formatted_content = format_lesson_with_ai(lesson["content"])
+
+    return render_template(
+        "lesson_display.html",
+        username=username,
+        lesson=lesson,
+        course=course,
+        formatted_content=formatted_content
+    )

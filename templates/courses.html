@@ -288,9 +288,9 @@ body{
         <div class="course-grid">
             {% for item in courses %}
             <div class="course-card">
-
-                <div class="course-title"><a href="/lessons/{{ item.id }}" style="text-decoration:none;color:inherit;">{{ item.title }}</a></div>
-
+                <a href="/lessons/{{ item.id }}" style="text-decoration:none;color:inherit;">
+                <div class="course-title">{{ item.title }}</div>
+                
                 {% if item.tags %}
                 <div class="course-tags">
                     {% for tag in item.tags.split(',') %}
@@ -312,8 +312,9 @@ body{
                     </span>
                     <a href="/lessons/{{ item.id }}" style="text-decoration:none;color:var(--accent);font-weight:700;font-size:.85rem;">View →</a>
                     <span class="course-id">#{{ item.id }}</span>
+                    </a>
                 </div>
-
+                
             </div>
             {% endfor %}
         </div>

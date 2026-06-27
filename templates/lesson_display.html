@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ lesson.title }} - Lesson</title>
+
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+}
+
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.brand{
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.nav-link{
+    margin-top:3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.nav-link:hover{
+    color: #3ec3d5;
+}
+
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+}
+
+.logout{
+    text-decoration:none;
+    color:var(--text-secondary);
+    font-size:.9rem;
+}
+
+.logout:hover{
+    color:var(--accent);
+}
+
+.container{
+    width:min(1100px,90%);
+    margin:auto;
+}
+
+.hero{
+    padding:60px 0 20px;
+}
+
+.hero h1{
+    font-size:clamp(2.2rem,6vw,3rem);
+    letter-spacing:-1.5px;
+    margin-bottom:8px;
+}
+
+.breadcrumb{
+    font-size:.85rem;
+    color:var(--text-secondary);
+    margin-bottom:16px;
+}
+
+.breadcrumb a{
+    color:var(--accent);
+    text-decoration:none;
+    font-weight:700;
+}
+
+.breadcrumb a:hover{
+    text-decoration:underline;
+}
+
+.section{
+    padding:20px 0 80px;
+}
+
+.btn-secondary{
+    background:white;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-secondary:hover{
+    border-color:var(--accent);
+}
+
+.lesson-content{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+}
+
+.lesson-title{
+    font-size:clamp(3rem,6vw,5rem);
+    line-height:.95;
+    letter-spacing:-4px;
+    margin-bottom:18px;
+    font-weight:900;
+    color:var(--text);
+}
+
+.section-title{
+    font-size:.78rem;
+    font-weight:900;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    margin-bottom:18px;
+}
+
+.card{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+}
+
+.highlight{
+    background:#eefcff;
+    border:none;
+    border-radius:18px;
+    padding:24px;
+    line-height:1.8;
+}
+
+.detailed-section{
+    position:relative;
+    padding:0 0 50px 60px;
+    margin-bottom:0;
+    border:none;
+    background:none;
+}
+
+.detailed-section::before{
+    content:"";
+    position:absolute;
+    left:18px;
+    top:24px;
+    bottom:-10px;
+    width:2px;
+    background:#dfe7eb;
+}
+
+.detailed-section::after{
+    content:"";
+    position:absolute;
+    left:8px;
+    top:10px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--accent);
+    border:5px solid white;
+    box-shadow:0 0 0 1px var(--accent);
+}
+
+.detailed-section:last-child::before{
+    display:none;
+}
+
+.detailed-section h3{
+    font-size:1.1rem;
+    font-weight:700;
+    margin-bottom:12px;
+    color:var(--text);
+}
+
+.detailed-section.sub-heading{
+    padding:0 0 30px 40px;
+}
+
+.detailed-section.sub-heading::before{
+    left:12px;
+    width:1px;
+}
+
+.detailed-section.sub-heading::after{
+    left:4px;
+    width:16px;
+    height:16px;
+    border:4px solid white;
+}
+
+.detailed-section.sub-heading h3{
+    font-size:1rem;
+    font-weight:600;
+    color:var(--text-secondary);
+}
+
+.section-content{
+    color:var(--text-secondary);
+    line-height:1.8;
+    font-size:1.05rem;
+    white-space:pre-wrap;
+}
+
+ul{
+    list-style:none;
+    padding-left:0;
+    color:var(--text-secondary);
+}
+
+ul li{
+    position:relative;
+    padding-left:24px;
+    margin-bottom:10px;
+}
+
+ul li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:11px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--accent);
+}
+
+.fallback-content{
+    color:var(--text-secondary);
+    line-height:1.8;
+    white-space:pre-wrap;
+}
+
+.loading{
+    text-align:center;
+    padding:40px;
+    color:var(--text-secondary);
+}
+
+@media(max-width:768px){
+    .navbar{
+        padding:0 18px;
+    }
+    .nav-left{
+        gap:14px;
+    }
+    .hero{
+        padding:40px 0 20px;
+    }
+    .lesson-content{
+        padding:24px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">
+            Up<span>ward</span>
+        </a>
+        <a href="/courses" class="nav-link">Courses</a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+
+<main class="container">
+
+    <section class="hero">
+        <div class="breadcrumb">
+            <a href="/courses">Courses</a> / <a href="/lessons/{{ course.id }}">{{ course.title }}</a> / {{ lesson.title }}
+        </div>
+        <a href="/lessons/{{ course.id }}" class="btn-secondary">← Back to Lessons</a>
+    </section>
+
+    <section class="section">
+        {% if formatted_content %}
+        <div class="lesson-content">
+            <h1 class="lesson-title">{{ formatted_content.title or lesson.title }}</h1>
+            
+            {% if formatted_content.sections %}
+            <div class="card">
+                <div class="section-title">Lesson Content</div>
+                {% for section in formatted_content.sections %}
+                <div class="detailed-section {% if section.type == 'sub_heading' %}sub-heading{% endif %}">
+                    <h3>{{ section.heading }}</h3>
+                    <div class="section-content">{{ section.content }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="lesson-content">
+            <h1 class="lesson-title">{{ lesson.title }}</h1>
+            <div class="card">
+                <div class="section-title">Lesson Content</div>
+                {% if lesson.content %}
+                <div class="section-content">{{ lesson.content }}</div>
+                {% else %}
+                <p style="color:var(--text-secondary);">No content available for this lesson.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+</main>
+
+</body>
+</html>
