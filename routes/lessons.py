@@ -18,6 +18,11 @@ def init_lessons_db():
         db.execute("ALTER TABLE lessons ADD COLUMN title TEXT")
     except Exception:
         pass
+    # Add formatted_content column for caching AI output
+    try:
+        db.execute("ALTER TABLE lessons ADD COLUMN formatted_content TEXT")
+    except Exception:
+        pass
 
 init_lessons_db()
 
@@ -198,7 +203,19 @@ def lesson_display(lesson_id):
     # Format content with AI if content exists
     formatted_content = None
     if lesson.get("content"):
-        formatted_content = format_lesson_with_ai(lesson["content"])
+        if lesson.get("formatted_content"):
+            import json
+            try:
+                formatted_content = json.loads(lesson["formatted_content"])
+            except (json.JSONDecodeError, TypeError):
+                pass
+        if not formatted_content:
+            formatted_content = format_lesson_with_ai(lesson["content"])
+            if formatted_content:
+                db.execute(
+                    "UPDATE lessons SET formatted_content = ? WHERE num = ?",
+                    json.dumps(formatted_content), lesson_id
+                )
 
     return render_template(
         "lesson_display.html",

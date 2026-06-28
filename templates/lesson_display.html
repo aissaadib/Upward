@@ -260,35 +260,41 @@ body{
     line-height:1.8;
     font-size:1.05rem;
     white-space:pre-wrap;
+    transition:font-size .2s;
 }
 
-ul{
-    list-style:none;
-    padding-left:0;
+.font-control{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:30px;
+    padding:12px 0;
+    border-top:1px solid var(--border);
+}
+
+.font-control label{
+    font-size:.8rem;
+    font-weight:700;
     color:var(--text-secondary);
 }
 
-ul li{
-    position:relative;
-    padding-left:24px;
-    margin-bottom:10px;
+.font-control input[type="range"]{
+    width:140px;
+    accent-color:var(--accent);
+    cursor:pointer;
 }
 
-ul li::before{
-    content:"";
-    position:absolute;
-    left:0;
-    top:11px;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:var(--accent);
+.font-control .size-label{
+    font-size:.8rem;
+    color:var(--text-secondary);
+    min-width:36px;
 }
 
 .fallback-content{
     color:var(--text-secondary);
     line-height:1.8;
     white-space:pre-wrap;
+    transition:font-size .2s;
 }
 
 .loading{
@@ -362,7 +368,7 @@ ul li::before{
             <div class="card">
                 <div class="section-title">Lesson Content</div>
                 {% if lesson.content %}
-                <div class="section-content">{{ lesson.content }}</div>
+                <div class="fallback-content">{{ lesson.content }}</div>
                 {% else %}
                 <p style="color:var(--text-secondary);">No content available for this lesson.</p>
                 {% endif %}
@@ -371,7 +377,35 @@ ul li::before{
         {% endif %}
     </section>
 
+    <div class="font-control">
+        <label for="fontSize">Font Size</label>
+        <input type="range" id="fontSize" min="12" max="24" step="1" value="17">
+        <span class="size-label" id="sizeLabel">17px</span>
+    </div>
+
 </main>
+
+<script>
+    const slider = document.getElementById('fontSize');
+    const label = document.getElementById('sizeLabel');
+    const targets = document.querySelectorAll('.section-content, .fallback-content');
+
+    function setSize(val) {
+        label.textContent = val + 'px';
+        targets.forEach(el => el.style.fontSize = val + 'px');
+        localStorage.setItem('lessonFontSize', val);
+    }
+
+    const saved = localStorage.getItem('lessonFontSize');
+    if (saved) {
+        slider.value = saved;
+        setSize(saved);
+    } else {
+        setSize(slider.value);
+    }
+
+    slider.addEventListener('input', () => setSize(slider.value));
+</script>
 
 </body>
 </html>
