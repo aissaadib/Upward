@@ -39,7 +39,7 @@ body{
 }
 
 .container{
-    max-width:640px;
+    max-width:900px;
     margin:0 auto;
 }
 
@@ -174,6 +174,129 @@ textarea.form-control{
     color:var(--accent);
 }
 
+.toolbar{
+    display:flex;
+    gap:4px;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-bottom:none;
+    border-radius:12px 12px 0 0;
+    background:#f8fbfc;
+    flex-wrap:wrap;
+}
+
+.toolbar button{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:6px;
+    background:transparent;
+    color:var(--text-secondary);
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+    transition:.15s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+.toolbar button:hover{
+    background:var(--border);
+    color:var(--text);
+}
+
+.toolbar button.active{
+    background:var(--accent);
+    color:white;
+}
+
+.toolbar .separator{
+    width:1px;
+    background:var(--border);
+    margin:0 4px;
+    flex-shrink:0;
+}
+
+.toolbar select{
+    height:30px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:white;
+    color:var(--text);
+    font-size:.8rem;
+    padding:0 6px;
+    cursor:pointer;
+    outline:none;
+    flex-shrink:0;
+}
+
+.toolbar select:focus{
+    border-color:var(--accent);
+}
+
+.toolbar input[type="color"]{
+    width:30px;
+    height:30px;
+    padding:2px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    cursor:pointer;
+    background:white;
+    flex-shrink:0;
+}
+
+.toolbar input[type="color"]:hover{
+    border-color:var(--accent);
+}
+
+.toolbar .label{
+    font-size:.75rem;
+    font-weight:600;
+    color:var(--text-secondary);
+    display:flex;
+    align-items:center;
+    margin-right:2px;
+}
+
+.editor{
+    min-height:500px;
+    padding:16px 20px;
+    border:1px solid var(--border);
+    border-radius:0 0 12px 12px;
+    background:white;
+    font-size:1rem;
+    font-family:Inter,Segoe UI,sans-serif;
+    line-height:1.8;
+    outline:none;
+    overflow-y:auto;
+}
+
+.editor:focus{
+    border-color:var(--accent);
+}
+
+.editor ul, .editor ol{
+    padding-left:24px;
+    margin:8px 0;
+}
+
+.editor blockquote{
+    border-left:3px solid var(--accent);
+    padding-left:14px;
+    margin:12px 0;
+    color:var(--text-secondary);
+    font-style:italic;
+}
+
+.editor.empty::before{
+    content:attr(data-placeholder);
+    color:var(--text-secondary);
+    opacity:.5;
+    pointer-events:none;
+}
+
 .btn-main{
     width:100%;
     border:none;
@@ -278,8 +401,55 @@ textarea.form-control{
     </div>
 
     <div class="form-group">
-        <label class="form-label">Content (optional)</label>
-        <textarea name="content" class="form-control" placeholder="Write lesson content here, or upload a file below..."></textarea>
+        <label class="form-label">Content</label>
+        <div class="toolbar">
+            <select id="fontFamily" title="Font">
+                <option value="Inter,Segoe UI,sans-serif">Default</option>
+                <option value="Arial,Helvetica,sans-serif">Arial</option>
+                <option value="Georgia,serif">Georgia</option>
+                <option value="'Times New Roman',serif">Times New Roman</option>
+                <option value="'Courier New',monospace">Courier New</option>
+                <option value="Verdana,sans-serif">Verdana</option>
+                <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+                <option value="'Comic Sans MS',cursive">Comic Sans</option>
+            </select>
+            <select id="fontSize" title="Font Size">
+                <option value="3">Small</option>
+                <option value="4" selected>Normal</option>
+                <option value="5">Large</option>
+                <option value="6">X-Large</option>
+                <option value="7">Huge</option>
+            </select>
+            <div class="separator"></div>
+            <button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic" title="Italic"><em>I</em></button>
+            <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+            <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+            <div class="separator"></div>
+            <span class="label">Color</span>
+            <input type="color" id="textColor" value="#1e2240" title="Text Color">
+            <span class="label">Bg</span>
+            <input type="color" id="bgColor" value="#ffff00" title="Background Color">
+            <div class="separator"></div>
+            <button type="button" data-cmd="formatBlock" data-val="h1" title="Heading 1">H1</button>
+            <button type="button" data-cmd="formatBlock" data-val="h2" title="Heading 2">H2</button>
+            <button type="button" data-cmd="formatBlock" data-val="h3" title="Heading 3">H3</button>
+            <button type="button" data-cmd="formatBlock" data-val="h4" title="Heading 4">H4</button>
+            <div class="separator"></div>
+            <button type="button" data-cmd="insertUnorderedList" title="Bullet List">•</button>
+            <button type="button" data-cmd="insertOrderedList" title="Numbered List">1.</button>
+            <div class="separator"></div>
+            <button type="button" data-cmd="justifyLeft" title="Align Left">≡</button>
+            <button type="button" data-cmd="justifyCenter" title="Align Center">≡</button>
+            <button type="button" data-cmd="justifyRight" title="Align Right">≡</button>
+            <div class="separator"></div>
+            <button type="button" data-cmd="formatBlock" data-val="blockquote" title="Quote">“</button>
+            <button type="button" data-cmd="insertHorizontalRule" title="Horizontal Line">—</button>
+            <div class="separator"></div>
+            <button type="button" data-cmd="removeFormat" title="Clear Formatting">↺</button>
+        </div>
+        <div class="editor" contenteditable="true" id="lessonEditor"></div>
+        <input type="hidden" name="content" id="contentHidden">
     </div>
 
     <div class="form-group">
@@ -290,6 +460,7 @@ textarea.form-control{
                 <strong>Click to upload</strong> or drag and drop
             </div>
         </label>
+        <button type="button" id="extractBtn" class="btn-secondary" style="margin-top:10px;" disabled>⏎ Confirm &amp; Extract to Editor</button>
     </div>
 
     <button type="submit" class="btn-main">Create Lesson</button>
@@ -303,19 +474,106 @@ textarea.form-control{
 </div>
 
 <script>
+const editor = document.getElementById('lessonEditor');
+const contentHidden = document.getElementById('contentHidden');
+const form = document.querySelector('form');
 const fileInput = document.getElementById('lessonInput');
 const fileDropZone = document.getElementById('fileDropZone');
 const fileUploadText = document.getElementById('fileUploadText');
 
+// Placeholder
+editor.dataset.placeholder = 'Write your lesson content here...';
+editor.addEventListener('focus', () => editor.classList.remove('empty'));
+editor.addEventListener('blur', () => {
+    if (!editor.innerText.trim()) editor.classList.add('empty');
+});
+if (!editor.innerText.trim()) editor.classList.add('empty');
+
+// Toolbar buttons
+document.querySelectorAll('.toolbar button[data-cmd]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const cmd = btn.dataset.cmd;
+        const val = btn.dataset.val || null;
+        document.execCommand(cmd, false, val);
+        editor.focus();
+    });
+});
+
+// Font family
+document.getElementById('fontFamily').addEventListener('change', function() {
+    document.execCommand('fontName', false, this.value);
+    editor.focus();
+    this.selectedIndex = 0;
+});
+
+// Font size
+document.getElementById('fontSize').addEventListener('change', function() {
+    document.execCommand('fontSize', false, this.value);
+    editor.focus();
+    this.selectedIndex = 1;
+});
+
+// Text color
+document.getElementById('textColor').addEventListener('input', function() {
+    document.execCommand('foreColor', false, this.value);
+    editor.focus();
+});
+
+// Background color
+document.getElementById('bgColor').addEventListener('input', function() {
+    document.execCommand('hiliteColor', false, this.value);
+    editor.focus();
+});
+
+// Sync hidden input on submit
+form.addEventListener('submit', function(e) {
+    contentHidden.value = editor.innerHTML;
+});
+
+const extractBtn = document.getElementById('extractBtn');
+
+// File input - just show filename, no auto-extract
 fileInput.addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-        fileUploadText.innerHTML = '<strong>' + e.target.files[0].name + '</strong>';
+    const file = e.target.files[0];
+    if (file) {
+        fileUploadText.innerHTML = '<strong>' + file.name + '</strong>';
         fileDropZone.style.borderColor = 'var(--accent)';
         fileDropZone.style.background = '#eefcff';
+        extractBtn.disabled = false;
+    } else {
+        extractBtn.disabled = true;
     }
 });
 
-// Drag and drop support
+// Confirm button - AI extract PDF/TXT into editor
+extractBtn.addEventListener('click', function() {
+    const file = fileInput.files[0];
+    if (!file) return;
+    extractBtn.disabled = true;
+    extractBtn.textContent = '⏳ Extracting...';
+    const fd = new FormData();
+    fd.append('file', file);
+    editor.innerHTML = '<p style="color:var(--text-secondary);">⏳ Extracting and formatting content...</p>';
+    editor.classList.remove('empty');
+
+    fetch('/api/extract_lesson', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            if (data.html) {
+                editor.innerHTML = data.html;
+            } else if (data.error) {
+                editor.innerHTML = '<p style="color:red;">Error: ' + data.error + '</p>';
+            }
+        })
+        .catch(() => {
+            editor.innerHTML = '<p style="color:red;">Failed to process file.</p>';
+        })
+        .finally(() => {
+            extractBtn.textContent = '⏎ Confirm & Extract to Editor';
+        });
+});
+
+// Drag and drop
 fileDropZone.addEventListener('dragover', function(e) {
     e.preventDefault();
     fileDropZone.style.borderColor = 'var(--accent)';
@@ -335,6 +593,7 @@ fileDropZone.addEventListener('drop', function(e) {
     if (e.dataTransfer.files.length > 0) {
         fileInput.files = e.dataTransfer.files;
         fileUploadText.innerHTML = '<strong>' + e.dataTransfer.files[0].name + '</strong>';
+        extractBtn.disabled = false;
     }
 });
 </script>
