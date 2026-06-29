@@ -166,6 +166,44 @@ body{
     border-color:var(--accent);
 }
 
+.btn-danger{
+    background:white;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    padding:6px 14px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.8rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-danger:hover{
+    background:var(--danger);
+    color:white;
+}
+
+.btn-edit{
+    background:white;
+    border:1.5px solid var(--accent);
+    color:var(--accent);
+    padding:6px 14px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.8rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-edit:hover{
+    background:var(--accent);
+    color:white;
+}
+
 .lesson-grid{
     display:grid;
     grid-template-columns:1fr;
@@ -186,6 +224,13 @@ body{
 .lesson-card:hover{
     border-color:var(--accent);
     box-shadow:0 6px 20px rgba(30,34,64,.06);
+}
+
+.lesson-actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    justify-content:flex-end;
 }
 
 .lesson-header{
@@ -297,17 +342,23 @@ body{
         {% if lessons %}
         <div class="lesson-grid">
             {% for lesson in lessons %}
-            <a href="/lessons/display/{{ lesson.num }}" class="lesson-card" style="text-decoration:none; color:inherit;">
+            <div class="lesson-card" style="cursor:pointer;" onclick="location.href='/lessons/display/{{ lesson.num }}'">
                 <div class="lesson-header">
                     <div class="lesson-title">{{ lesson.title }}</div>
                     <div class="lesson-number">Lesson {{ loop.index }}</div>
                 </div>
                 {% if lesson.content %}
-                <p class="lesson-content">{{ lesson.content | truncate(280) }}</p>
+                <p class="lesson-content">{{ lesson.content | striptags | truncate(280) }}</p>
                 {% else %}
                 <p class="lesson-content" style="font-style:italic; color:var(--text-secondary);">No content yet.</p>
                 {% endif %}
-            </a>
+                {% if is_owner %}
+                <div class="lesson-actions" onclick="event.stopPropagation()">
+                    <a href="/edit_lesson/{{ lesson.num }}" class="btn-edit">Edit</a>
+                    <button class="btn-danger" onclick="if(confirm('Delete this lesson?')){ fetch('/delete_lesson/{{ lesson.num }}', {method:'POST'}).then(()=>location.reload()); }">Delete</button>
+                </div>
+                {% endif %}
+            </div>
             {% endfor %}
         </div>
         {% else %}

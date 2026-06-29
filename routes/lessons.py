@@ -109,6 +109,57 @@ def create_lesson(course_id):
     return redirect(f"/lessons/{course_id}")
 
 
+@app.route("/edit_lesson/<int:lesson_id>")
+@login_required
+def edit_lesson(lesson_id):
+    lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
+    if not lesson:
+        return redirect("/courses")
+    lesson = lesson[0]
+    course = db.execute("SELECT * FROM courses WHERE id = ?", lesson["course_id"])
+    if not course or course[0]["owner_id"] != session["user_id"]:
+        return redirect("/courses")
+    course = course[0]
+    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    return render_template("costumize_lessons.html",
+        username=user[0]["name"] if user else "User",
+        course=course, lesson=lesson)
+
+
+@app.route("/update_lesson/<int:lesson_id>", methods=["POST"])
+@login_required
+def update_lesson(lesson_id):
+    lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
+    if not lesson:
+        return redirect("/courses")
+    lesson = lesson[0]
+    course = db.execute("SELECT * FROM courses WHERE id = ?", lesson["course_id"])
+    if not course or course[0]["owner_id"] != session["user_id"]:
+        return redirect("/courses")
+    title = request.form.get("title", "").strip()
+    content = request.form.get("content", "").strip()
+    if not title:
+        return render_template("costumize_lessons.html",
+            username=session.get("username", "User"),
+            course=course[0], lesson=lesson, error="Title is required.")
+    db.execute("UPDATE lessons SET title = ?, content = ? WHERE num = ?",
+        title, content, lesson_id)
+    return redirect(f"/lessons/display/{lesson_id}")
+
+
+@app.route("/delete_lesson/<int:lesson_id>", methods=["POST"])
+@login_required
+def delete_lesson(lesson_id):
+    lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
+    if not lesson:
+        return "Not found", 404
+    course = db.execute("SELECT * FROM courses WHERE id = ?", lesson[0]["course_id"])
+    if not course or course[0]["owner_id"] != session["user_id"]:
+        return "Unauthorized", 403
+    db.execute("DELETE FROM lessons WHERE num = ?", lesson_id)
+    return "OK"
+
+
 @app.route("/api/extract_lesson", methods=["POST"])
 @login_required
 def extract_lesson():

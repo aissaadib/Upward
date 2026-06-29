@@ -393,11 +393,11 @@ textarea.form-control{
 </div>
 {% endif %}
 
-<form method="POST" action="/create_lesson/{{ course.id }}" enctype="multipart/form-data">
+<form method="POST" action="{% if lesson %}/update_lesson/{{ lesson.num }}{% else %}/create_lesson/{{ course.id }}{% endif %}" enctype="multipart/form-data">
 
     <div class="form-group">
         <label class="form-label">Lesson Title</label>
-        <input type="text" name="title" class="form-control" placeholder="e.g., Introduction to Variables" required>
+        <input type="text" name="title" class="form-control" placeholder="e.g., Introduction to Variables" value="{{ lesson.title if lesson else '' }}" required>
     </div>
 
     <div class="form-group">
@@ -448,8 +448,8 @@ textarea.form-control{
             <div class="separator"></div>
             <button type="button" data-cmd="removeFormat" title="Clear Formatting">↺</button>
         </div>
-        <div class="editor" contenteditable="true" id="lessonEditor"></div>
-        <input type="hidden" name="content" id="contentHidden">
+        <div class="editor" contenteditable="true" id="lessonEditor">{{ lesson.content | safe if lesson else '' }}</div>
+        <input type="hidden" name="content" id="contentHidden" value="{{ lesson.content if lesson else '' }}">
     </div>
 
     <div class="form-group">
@@ -463,7 +463,7 @@ textarea.form-control{
         <button type="button" id="extractBtn" class="btn-secondary" style="margin-top:10px;" disabled>⏎ Confirm &amp; Extract to Editor</button>
     </div>
 
-    <button type="submit" class="btn-main">Create Lesson</button>
+    <button type="submit" class="btn-main">{% if lesson %}Update Lesson{% else %}Create Lesson{% endif %}</button>
 
 </form>
 
