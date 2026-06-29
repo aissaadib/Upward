@@ -198,6 +198,30 @@ body{
     color:var(--text-secondary);
 }
 
+.course-actions{
+    display:flex;
+    gap:6px;
+    margin-top:10px;
+    justify-content:flex-end;
+}
+
+.btn-danger-sm{
+    background:white;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    padding:4px 12px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:.75rem;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn-danger-sm:hover{
+    background:var(--danger);
+    color:white;
+}
+
 .course-rating{
     font-weight:700;
     font-size:.95rem;
@@ -315,6 +339,12 @@ body{
                     </a>
                 </div>
                 
+                {% if item.is_owner %}
+                <div class="course-actions">
+                    <button class="btn-danger-sm" onclick="event.preventDefault(); if(confirm('Delete this course and all its lessons?')){ fetch('/delete_course/{{ item.id }}', {method:'POST'}).then(()=>location.reload()); }">Delete</button>
+                </div>
+                {% endif %}
+
             </div>
             {% endfor %}
         </div>

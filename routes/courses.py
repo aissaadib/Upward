@@ -1,5 +1,5 @@
 from app import app, db, login_required
-from flask import render_template, session
+from flask import render_template, session, redirect, jsonify
 
 
 def init_db():
@@ -24,5 +24,20 @@ def courses():
     username = user[0]["name"] if user else "User"
 
     course_list = db.execute("SELECT * FROM courses ORDER BY id DESC")
+    for c in course_list:
+        c["is_owner"] = (c["owner_id"] == session["user_id"])
 
     return render_template("courses.html", username=username, courses=course_list)
+
+
+@app.route("/delete_course/<int:course_id>", methods=["POST"])
+@login_required
+def delete_course(course_id):
+    course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
+    if not course:
+        return "Not found", 404
+    if course[0]["owner_id"] != session["user_id"]:
+        return "Unauthorized", 403
+    db.execute("DELETE FROM lessons WHERE course_id = ?", course_id)
+    db.execute("DELETE FROM courses WHERE id = ?", course_id)
+    return "OK"
