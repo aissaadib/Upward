@@ -378,6 +378,7 @@ body{
 </main>
 
 <script>
+    // Font size slider - persist preference across visits
     const slider = document.getElementById('fontSize');
     const label = document.getElementById('sizeLabel');
     const targets = document.querySelectorAll('.lesson-body');
@@ -385,9 +386,10 @@ body{
     function setSize(val) {
         label.textContent = val + 'px';
         targets.forEach(el => el.style.fontSize = val + 'px');
-        localStorage.setItem('lessonFontSize', val);
+        localStorage.setItem('lessonFontSize', val); // Save preference
     }
 
+    // Restore saved font size or use slider default
     const saved = localStorage.getItem('lessonFontSize');
     if (saved) {
         slider.value = saved;
@@ -396,6 +398,7 @@ body{
         setSize(slider.value);
     }
 
+    // Update on slider drag
     slider.addEventListener('input', () => setSize(slider.value));
 </script>
 

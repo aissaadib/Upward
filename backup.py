@@ -1,4 +1,4 @@
-#imports
+"""Backup monolithic routes file (legacy). Kept for reference; all functionality migrated to routes/ package."""
 
 import os
 import random
@@ -11,11 +11,10 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from groq import Groq
 from pathlib import Path
-# Environment Setup
-# Loads variables from .env during local development.
 
 
 def load_local_env(path=".env"):
+    """Load environment variables from .env for local development."""
     if not os.path.exists(path):
         return
     with open(path, encoding="utf-8") as f:
@@ -27,13 +26,13 @@ def load_local_env(path=".env"):
             os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 load_local_env()
-# Flask Configuration
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
-# Database & External Services
+
 db = SQL("sqlite:///upward.db")
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
@@ -42,8 +41,8 @@ SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 SMTP_SERVER   = "smtp.gmail.com"
 
 # Email Verification Utilities
-# Handles signup verification emails.
 def send_code(to_email, code):
+    """Send a 6-digit verification code via SMTP to the given email."""
     msg = MIMEText(f"Your Upward verification code is: {code}")
     msg["Subject"] = "Upward - Verification Code"
     msg["From"]    = SMTP_EMAIL
@@ -54,6 +53,7 @@ def send_code(to_email, code):
 
 
 def init_db():
+    """Create locked_plans table if it does not exist."""
     db.execute("""
         CREATE TABLE IF NOT EXISTS locked_plans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,11 +64,11 @@ def init_db():
         )
     """)
 
-
 init_db()
 
 
 def get_locked_plan(user_id):
+    """Retrieve a user's locked plan (basic + extended) from the database, or None."""
     rows = db.execute("SELECT * FROM locked_plans WHERE user_id = ?", user_id)
     if not rows:
         return None
@@ -81,9 +81,8 @@ def get_locked_plan(user_id):
 
 
 # AI Helpers
-# Utilities for parsing and formatting AI data.
-
 def parse_ai_json(raw):
+    """Strip markdown fences from AI output and parse the remaining JSON."""
     raw = raw.strip().replace("```json", "").replace("```", "").strip()
     return json.loads(raw)
 
@@ -91,7 +90,7 @@ def parse_ai_json(raw):
 def build_profile_summary(answers):
     """
     Maps raw onboarding answers into a structured profile string
-    that will be injected into the AI prompt.
+    for injection into the AI prompt.
     """
     skills = answers.get("q2", [])
     if isinstance(skills, list):
@@ -126,6 +125,7 @@ def build_profile_summary(answers):
 
 @app.route("/")
 def index():
+    """Render the dashboard if logged in, otherwise redirect to login."""
     if session.get("user_id") is None:
         return redirect("/login")
     user_id = session["user_id"]
@@ -137,6 +137,7 @@ def index():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Authenticate user by email/password and set session user_id."""
     session.clear()
     if request.method == "POST":
         email    = request.form.get("email")
@@ -155,17 +156,20 @@ def login():
 
 @app.route("/login/google")
 def login_google():
+    """Placeholder for Google OAuth login."""
     return "Google login coming soon!"
 
 
 @app.route("/logout")
 def logout():
+    """Clear the session and redirect to login."""
     session.clear()
     return redirect("/login")
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """Register a new user, send verification code via email, redirect to /verify."""
     session.clear()
     if request.method == "POST":
         username     = request.form.get("username")
@@ -192,9 +196,10 @@ def register():
         return redirect("/verify")
     return render_template("register.html")
 
-#verify user
+
 @app.route("/verify", methods=["GET", "POST"])
 def verify():
+    """Confirm user's email via verification code, create user record, and log them in."""
     if "pending_email" not in session:
         return redirect("/register")
     if request.method == "POST":
@@ -214,6 +219,7 @@ def verify():
 
 @app.route("/onboarding", methods=["GET", "POST"])
 def onboarding():
+    """Collect user's career profile answers and store in session for AI prompt."""
     if session.get("user_id") is None:
         return redirect("/login")
     if request.method == "POST":
@@ -233,6 +239,7 @@ def onboarding():
 
 @app.route("/advice")
 def advice():
+    """Render the advice page with the user's name and clear debug files."""
     if session.get("user_id") is None:
         return redirect("/login")
     
@@ -249,6 +256,7 @@ def advice():
 
 @app.route("/generate_advice", methods=["POST"])
 def generate_advice():
+    """Call the AI to generate 5 career suggestions based on the user's profile."""
     if session.get("user_id") is None:
         return jsonify({"error": "Not logged in"}), 401
 
@@ -256,10 +264,6 @@ def generate_advice():
     if not profile:
         return jsonify({"error": "No profile found. Please complete onboarding first."}), 400
 
-    # ── WIP AI PROMPT ─────────────────────────────────────────
-    # This prompt will be refined as the product grows.
-    # The profile variable contains all user answers structured
-    # as key: value lines ready to be injected here.
     prompt = f"""You are a practical career advisor helping a real person plan their next steps.
 
 Here is their profile:
@@ -311,7 +315,6 @@ a research output
 
 Respond ONLY with a valid JSON array. No markdown. No explanation:
 [{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]"""
-    # ─────────────────────────────────────────────────────────
 
     try:
         response = groq_client.chat.completions.create(
@@ -327,6 +330,7 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
     try:
         advice_list = parse_ai_json(raw)
     except:
+        # Fallback: split raw text into parts when JSON parsing fails
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
         advice_list = [{
             "title": f"Suggestion {idx+1}",
@@ -354,6 +358,7 @@ Respond ONLY with a valid JSON array. No markdown. No explanation:
 
 @app.route("/plan/select", methods=["POST"])
 def plan_select():
+    """Store the user's chosen suggestion in session and check if plan is locked."""
     if session.get("user_id") is None:
         return jsonify({"error": "Not logged in"}), 401
 
@@ -380,7 +385,7 @@ def plan_select():
 
 @app.route("/plan/extend")
 def plan_extend():
-
+    """Render the extended plan page for the selected suggestion."""
     if session.get("user_id") is None:
         return redirect("/login")
 
@@ -415,6 +420,7 @@ def plan_extend():
 
 @app.route("/generate_extended_plan", methods=["POST"])
 def generate_extended_plan():
+    """Call AI to generate an in-depth 6-month plan for the user's selected path."""
     if session.get("user_id") is None:
         return jsonify({"error": "Not logged in"}), 401
 
@@ -423,6 +429,7 @@ def generate_extended_plan():
     if not profile or not suggestion:
         return jsonify({"error": "Missing profile or selected path."}), 400
 
+    # Return cached plan if already generated this session
     if session.get("pending_extended_plan"):
         return jsonify({"plan": session["pending_extended_plan"]})
 
@@ -482,6 +489,7 @@ Rules:
     try:
         extended = parse_ai_json(raw)
     except:
+        # Fallback when AI returns unparseable content
         extended = {
             "title": suggestion.get("title", "Your plan"),
             "summary": suggestion.get("fit", "A structured path based on your profile."),
@@ -513,11 +521,11 @@ Rules:
 
 @app.route("/plan/lock", methods=["POST"])
 def plan_lock():
+    """Persist the user's chosen plan (basic + extended) to locked_plans table."""
     if session.get("user_id") is None:
         return redirect("/login")
     session["locked"] = True
     
-    #locked = db.execute("SELECT id FROM locked_plans WHERE user_id = ?", user_id)
     user_id = session["user_id"]
     basic = session.get("pending_plan")
     extended = session.get("pending_extended_plan")
@@ -544,6 +552,7 @@ def plan_lock():
 
 @app.route("/plan")
 def plan_view():
+    """Render the locked plan details for the current user."""
     if session.get("user_id") is None:
         return redirect("/login")
     locked = get_locked_plan(session["user_id"])
@@ -556,6 +565,7 @@ def plan_view():
 
 @app.route("/plan/leave", methods=["POST"])
 def plan_leave():
+    """Delete the user's locked plan and redirect to dashboard."""
     if session.get("user_id") is None:
         return redirect("/login")
     db.execute("DELETE FROM locked_plans WHERE user_id = ?", session["user_id"])

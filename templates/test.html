@@ -346,6 +346,7 @@ body{
 </form>
 
 <script>
+// Auto-submit the hidden rating form to trigger AI analysis
 document.getElementById('ratingForm').submit();
 </script>
 {% endif %}
@@ -357,6 +358,7 @@ document.getElementById('ratingForm').submit();
 </div>
 
 <script>
+// Show selected filename and visually confirm file choice
 const fileInput = document.getElementById('resumeInput');
 const fileUpload = document.querySelector('.file-upload');
 const fileUploadText = document.querySelector('.file-upload-text');

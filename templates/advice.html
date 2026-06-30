@@ -258,13 +258,16 @@ a:hover{
 
 <script>
 
-let data = [];
-let active = 0;
+// Career path suggestions: user can browse, select, and lock a plan
+let data = []; // Career path suggestions from the API
+let active = 0; // Currently selected path index
 
+// Escape HTML to prevent XSS when rendering user/API-provided content
 function esc(s){
     return String(s||"").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 
+// Render the list of clickable path cards in the left panel
 function renderPaths(){
     const box = document.getElementById("paths");
     box.innerHTML = "";
@@ -283,6 +286,7 @@ function renderPaths(){
     });
 }
 
+// Render the selected path's full details (roadmap, risks, resources) in the right panel
 function render(){
     renderPaths();
 
@@ -343,6 +347,7 @@ function render(){
     `;
 }
 
+// Send the selected path to the server and redirect to the full plan page
 async function choosePlan(index){
     const suggestion = data[index];
     if(!suggestion) return;
@@ -369,6 +374,7 @@ async function choosePlan(index){
     }
 }
 
+// Fetch career path suggestions from the server based on the user's profile
 async function generate(){
     const res = await fetch("/generate_advice", {
         method: "POST",
@@ -390,6 +396,7 @@ async function generate(){
     render();
 }
 
+// Load suggestions on page load
 generate();
 
 </script>

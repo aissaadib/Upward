@@ -186,14 +186,14 @@ ul{padding-left:18px;line-height:1.8;color:var(--text-secondary);}
 <form action="/plan/leave" method="POST" id="leaveForm" style="display:none;"></form>
 
 <script>
+// Show/hide the "Leave plan" confirmation modal
 function showLeaveModal() {
     document.getElementById('leaveModal').style.display = 'flex';
 }
-
 function hideLeaveModal() {
     document.getElementById('leaveModal').style.display = 'none';
 }
-
+// Submit the leave form on confirmation
 function confirmLeave() {
     document.getElementById('leaveForm').submit();
 }

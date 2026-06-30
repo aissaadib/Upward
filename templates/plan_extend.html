@@ -454,10 +454,12 @@ ul li::before{
 {% endif %}
 
 <script>
+// Escape HTML entities to prevent XSS when rendering dynamic plan content
 function esc(s){
     return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
 
+// Render the full extended plan (phases, skills, habits, metrics, risks, resources)
 function renderPlan(p){
     const phases = p.phases || [];
     const skills = p.skills_to_build || [];
@@ -537,12 +539,15 @@ function renderPlan(p){
     `;
 }
 
+// Load plan data — either pre-rendered from server or fetch a new one
 async function load(){
     if(window.planData){
+        // Plan data was embedded in the page by the server
         document.getElementById("loading").style.display = "none";
         document.getElementById("content").style.display = "block";
         renderPlan(window.planData);
     }else{
+        // Generate a new extended plan via the API
         try{
             const res = await fetch("/generate_extended_plan",{method:"POST",headers:{"Content-Type":"application/json"}});
             const json = await res.json();
@@ -558,6 +563,7 @@ async function load(){
     }
 }
 
+// Load the plan on page load
 load();
 </script>
 </body>

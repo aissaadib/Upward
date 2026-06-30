@@ -1,8 +1,9 @@
+"""Profile builder — converts raw onboarding form answers into a structured string for AI prompts."""
 
 def build_profile_summary(answers):
     """
-    Maps raw onboarding answers into a structured profile string
-    that will be injected into the AI prompt.
+    Convert onboarding questionnaire answers into a multi-line summary string
+    suitable for injection into the AI prompt.
     """
     skills = answers.get("q2", [])
     if isinstance(skills, list):
@@ -31,8 +32,8 @@ def build_profile_summary(answers):
         f"Country: {answers.get('q11', 'Not provided')}",
     ]
 
-    # Add resume text if available
+    # Append resume/portfolio text if the user uploaded one
     if answers.get('resume_text'):
-        lines.append(f"\nResume/Portfolio content:\n{answers['resume_text'][:2000]}")  # Limit to 2000 chars
+        lines.append(f"\nResume/Portfolio content:\n{answers['resume_text'][:2000]}")
 
     return "\n".join(lines)

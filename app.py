@@ -1,3 +1,5 @@
+"""Flask application entry point. Sets up config, DB, AI client, and registers all route modules."""
+
 import os
 import json
 from functools import wraps
@@ -8,6 +10,7 @@ from groq import Groq
 
 
 def load_local_env(path=".env"):
+    """Load environment variables from .env file into os.environ (development only)."""
     if not os.path.exists(path):
         return
     with open(path, encoding="utf-8") as f:
@@ -22,6 +25,7 @@ load_local_env()
 
 
 def login_required(f):
+    """Decorator that redirects unauthenticated users to /login, or returns 401 for JSON requests."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("user_id") is None:

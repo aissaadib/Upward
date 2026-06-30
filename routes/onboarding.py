@@ -1,5 +1,7 @@
+"""Onboarding route — collects career profile answers and optional resume upload."""
+
 from app import app, login_required, db
-from flask import render_template, session,redirect, jsonify, request
+from flask import render_template, session, redirect, jsonify, request
 import json
 import os
 from werkzeug.utils import secure_filename
@@ -8,9 +10,11 @@ from services.profile import build_profile_summary
 ALLOWED_EXTENSIONS = {'pdf'}
 
 def allowed_file(filename):
+    """Check if the uploaded file has an allowed extension (.pdf)."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def extract_text_from_pdf(file_path):
+    """Extract text content from a PDF file using PyPDF2."""
     try:
         import PyPDF2
         text = ""
@@ -26,6 +30,7 @@ def extract_text_from_pdf(file_path):
 @app.route("/onboarding", methods=["GET", "POST"])
 @login_required
 def onboarding():
+    """Handle the onboarding questionnaire: save answers and optional resume to session, then redirect to /advice."""
     if request.method == "POST":
         raw = request.form.get("answers", "{}")
         try:
@@ -33,7 +38,7 @@ def onboarding():
         except:
             return render_template("onboarding.html", error=True)
 
-        # Handle file upload
+        # Handle optional resume PDF upload — extract text and attach to answers
         resume_file = request.files.get('resume_file')
         resume_text = None
         if resume_file and resume_file.filename and allowed_file(resume_file.filename):

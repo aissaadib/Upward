@@ -64,8 +64,10 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 </div>
 
 <script>
+// Special marker value for "None" in multi-select questions
 const NONE_OPTION = "None";
 
+// All onboarding questions with branching logic, filtering, and tier-based variants
 const allQuestions = [
     {
         key:"field",
@@ -73,7 +75,7 @@ const allQuestions = [
         q:"What is your main field?",
         sub:"Pick the area that best describes your direction.",
         options:["Technology & Coding","Business & Finance","Art & Design","Science & Research","Medicine & Health","Education & Teaching","Law & Politics","Media & Communication","Engineering"],
-        other:true
+        other:true // Allow custom text input
     },
     {
         key:"q0",
@@ -81,7 +83,7 @@ const allQuestions = [
         q:"What is your current level?",
         sub:"Be honest — this shapes everything that follows.",
         options:["Complete beginner","Some basics","Intermediate","Advanced","Professional / working in the field"],
-        optionFilter:{ school:["Professional / working in the field"] }
+        optionFilter:{ school:["Professional / working in the field"] } // Remove irrelevant options for school-tier users
     },
     {
         key:"q1",
@@ -236,7 +238,7 @@ const allQuestions = [
     type:"file",
     q:"Upload your resume or portfolio (optional)",
     sub:"This helps us understand your background better. PDF files only.",
-    showWhen: {key: "q8b", not: "Nothing yet"},
+    showWhen: {key: "q8b", not: "Nothing yet"}, // Only show if user has at least some experience
     optional: true
 },
 {
@@ -265,7 +267,7 @@ const allQuestions = [
         q:"How do you prefer to work?",
         sub:"This helps us match you with compatible paths.",
         options:["Alone and independently","In a small team","In a large organization","Remotely from anywhere","On-site or in person","I don't have a preference"],
-        skipWhen:["school"]
+        skipWhen:["school"] // Not relevant for school-tier users
     },
     {
         key:"q11",
@@ -282,6 +284,7 @@ const allQuestions = [
     
 ];
 
+// Map education status answers to simplified tier keys for branching logic
 const EDUCATION_TIERS = {
     "Still in high school":"school",
     "Undergraduate student":"undergrad",
@@ -291,13 +294,15 @@ const EDUCATION_TIERS = {
     "Self-taught / no formal education":"self_taught"
 };
 
-let i = 0;
-let answers = {};
+let i = 0; // Current question index
+let answers = {}; // Accumulated user answers
 
+// Resolve the user's education tier from their answer to q1
 function getTier(){
     return EDUCATION_TIERS[answers.q1] || null;
 }
 
+// Get the active question list, applying tier-based filtering, variants, and conditional logic
 function getActiveQuestions(){
     const tier = getTier();
     return allQuestions
@@ -324,6 +329,7 @@ function getActiveQuestions(){
         });
 }
 
+// Remove stale answers when education tier changes and re-validate existing ones
 function pruneAnswers(){
     const active = getActiveQuestions();
     const activeKeys = new Set(active.map(q => q.key));
@@ -339,6 +345,7 @@ function pruneAnswers(){
     });
 }
 
+// Render the current question screen based on question type
 function render(){
     const qs = getActiveQuestions();
     if(i >= qs.length) i = Math.max(0, qs.length - 1);
@@ -349,6 +356,7 @@ function render(){
     let html = `<h1 class="title">${q.q}</h1><p class="sub">${q.sub}</p>`;
 
     if(q.type === "options"){
+        // Single-select option buttons
         html += `<div class="options-list">`;
         q.options.forEach(opt => {
             const sel = answers[q.key] === opt ? " selected" : "";
@@ -356,12 +364,14 @@ function render(){
         });
         html += `</div>`;
         if(q.other){
+            // Custom "Other" text input alongside preset options
             html += `<div style="margin-top:12px;display:flex;gap:10px;">
                 <input class="text-input" id="other-input" placeholder="Or type your own..." style="margin-top:0;" value="${(answers[q.key] && !q.options.includes(answers[q.key])) ? answers[q.key] : ''}">
                 <button type="button" onclick="useOther()" style="padding:12px 18px;border:1.5px solid var(--border);border-radius:12px;background:white;cursor:pointer;font-weight:700;white-space:nowrap;color:var(--text);">Use this</button>
             </div>`;
         }
     } else if(q.type === "multi"){
+        // Multi-select option buttons with None toggle logic
         const selected = answers[q.key] || [];
         html += `<p class="multi-hint">Select all that apply — or pick None</p><div class="options-list">`;
         q.options.forEach(opt => {
@@ -370,16 +380,19 @@ function render(){
         });
         html += `</div>`;
     } else if(q.type === "file"){
+        // Hidden file input triggered by a styled button
         html += `<input type="file" id="file-input" accept=".pdf" class="file-input" onchange="updateFile(this)">`;
         html += `<button type="button" class="file-upload-btn" onclick="document.getElementById('file-input').click()">${answers[q.key] ? 'Change file' : 'Choose PDF file'}</button>`;
         if(answers[q.key]) html += `<p class="file-selected">Selected: ${answers[q.key].name}</p>`;
         if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
     } else {
+        // Text input fields
         const val = answers[q.key] || "";
         html += `<input class="text-input" id="text-input" placeholder="${q.placeholder}" value="${val}" oninput="updateText(this.value)">`;
         if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
     }
 
+    // Navigation buttons - back and next/submit
     html += `<div class="nav-row">
         <button class="btn-back" type="button" onclick="back()">←</button>
         <button class="btn-next${isValid(q) ? ' active' : ''}" id="btn-next" type="button" onclick="next()">${i === getActiveQuestions().length-1 ? 'Build my profile' : 'Continue'}</button>
@@ -388,6 +401,7 @@ function render(){
     document.getElementById("screen").innerHTML = html;
 }
 
+// Validate whether the current question has a sufficient answer
 function isValid(q){
     const val = answers[q.key];
     if(q.optional) return true;
@@ -396,22 +410,25 @@ function isValid(q){
     return !!val;
 }
 
+// Handle single-option selection
 function selectOption(val, btn){
     const key = getActiveQuestions()[i].key;
     answers[key] = val;
-    if(key === "q1") pruneAnswers();
+    if(key === "q1") pruneAnswers(); // Re-evaluate questions when education tier changes
     document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
     const nb = document.getElementById("btn-next");
     if(nb) nb.classList.add("active");
 }
 
+// Handle multi-select toggle with special None option handling
 function toggleMulti(val, btn){
     const key = getActiveQuestions()[i].key;
     if(!answers[key]) answers[key] = [];
     const arr = answers[key];
 
     if(val === NONE_OPTION){
+        // Toggle "None" - selecting None clears all other selections and vice versa
         if(arr.includes(NONE_OPTION)){
             arr.splice(arr.indexOf(NONE_OPTION), 1);
             btn.classList.remove("selected");
@@ -421,6 +438,7 @@ function toggleMulti(val, btn){
             btn.classList.add("selected");
         }
     } else {
+        // Remove None if user picks a real option, then toggle the selected value
         const noneIdx = arr.indexOf(NONE_OPTION);
         if(noneIdx > -1){
             arr.splice(noneIdx, 1);
@@ -437,12 +455,14 @@ function toggleMulti(val, btn){
     if(nb) nb.classList.toggle("active", arr.length > 0);
 }
 
+// Store text input value and toggle Next button state
 function updateText(val){
     answers[getActiveQuestions()[i].key] = val;
     const nb = document.getElementById("btn-next");
     if(nb) nb.classList.toggle("active", !!val || !!getActiveQuestions()[i].optional);
 }
 
+// Store uploaded file reference and show its name
 function updateFile(input){
     const file = input.files[0];
     if(file){
@@ -457,6 +477,7 @@ function updateFile(input){
     }
 }
 
+// Apply a custom typed-in answer for questions with the "other" option
 function useOther(){
     const val = document.getElementById("other-input")?.value.trim();
     if(!val) return;
@@ -467,6 +488,7 @@ function useOther(){
     if(nb) nb.classList.add("active");
 }
 
+// Advance to the next question or finish if on the last one
 function next(){
     const qs = getActiveQuestions();
     const q = qs[i];
@@ -476,15 +498,17 @@ function next(){
     render();
 }
 
+// Go back to the previous question
 function back(){
     if(i > 0){ i--; render(); }
 }
 
+// Submit all answers as JSON and trigger form submission
 function finish(){
     document.getElementById("progress").style.width = "100%";
     document.getElementById("answers-input").value = JSON.stringify(answers);
 
-    // Handle file upload
+    // Move uploaded file to the hidden form input for actual upload
     const fileInput = document.getElementById("file-input");
     const hiddenFileInput = document.getElementById("resume-file-input");
     if(fileInput && fileInput.files[0] && hiddenFileInput){
@@ -497,6 +521,7 @@ function finish(){
     document.getElementById("form").submit();
 }
 
+// Initialize: render the first question
 render();
 </script>
 </body>

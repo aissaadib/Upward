@@ -474,6 +474,7 @@ textarea.form-control{
 </div>
 
 <script>
+// WYSIWYG lesson editor: toolbar, file upload, drag-and-drop, and AI extraction
 const editor = document.getElementById('lessonEditor');
 const contentHidden = document.getElementById('contentHidden');
 const form = document.querySelector('form');
@@ -481,7 +482,7 @@ const fileInput = document.getElementById('lessonInput');
 const fileDropZone = document.getElementById('fileDropZone');
 const fileUploadText = document.getElementById('fileUploadText');
 
-// Placeholder
+// Show placeholder text when editor is empty
 editor.dataset.placeholder = 'Write your lesson content here...';
 editor.addEventListener('focus', () => editor.classList.remove('empty'));
 editor.addEventListener('blur', () => {
@@ -489,7 +490,7 @@ editor.addEventListener('blur', () => {
 });
 if (!editor.innerText.trim()) editor.classList.add('empty');
 
-// Toolbar buttons
+// Toolbar buttons — execute document commands (bold, italic, headings, etc.)
 document.querySelectorAll('.toolbar button[data-cmd]').forEach(btn => {
     btn.addEventListener('click', () => {
         const cmd = btn.dataset.cmd;
@@ -499,40 +500,40 @@ document.querySelectorAll('.toolbar button[data-cmd]').forEach(btn => {
     });
 });
 
-// Font family
+// Font family selector
 document.getElementById('fontFamily').addEventListener('change', function() {
     document.execCommand('fontName', false, this.value);
     editor.focus();
-    this.selectedIndex = 0;
+    this.selectedIndex = 0; // Reset to default placeholder
 });
 
-// Font size
+// Font size selector
 document.getElementById('fontSize').addEventListener('change', function() {
     document.execCommand('fontSize', false, this.value);
     editor.focus();
-    this.selectedIndex = 1;
+    this.selectedIndex = 1; // Reset to "Normal"
 });
 
-// Text color
+// Text color picker
 document.getElementById('textColor').addEventListener('input', function() {
     document.execCommand('foreColor', false, this.value);
     editor.focus();
 });
 
-// Background color
+// Background (highlight) color picker
 document.getElementById('bgColor').addEventListener('input', function() {
     document.execCommand('hiliteColor', false, this.value);
     editor.focus();
 });
 
-// Sync hidden input on submit
+// On form submit, copy editor HTML to the hidden input
 form.addEventListener('submit', function(e) {
     contentHidden.value = editor.innerHTML;
 });
 
 const extractBtn = document.getElementById('extractBtn');
 
-// File input - just show filename, no auto-extract
+// Show selected filename and enable the extract button
 fileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -545,7 +546,7 @@ fileInput.addEventListener('change', function(e) {
     }
 });
 
-// Confirm button - AI extract PDF/TXT into editor
+// Send file to server for AI extraction; insert returned HTML into editor
 extractBtn.addEventListener('click', function() {
     const file = fileInput.files[0];
     if (!file) return;
@@ -573,7 +574,7 @@ extractBtn.addEventListener('click', function() {
         });
 });
 
-// Drag and drop
+// Drag-and-drop file upload with visual feedback
 fileDropZone.addEventListener('dragover', function(e) {
     e.preventDefault();
     fileDropZone.style.borderColor = 'var(--accent)';

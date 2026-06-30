@@ -1,3 +1,5 @@
+"""Teaching-readiness test routes — resume upload, AI rating, and course creation."""
+
 from app import app, db, groq_client, login_required
 from flask import render_template, request, session, redirect
 from services.ai import parse_ai_json
@@ -7,26 +9,25 @@ import re
 @app.route("/test", methods=["GET", "POST"])
 @login_required
 def test():
+    """Render the resume upload page or process a submitted resume + teaching field."""
     if request.method == "GET":
         return render_template("test.html", username=session.get("username", "User"), loading=False)
 
-    # Handle POST - resume upload
+    # Handle POST — resume upload
     resume_file = request.files.get("resume")
     major = request.form.get("major", "").strip()
 
     if not resume_file or not major:
         return render_template("test.html", username=session.get("username", "User"), error="Please upload a resume and specify your teaching field.", loading=False)
 
-    # Read resume content
+    # Extract text from the uploaded file
     try:
         if resume_file.filename.endswith('.pdf'):
-            # Extract text from PDF
             pdf_reader = PyPDF2.PdfReader(resume_file)
             resume_text = ""
             for page in pdf_reader.pages:
                 resume_text += page.extract_text()
         elif resume_file.filename.endswith('.txt'):
-            # Read text file
             resume_text = resume_file.read().decode('utf-8')
         else:
             return render_template("test.html", username=session.get("username", "User"), error="Only PDF and TXT files are supported.", loading=False)
@@ -37,13 +38,14 @@ def test():
     if not resume_text or len(resume_text.strip()) < 50:
         return render_template("test.html", username=session.get("username", "User"), error="Resume appears to be empty or too short.", loading=False)
 
-    # Show loading state
+    # Show loading state before AI processes the data
     return render_template("test.html", username=session.get("username", "User"), loading=True, resume_text=resume_text, major=major)
 
 
 @app.route("/rate_resume", methods=["POST"])
 @login_required
 def rate_resume():
+    """Call AI to evaluate the resume across 9 teaching-readiness dimensions and compute a weighted rating."""
     resume_text = request.form.get("resume_text", "")
     major = request.form.get("major", "").strip()
 
@@ -79,7 +81,6 @@ IMPORTANT RULES:
 - Most candidates should fall between 2.0 and 3.8.
 
 Categories:
-
 1. Subject mastery
 2. Ability to explain clearly
 3. Communication skills
@@ -130,7 +131,7 @@ Respond ONLY with valid JSON:
         if not isinstance(rating_data, dict):
             raise ValueError("Invalid rating response")
 
-        # Extract scores safely
+        # Extract individual dimension scores
         subject = float(rating_data.get("subject_mastery", 2.0))
         explanation = float(rating_data.get("explanation_ability", 2.0))
         communication = float(rating_data.get("communication_skills", 2.0))
@@ -141,7 +142,7 @@ Respond ONLY with valid JSON:
         passion = float(rating_data.get("passion_enthusiasm", 2.0))
         credibility = float(rating_data.get("credibility", 2.0))
 
-        # Clamp all values between 1 and 5
+        # Clamp all values between 1.0 and 5.0
         scores = [
             subject, explanation, communication,
             practical, patience, teaching,
@@ -162,7 +163,7 @@ Respond ONLY with valid JSON:
             credibility
         ) = scores
 
-        # Base weighted score
+        # Compute weighted base score using fixed weights per dimension
         weighted_score = (
             (subject * 0.22) +
             (explanation * 0.18) +
@@ -175,7 +176,7 @@ Respond ONLY with valid JSON:
             (credibility * 0.02)
         )
 
-        # Penalties
+        # Apply penalties for weak evidence in critical dimensions
         penalty = 0
 
         if teaching <= 2:
@@ -190,7 +191,7 @@ Respond ONLY with valid JSON:
         if subject <= 2.5:
             penalty += 0.6
 
-        # Prevent inflated scores
+        # Prevent inflated scores when subject mastery doesn't justify it
         if weighted_score > 4 and subject < 4:
             penalty += 0.4
 
@@ -200,7 +201,7 @@ Respond ONLY with valid JSON:
         if weighted_score > 4.5 and proof < 4:
             penalty += 0.5
 
-        # Final score
+        # Compute final clamped rating
         rating = max(1.0, min(5.0, weighted_score - penalty))
 
         rating_data["rating"] = round(rating, 1)
@@ -226,6 +227,7 @@ Respond ONLY with valid JSON:
     except Exception as e:
         print(f"AI rating error: {e}")
 
+        # Fallback: set a default rating so the flow can continue
         session["teaching_rating"] = {"rating": 2.0}
         session["teaching_major"] = major
 
@@ -234,10 +236,10 @@ Respond ONLY with valid JSON:
 @app.route("/customize_course", methods=["GET"])
 @login_required
 def customize_course():
+    """Render the course creator page, passing the teaching rating from session."""
     rating_data = session.get("teaching_rating", {})
     major = session.get("teaching_major", "Unknown")
     
-    # Get user's current rating from session
     rating = session.get("teaching_rating", {}).get("rating", 2.5)
     
     return render_template(
@@ -252,6 +254,7 @@ def customize_course():
 @app.route("/create_course", methods=["POST"])
 @login_required
 def create_course():
+    """Insert a new course into the database with title, description, price, tags, and AI rating."""
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
     price = request.form.get("price", "0")
@@ -272,10 +275,8 @@ def create_course():
 
     owner_id = session["user_id"]
     
-    # Get the user's rating for this topic from session
     course_rating = session.get("teaching_rating", {}).get("rating", 2.5)
     
-    # Insert course into database
     db.execute(
         """INSERT INTO courses (owner_id, title, description, tags, price, rating)
            VALUES (?, ?, ?, ?, ?, ?)""",

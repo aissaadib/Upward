@@ -1,3 +1,5 @@
+"""Central database and AI client instances shared across route modules."""
+
 import os
 from cs50 import SQL
 from groq import Groq

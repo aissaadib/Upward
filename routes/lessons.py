@@ -1,10 +1,13 @@
+"""Lessons routes — create, read, update, delete lessons and extract content from files."""
+
 from app import app, db, login_required, groq_client
 from flask import render_template, request, session, redirect, jsonify
 import PyPDF2
 from services.ai import parse_ai_json
 
-# Ensure lessons table exists with all columns
+
 def init_lessons_db():
+    """Create the lessons table if it does not exist; backfill missing title column for older schemas."""
     db.execute("""
         CREATE TABLE IF NOT EXISTS lessons (
             num INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,7 +16,7 @@ def init_lessons_db():
             content TEXT
         )
     """)
-    # Try to add title column if it doesn't exist (older schema)
+    # Handle older schema that may lack the title column
     try:
         db.execute("ALTER TABLE lessons ADD COLUMN title TEXT")
     except Exception:
@@ -25,22 +28,19 @@ init_lessons_db()
 @app.route("/lessons/<int:course_id>")
 @login_required
 def lessons(course_id):
-    # Get course details
+    """List all lessons for a given course, with owner controls if applicable."""
     course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
     if not course:
         return redirect("/courses")
     course = course[0]
 
-    # Get all lessons for this course
     lesson_list = db.execute(
         "SELECT * FROM lessons WHERE course_id = ? ORDER BY num ASC",
         course_id
     )
 
-    # Check if current user is the owner
     is_owner = course["owner_id"] == session["user_id"]
 
-    # Get username
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
 
@@ -56,7 +56,7 @@ def lessons(course_id):
 @app.route("/customize_lesson/<int:course_id>")
 @login_required
 def customize_lesson(course_id):
-    # Verify course exists and user is owner
+    """Render the lesson creation page for a course owned by the current user."""
     course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
     if not course:
         return redirect("/courses")
@@ -65,7 +65,6 @@ def customize_lesson(course_id):
     if course["owner_id"] != session["user_id"]:
         return redirect(f"/lessons/{course_id}")
 
-    # Get username
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
 
@@ -79,7 +78,7 @@ def customize_lesson(course_id):
 @app.route("/create_lesson/<int:course_id>", methods=["POST"])
 @login_required
 def create_lesson(course_id):
-    # Verify course exists and user is owner
+    """Insert a new lesson into the database for the given course."""
     course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
     if not course:
         return redirect("/courses")
@@ -99,7 +98,6 @@ def create_lesson(course_id):
             error="Lesson title is required."
         )
 
-    # Insert lesson into database
     db.execute(
         """INSERT INTO lessons (course_id, title, content)
            VALUES (?, ?, ?)""",
@@ -112,6 +110,7 @@ def create_lesson(course_id):
 @app.route("/edit_lesson/<int:lesson_id>")
 @login_required
 def edit_lesson(lesson_id):
+    """Render the lesson editor pre-populated with existing lesson data."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
     if not lesson:
         return redirect("/courses")
@@ -129,6 +128,7 @@ def edit_lesson(lesson_id):
 @app.route("/update_lesson/<int:lesson_id>", methods=["POST"])
 @login_required
 def update_lesson(lesson_id):
+    """Update an existing lesson's title and content."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
     if not lesson:
         return redirect("/courses")
@@ -150,6 +150,7 @@ def update_lesson(lesson_id):
 @app.route("/delete_lesson/<int:lesson_id>", methods=["POST"])
 @login_required
 def delete_lesson(lesson_id):
+    """Delete a lesson, verifying the current user owns the parent course."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
     if not lesson:
         return "Not found", 404
@@ -163,11 +164,13 @@ def delete_lesson(lesson_id):
 @app.route("/api/extract_lesson", methods=["POST"])
 @login_required
 def extract_lesson():
+    """Extract text from a PDF or TXT file and format it into HTML via AI."""
     file = request.files.get("file")
     if not file or not file.filename:
         return jsonify({"error": "No file provided"}), 400
 
     try:
+        # Extract raw text from PDF or plain text file
         if file.filename.endswith('.pdf'):
             pdf_reader = PyPDF2.PdfReader(file)
             text = ""
@@ -184,6 +187,7 @@ def extract_lesson():
         if not text:
             return jsonify({"error": "Could not extract text from file"}), 400
 
+        # Ask AI to format the raw text into clean HTML
         prompt = f"""You are an educational content formatter. Format the following lesson text into clean HTML WITHOUT summarizing or rewriting it. Keep the EXACT content but make it readable.
 
 LESSON TEXT:
@@ -217,6 +221,7 @@ Preserve all original content exactly. Do NOT change any words."""
 @app.route("/lessons/display/<int:lesson_id>")
 @login_required
 def lesson_display(lesson_id):
+    """Display a single lesson's full content."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
     if not lesson:
         return redirect("/courses")

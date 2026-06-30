@@ -1,3 +1,5 @@
+"""Advice routes — generates AI-powered career suggestions based on user profile."""
+
 from app import app, db, groq_client, login_required
 from flask import render_template, redirect, session, jsonify
 from services.ai import parse_ai_json
@@ -5,6 +7,7 @@ from services.ai import parse_ai_json
 @app.route("/advice")
 @login_required
 def advice():
+    """Render the advice page after resetting the user's locked status."""
     user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
     db.execute("UPDATE users SET locked = 0 WHERE id = ?", session["user_id"])
@@ -14,15 +17,14 @@ def advice():
 @app.route("/generate_advice", methods=["POST"])
 @login_required
 def generate_advice():
+    """Call the AI to generate 7 career suggestions based on the user's stored profile."""
 
     profile = session.get("career_profile", "")
     if not profile:
         return jsonify({"error": "No profile found. Please complete onboarding first."}), 400
 
     # ── WIP AI PROMPT ─────────────────────────────────────────
-    # This prompt will be refined as the product grows.
-    # The profile variable contains all user answers structured
-    # as key: value lines ready to be injected here.
+    # The profile variable contains all user answers structured as key: value lines.
     prompt = f"""You are a practical career advisor helping a real person plan their next steps.
 
 Here is their profile:
@@ -107,7 +109,7 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
         print(f"Raw response: {raw[:500]}")
         parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
         if not parts:
-            # If no parts at all, provide a generic fallback
+            # Generic fallback when AI output is completely unparseable
             advice_list = [{
                 "title": "Explore your field",
                 "category": "Research",
@@ -118,6 +120,7 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
                 "links": []
             }]
         else:
+            # Fallback: wrap each paragraph into a suggestion object
             advice_list = [{
                 "title": f"Suggestion {idx+1}",
                 "category": "Explore",
@@ -128,10 +131,10 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
                 "links": []
             } for idx, p in enumerate(parts[:5])]
 
-    # Validate for repetitive content
+    # Validate for repetitive content — regenerate if >30% titles are duplicates
     titles = [item.get("title", "").lower().strip() for item in advice_list]
     unique_titles = set(titles)
-    if len(unique_titles) < len(titles) * 0.7:  # If more than 30% of titles are duplicates
+    if len(unique_titles) < len(titles) * 0.7:
         print("Detected repetitive titles, regenerating with fallback")
         advice_list = [{
             "title": f"Path {i+1}: {['Freelance', 'Full-time job', 'Internship', 'Contract work', 'Remote work', 'Part-time', 'Volunteer'][i%7]}",
@@ -144,6 +147,7 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
         } for i in range(7)]
 
     session["last_advice"] = advice_list
+    # Ensure every suggestion has all expected keys
     for item in advice_list:
         item.setdefault("title", "Untitled Path")
         item.setdefault("category", "Explore")
@@ -155,12 +159,4 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
     if len(advice_list):
         print("need more advice")
 
-    
-
-
-
-
-
-
     return jsonify({"advice": advice_list})
-

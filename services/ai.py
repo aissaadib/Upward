@@ -1,11 +1,18 @@
+"""AI utility functions — JSON parsing with markdown-stripping and regex fallback."""
+
 import json
 import re
 
 
 def parse_ai_json(raw):
+    """
+    Parse JSON from AI responses, stripping markdown code fences.
+    Tries to extract JSON from ```json blocks first, then falls back to
+    finding the first JSON object/array in the raw text.
+    """
     raw = raw.strip()
     
-    # Try to extract JSON from markdown code blocks
+    # Try to extract JSON from markdown code blocks first
     json_match = re.search(r'```(?:json)?\s*(\{.*?\}|\[.*?\])\s*```', raw, re.DOTALL)
     if json_match:
         raw = json_match.group(1)
@@ -13,11 +20,10 @@ def parse_ai_json(raw):
         # Fallback: remove any markdown code block markers
         raw = raw.replace("```json", "").replace("```", "").strip()
     
-    # Try to find JSON object/array in the text
+    # Attempt to parse; if that fails, search for first JSON-like substring
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        # Try to extract JSON from text that might have extra content
         json_match = re.search(r'(\{.*?\}|\[.*?\])', raw, re.DOTALL)
         if json_match:
             try:

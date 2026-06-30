@@ -1,3 +1,5 @@
+"""Authentication routes: login, register, logout, email verification."""
+
 from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required
 from flask import render_template, request, redirect, session
 import os
@@ -7,9 +9,9 @@ import json
 from email.mime.text import MIMEText
 from werkzeug.security import check_password_hash, generate_password_hash
 
-# Email Verification Utilities
-# Handles signup verification emails.
+
 def send_code(to_email, code):
+    """Send a 6-digit verification code via SMTP to the given email."""
     msg = MIMEText(f"Your Upward verification code is: {code}")
     msg["Subject"] = "Upward - Verification Code"
     msg["From"]    = SMTP_EMAIL
@@ -20,6 +22,7 @@ def send_code(to_email, code):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Authenticate user by email/password and set session user_id on success."""
     session.clear()
     if request.method == "POST":
         email    = request.form.get("email")
@@ -37,6 +40,7 @@ def login():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """Register a new user: validate inputs, send verification code, redirect to /verify."""
     session.clear()
     if request.method == "POST":
         username     = request.form.get("username")
@@ -66,15 +70,18 @@ def register():
 @app.route("/logout")
 @login_required
 def logout():
+    """Clear the session and redirect to login."""
     session.clear()
     return redirect("/login")
 
 @app.route("/login/google")
 def login_google():
+    """Placeholder for Google OAuth login — redirects to home."""
     return redirect("/")
 
 @app.route("/verify", methods=["GET", "POST"])
 def verify():
+    """Verify email code, insert user into DB, and log them in."""
     if "pending_email" not in session:
         return redirect("/register")
     if request.method == "POST":
