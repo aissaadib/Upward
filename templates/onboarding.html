@@ -32,6 +32,17 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 .multi-hint{font-size:.78rem;color:var(--text-secondary);margin-bottom:12px;}
 .text-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;}
 .text-input:focus{border-color:var(--accent);}
+.country-select{cursor:pointer;appearance:auto;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;}
+/* Custom country dropdown with flag emoji support */
+.custom-dropdown{position:relative;width:100%}
+.dropdown-trigger{display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:12px;background:white;font-size:1rem;cursor:pointer;box-sizing:border-box;color:var(--text)}
+.dropdown-trigger .placeholder{color:#999}
+.dropdown-arrow{margin-left:auto;font-size:10px;color:#999;transition:transform .2s}
+.dropdown-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:280px;overflow-y:auto;background:white;border:2px solid var(--border);border-radius:12px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.dropdown-panel.open{display:block}
+.dropdown-option{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
+.dropdown-option:hover{background:#f3f4f6}
+.dropdown-option.selected{background:#e0e7ff;font-weight:600}
 .skip-hint{font-size:.78rem;color:var(--text-secondary);margin-top:8px;}
 .nav-row{display:flex;gap:12px;margin-top:32px;}
 .btn-next{flex:1;padding:14px;border:none;border-radius:12px;background:var(--sidebar);color:white;opacity:.35;pointer-events:none;font-weight:700;font-size:.95rem;cursor:pointer;}
@@ -67,6 +78,14 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 // Special marker value for "None" in multi-select questions
 const NONE_OPTION = "None";
 
+// Full country list for the country dropdown question
+const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","DR Congo","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+
+// Country flag emojis mapped by country name
+const COUNTRY_FLAGS = {
+    Afghanistan:"🇦🇫",Albania:"🇦🇱",Algeria:"🇩🇿",Andorra:"🇦🇩",Angola:"🇦🇴","Antigua and Barbuda":"🇦🇬",Argentina:"🇦🇷",Armenia:"🇦🇲",Australia:"🇦🇺",Austria:"🇦🇹",Azerbaijan:"🇦🇿",Bahamas:"🇧🇸",Bahrain:"🇧🇭",Bangladesh:"🇧🇩",Barbados:"🇧🇧",Belarus:"🇧🇾",Belgium:"🇧🇪",Belize:"🇧🇿",Benin:"🇧🇯",Bhutan:"🇧🇹",Bolivia:"🇧🇴","Bosnia and Herzegovina":"🇧🇦",Botswana:"🇧🇼",Brazil:"🇧🇷",Brunei:"🇧🇳",Bulgaria:"🇧🇬","Burkina Faso":"🇧🇫",Burundi:"🇧🇮","Cabo Verde":"🇨🇻",Cambodia:"🇰🇭",Cameroon:"🇨🇲",Canada:"🇨🇦","Central African Republic":"🇨🇫",Chad:"🇹🇩",Chile:"🇨🇱",China:"🇨🇳",Colombia:"🇨🇴",Comoros:"🇰🇲",Congo:"🇨🇬","Costa Rica":"🇨🇷",Croatia:"🇭🇷",Cuba:"🇨🇺",Cyprus:"🇨🇾","Czech Republic":"🇨🇿",Denmark:"🇩🇰",Djibouti:"🇩🇯",Dominica:"🇩🇲","Dominican Republic":"🇩🇴","DR Congo":"🇨🇩","East Timor":"🇹🇱",Ecuador:"🇪🇨",Egypt:"🇪🇬","El Salvador":"🇸🇻","Equatorial Guinea":"🇬🇶",Eritrea:"🇪🇷",Estonia:"🇪🇪",Eswatini:"🇸🇿",Ethiopia:"🇪🇹",Fiji:"🇫🇯",Finland:"🇫🇮",France:"🇫🇷",Gabon:"🇬🇦",Gambia:"🇬🇲",Georgia:"🇬🇪",Germany:"🇩🇪",Ghana:"🇬🇭",Greece:"🇬🇷",Grenada:"🇬🇩",Guatemala:"🇬🇹",Guinea:"🇬🇳","Guinea-Bissau":"🇬🇼",Guyana:"🇬🇾",Haiti:"🇭🇹",Honduras:"🇭🇳",Hungary:"🇭🇺",Iceland:"🇮🇸",India:"🇮🇳",Indonesia:"🇮🇩",Iran:"🇮🇷",Iraq:"🇮🇶",Ireland:"🇮🇪",Israel:"🇮🇱",Italy:"🇮🇹","Ivory Coast":"🇨🇮",Jamaica:"🇯🇲",Japan:"🇯🇵",Jordan:"🇯🇴",Kazakhstan:"🇰🇿",Kenya:"🇰🇪",Kiribati:"🇰🇮",Kuwait:"🇰🇼",Kyrgyzstan:"🇰🇬",Laos:"🇱🇦",Latvia:"🇱🇻",Lebanon:"🇱🇧",Lesotho:"🇱🇸",Liberia:"🇱🇷",Libya:"🇱🇾",Liechtenstein:"🇱🇮",Lithuania:"🇱🇹",Luxembourg:"🇱🇺",Madagascar:"🇲🇬",Malawi:"🇲🇼",Malaysia:"🇲🇾",Maldives:"🇲🇻",Mali:"🇲🇱",Malta:"🇲🇹","Marshall Islands":"🇲🇭",Mauritania:"🇲🇷",Mauritius:"🇲🇺",Mexico:"🇲🇽",Micronesia:"🇫🇲",Moldova:"🇲🇩",Monaco:"🇲🇨",Mongolia:"🇲🇳",Montenegro:"🇲🇪",Morocco:"🇲🇦",Mozambique:"🇲🇿",Myanmar:"🇲🇲",Namibia:"🇳🇦",Nauru:"🇳🇷",Nepal:"🇳🇵",Netherlands:"🇳🇱","New Zealand":"🇳🇿",Nicaragua:"🇳🇮",Niger:"🇳🇪",Nigeria:"🇳🇬","North Korea":"🇰🇵","North Macedonia":"🇲🇰",Norway:"🇳🇴",Oman:"🇴🇲",Pakistan:"🇵🇰",Palau:"🇵🇼",Palestine:"🇵🇸",Panama:"🇵🇦","Papua New Guinea":"🇵🇬",Paraguay:"🇵🇾",Peru:"🇵🇪",Philippines:"🇵🇭",Poland:"🇵🇱",Portugal:"🇵🇹",Qatar:"🇶🇦",Romania:"🇷🇴",Russia:"🇷🇺",Rwanda:"🇷🇼","Saint Kitts and Nevis":"🇰🇳","Saint Lucia":"🇱🇨","Saint Vincent and the Grenadines":"🇻🇨",Samoa:"🇼🇸","San Marino":"🇸🇲","Sao Tome and Principe":"🇸🇹","Saudi Arabia":"🇸🇦",Senegal:"🇸🇳",Serbia:"🇷🇸",Seychelles:"🇸🇨","Sierra Leone":"🇸🇱",Singapore:"🇸🇬",Slovakia:"🇸🇰",Slovenia:"🇸🇮","Solomon Islands":"🇸🇧",Somalia:"🇸🇴","South Africa":"🇿🇦","South Korea":"🇰🇷","South Sudan":"🇸🇸",Spain:"🇪🇸","Sri Lanka":"🇱🇰",Sudan:"🇸🇩",Suriname:"🇸🇷",Sweden:"🇸🇪",Switzerland:"🇨🇭",Syria:"🇸🇾",Taiwan:"🇹🇼",Tajikistan:"🇹🇯",Tanzania:"🇹🇿",Thailand:"🇹🇭",Togo:"🇹🇬",Tonga:"🇹🇴","Trinidad and Tobago":"🇹🇹",Tunisia:"🇹🇳",Turkey:"🇹🇷",Turkmenistan:"🇹🇲",Tuvalu:"🇹🇻",Uganda:"🇺🇬",Ukraine:"🇺🇦","United Arab Emirates":"🇦🇪","United Kingdom":"🇬🇧","United States":"🇺🇸",Uruguay:"🇺🇾",Uzbekistan:"🇺🇿",Vanuatu:"🇻🇺","Vatican City":"🇻🇦",Venezuela:"🇻🇪",Vietnam:"🇻🇳",Yemen:"🇾🇪",Zambia:"🇿🇲",Zimbabwe:"🇿🇼"
+};
+
 // All onboarding questions with branching logic, filtering, and tier-based variants
 const allQuestions = [
     {
@@ -94,14 +113,14 @@ const allQuestions = [
     },
     {
         key:"q2",
-        type:"multi",
+        type:"dynamic_multi",
         q:"Which tools or skills do you already have?",
         sub:"Select all that apply — or pick None if you're starting fresh.",
-        options:["Python","JavaScript","HTML / CSS","SQL","Excel / Sheets","Figma","Git / GitHub","Photoshop","Canva","Video editing","Writing","Public speaking","Project management", NONE_OPTION]
+        options:[NONE_OPTION]
     },
     {
         key:"q3",
-        type:"text",
+        type:"dynamic_suggest",
         q:"What is the one skill you are strongest at?",
         sub:"Even if it's not in the list above.",
         placeholder:"e.g. Python, drawing, writing, Excel..."
@@ -271,17 +290,15 @@ const allQuestions = [
     },
     {
         key:"q11",
-        type:"text",
+        type:"country",
         q:"Which country?",
         sub:"Helps us find local opportunities and salary data.",
         subByTier:{
             school:"Helps us find opportunities and programs relevant to where you live.",
             undergrad:"Helps us find local internships, programs, and opportunities.",
             grad:"Helps us find local opportunities and entry-level salary ranges."
-        },
-        placeholder:"e.g. Morocco, France, USA..."
+        }
     },
-    
 ];
 
 // Map education status answers to simplified tier keys for branching logic
@@ -342,7 +359,49 @@ function pruneAnswers(){
             answers[q.key] = val.filter(v => q.options.includes(v));
             if(answers[q.key].length === 0) delete answers[q.key];
         }
+        if(q.type === "dynamic_multi" && Array.isArray(val)){
+            // Keep AI-generated tool selections; NONE resets the array
+            if(val.includes(NONE_OPTION)) answers[q.key] = [NONE_OPTION];
+        }
     });
+}
+
+// Cache for AI-generated tool options keyed by field name
+let cachedToolOptions = {};
+
+// Fetch tool/skill suggestions from AI for the selected field
+async function loadToolOptions(field){
+    if(cachedToolOptions[field]) return cachedToolOptions[field];
+    const resp = await fetch("/api/generate_tools", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({field})
+    });
+    const data = await resp.json();
+    if(data.tools && data.tools.length){
+        cachedToolOptions[field] = data.tools;
+        return data.tools;
+    }
+    return [];
+}
+
+// Cache for AI-generated skill suggestions keyed by field name
+let cachedSkillSuggestions = {};
+
+// Fetch skill suggestions from AI for the selected field (≤5)
+async function loadSkillSuggestions(field){
+    if(cachedSkillSuggestions[field]) return cachedSkillSuggestions[field];
+    const resp = await fetch("/api/generate_skills", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({field})
+    });
+    const data = await resp.json();
+    if(data.skills && data.skills.length){
+        cachedSkillSuggestions[field] = data.skills;
+        return data.skills;
+    }
+    return [];
 }
 
 // Render the current question screen based on question type
@@ -379,12 +438,69 @@ function render(){
             html += `<button type="button" class="option-btn${sel}" onclick="toggleMulti('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
         });
         html += `</div>`;
+    } else if(q.type === "dynamic_multi"){
+        // AI-generated multi-select options
+        const selected = answers[q.key] || [];
+        const field = answers.field || "";
+        html += `<p class="multi-hint">Select all that apply — or pick None</p><div class="options-list" id="dynamic-options">`;
+        html += `<div style="text-align:center;padding:20px;color:var(--muted)">Loading options...</div>`;
+        html += `</div>`;
+        // Trigger async fetch and re-render the options list
+        (async () => {
+            const tools = await loadToolOptions(field);
+            const container = document.getElementById("dynamic-options");
+            if(!container) return;
+            const unique = [...new Set([...tools, NONE_OPTION])];
+            container.innerHTML = unique.map(opt => {
+                const sel = selected.includes(opt) ? " selected" : "";
+                return `<button type="button" class="option-btn${sel}" onclick="toggleDynamic('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
+            }).join("");
+        })();
     } else if(q.type === "file"){
         // Hidden file input triggered by a styled button
         html += `<input type="file" id="file-input" accept=".pdf" class="file-input" onchange="updateFile(this)">`;
         html += `<button type="button" class="file-upload-btn" onclick="document.getElementById('file-input').click()">${answers[q.key] ? 'Change file' : 'Choose PDF file'}</button>`;
         if(answers[q.key]) html += `<p class="file-selected">Selected: ${answers[q.key].name}</p>`;
         if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
+    } else if(q.type === "country"){
+        // Custom country dropdown with flag emojis
+        const val = answers[q.key] || "";
+        const flag = COUNTRY_FLAGS[val] || "";
+        html += `<div class="custom-dropdown" id="country-dropdown">
+            <div class="dropdown-trigger" onclick="toggleCountryDropdown()">
+                <span id="country-selected" class="${val ? '' : 'placeholder'}">${val ? flag + ' ' + val : 'Select your country...'}</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-panel" id="country-panel">
+                <div class="dropdown-option${!val ? ' selected' : ''}" onclick="selectCountry('')">Select your country...</div>`;
+        COUNTRIES.forEach(c => {
+            const f = COUNTRY_FLAGS[c] || "";
+            const sel = c === val ? ' selected' : '';
+            html += `<div class="dropdown-option${sel}" onclick="selectCountry('${c.replace(/'/g,"\\'")}')">${f} ${c}</div>`;
+        });
+        html += `</div></div>`;
+    } else if(q.type === "dynamic_suggest"){
+        // AI-suggested skill options + text input
+        const val = answers[q.key] || "";
+        const field = answers.field || "";
+        html += `<div class="options-list" id="skills-options">`;
+        html += `<div style="text-align:center;padding:20px;color:var(--muted)">Loading suggestions...</div>`;
+        html += `</div>`;
+        html += `<div style="margin-top:12px;display:flex;gap:10px;">
+            <input class="text-input" id="other-input" placeholder="${q.placeholder}" style="margin-top:0;" value="${val}">
+            <button type="button" onclick="useSkillOther()" style="padding:12px 18px;border:1.5px solid var(--border);border-radius:12px;background:white;cursor:pointer;font-weight:700;white-space:nowrap;color:var(--text);">Use this</button>
+        </div>`;
+        // Trigger async fetch and render suggestions
+        (async () => {
+            const skills = await loadSkillSuggestions(field);
+            const container = document.getElementById("skills-options");
+            if(!container) return;
+            if(!skills.length){ container.innerHTML = ""; return; }
+            container.innerHTML = skills.map(s => {
+                const sel = val === s ? " selected" : "";
+                return `<button type="button" class="option-btn${sel}" onclick="selectSkillSuggestion('${s.replace(/'/g,"\\'")}', this)">${s}</button>`;
+            }).join("");
+        })();
     } else {
         // Text input fields
         const val = answers[q.key] || "";
@@ -405,7 +521,7 @@ function render(){
 function isValid(q){
     const val = answers[q.key];
     if(q.optional) return true;
-    if(q.type === "multi") return val && val.length > 0;
+    if(q.type === "multi" || q.type === "dynamic_multi") return val && val.length > 0;
     if(q.type === "file") return !!val;
     return !!val;
 }
@@ -455,6 +571,11 @@ function toggleMulti(val, btn){
     if(nb) nb.classList.toggle("active", arr.length > 0);
 }
 
+// Handle multi-select toggle for AI-generated dynamic options (same logic as toggleMulti)
+function toggleDynamic(val, btn){
+    toggleMulti(val, btn);
+}
+
 // Store text input value and toggle Next button state
 function updateText(val){
     answers[getActiveQuestions()[i].key] = val;
@@ -487,6 +608,59 @@ function useOther(){
     const nb = document.getElementById("btn-next");
     if(nb) nb.classList.add("active");
 }
+
+// Select an AI-suggested skill (single-select) for dynamic_suggest questions
+function selectSkillSuggestion(val, btn){
+    const key = getActiveQuestions()[i].key;
+    answers[key] = val;
+    document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    document.getElementById("other-input").value = val;
+    document.getElementById("other-input").style.borderColor = "var(--accent)";
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.add("active");
+}
+
+// Use custom typed-in skill for dynamic_suggest questions
+function useSkillOther(){
+    const val = document.getElementById("other-input")?.value.trim();
+    if(!val) return;
+    const key = getActiveQuestions()[i].key;
+    answers[key] = val;
+    document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("other-input").style.borderColor = "var(--accent)";
+    const nb = document.getElementById("btn-next");
+    if(nb) nb.classList.add("active");
+}
+
+// Toggle the custom country dropdown open/close
+function toggleCountryDropdown(){
+    document.getElementById("country-panel")?.classList.toggle("open");
+}
+
+// Select a country from the custom dropdown
+function selectCountry(val){
+    document.getElementById("country-panel")?.classList.remove("open");
+    const display = document.getElementById("country-selected");
+    if(display){
+        if(val){
+            const flag = COUNTRY_FLAGS[val] || "";
+            display.textContent = flag + " " + val;
+            display.className = "";
+        } else {
+            display.textContent = "Select your country...";
+            display.className = "placeholder";
+        }
+    }
+    updateText(val);
+}
+
+// Close country dropdown on outside click
+document.addEventListener("click", function(e){
+    if(!e.target.closest("#country-dropdown")){
+        document.getElementById("country-panel")?.classList.remove("open");
+    }
+});
 
 // Advance to the next question or finish if on the last one
 function next(){
