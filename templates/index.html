@@ -383,6 +383,28 @@ body{
             {% endif %}
         </div>
         
+        {% if courses %}
+        <section class="section" style="margin-top:40px;">
+            <div class="section-label">Available Courses</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;">
+                {% for c in courses %}
+                <a href="/lessons/{{ c.id }}" style="text-decoration:none;color:inherit;display:block;background:white;border:1px solid var(--border);border-radius:14px;padding:20px;transition:.2s;">
+                    <h3 style="font-size:1rem;margin-bottom:6px;">{{ c.title }}</h3>
+                    {% if c.description %}
+                    <p style="font-size:.85rem;color:var(--text-secondary);margin:0;">{{ c.description[:120] }}{% if c.description|length > 120 %}…{% endif %}</p>
+                    {% endif %}
+                    {% if c.tags %}
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+                        {% for tag in c.tags.split(',')[:3] %}
+                        <span style="background:#f3f4f6;padding:4px 10px;border-radius:999px;font-size:.75rem;font-weight:600;">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
 
     </section>
 
@@ -423,6 +445,13 @@ body{
                 <p>
                     Find careers and opportunities that
                     match your strengths.
+                </p>
+            </div>
+
+            <div class="feature">
+                <h3>Course System</h3>
+                <p>
+                    Browse structured severant courses any diffrent topics 
                 </p>
             </div>
 
