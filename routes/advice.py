@@ -3,6 +3,7 @@
 from app import app, db, groq_client, login_required
 from flask import render_template, redirect, session, jsonify
 from services.ai import parse_ai_json
+import time
 
 @app.route("/advice")
 @login_required
@@ -23,7 +24,7 @@ def generate_advice():
     if not profile:
         return jsonify({"error": "No profile found. Please complete onboarding first."}), 400
 
-    # ── WIP AI PROMPT ─────────────────────────────────────────
+    # ── AI PROMPT ─────────────────────────────────────────
     # The profile variable contains all user answers structured as key: value lines.
     prompt = f"""You are a practical career advisor helping a real person plan their next steps.
 
@@ -45,7 +46,7 @@ Every suggestion must be substantially different.
 Never repeat the same idea with different wording.
 Focus on opportunities with strong long-term value and clear progression.
 
-CRITICAL: Each suggestion must have UNIQUE and SPECIFIC content. Do not repeat the same title, category, or description across different suggestions. Each "fit" field must contain distinct, actionable information specific to that particular opportunity.
+CRITICAL: Each suggestion must have UNIQUE and SPECIFIC content. Do not repeat the same title, category, or description across different suggestions.
 
 ROADMAP REQUIREMENTS
 
@@ -76,14 +77,14 @@ an audience
 revenue
 a research output
 
-Respond ONLY with a valid JSON array. No markdown. No explanation:
-[{{"title":"","category":"","fit":"","outcome":"","roadmap":["","","",""],"risks":["",""],"links":[{{"label":"","url":""}}]}}]
+Return ONLY a valid JSON array with exactly 7 objects. Each object must have these keys: "title", "category", "fit", "outcome", "roadmap" (array of 4 strings), "risks" (array of 2-3 strings), "links" (array of objects with "label" and "url"). The "title" and "fit" fields must each be at least 20 characters long. No markdown, no explanation.
 
 REVIEW YOUR OUTPUT BEFORE SUBMITTING:
-1. Are all 7 titles unique?
+1. Are all 7 titles unique and descriptive?
 2. Does each "fit" field contain specific, distinct information?
 3. Are there no repeated phrases or descriptions?
 4. Is each suggestion tailored to the specific profile provided?
+5. Is every title at least 20 characters long?
 
 """
     # ─────────────────────────────────────────────────────────
@@ -92,44 +93,75 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
-            timeout=30.0
+            timeout=90.0
         )
     except Exception as e:
-        print(f"Groq API error: {e}")
-        return jsonify({"error": "AI service temporarily unavailable. Please try again."}), 502
+        print(f"Groq API error (attempt 1): {e}")
+        time.sleep(1)
+        try:
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+                timeout=90.0
+            )
+        except Exception as e2:
+            print(f"Groq API error (attempt 2): {e2}")
+            return jsonify({"error": "AI service temporarily unavailable. Please try again."}), 502
 
     raw = response.choices[0].message.content.strip()
     try:
         advice_list = parse_ai_json(raw)
-        # Validate that we got a list with at least one item
         if not isinstance(advice_list, list) or len(advice_list) == 0:
             raise ValueError("AI did not return a valid list")
+        # Validate items have non-blank titles (at least 10 chars)
+        valid = []
+        for item in advice_list:
+            t = item.get("title", "").strip()
+            if len(t) >= 10:
+                valid.append(item)
+        if len(valid) < 4:
+            raise ValueError(f"Only {len(valid)} items with valid titles, need at least 4")
+        advice_list = valid[:7]
     except Exception as e:
         print(f"AI JSON parsing failed: {e}")
         print(f"Raw response: {raw[:500]}")
-        parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
-        if not parts:
-            # Generic fallback when AI output is completely unparseable
-            advice_list = [{
-                "title": "Explore your field",
-                "category": "Research",
-                "fit": "Start by researching different roles and opportunities in your chosen field to understand what interests you most.",
-                "outcome": "A clearer understanding of available paths and requirements.",
-                "roadmap": ["Research job descriptions", "Identify required skills", "Talk to people in the field", "Create a learning plan"],
-                "risks": ["Information overload", "Changing interests"],
-                "links": []
-            }]
-        else:
-            # Fallback: wrap each paragraph into a suggestion object
-            advice_list = [{
-                "title": f"Suggestion {idx+1}",
-                "category": "Explore",
-                "fit": p,
-                "outcome": "A clearer next step based on your profile.",
-                "roadmap": ["Start with research", "Learn the basics", "Build a small proof", "Share and get feedback"],
-                "risks": ["Requires consistency", "Competitive field"],
-                "links": []
-            } for idx, p in enumerate(parts[:5])]
+        # Retry once with a stricter prompt
+        try:
+            retry_prompt = prompt + "\n\nCRITICAL: Your previous response was not valid JSON with 7 items. Every title must be at least 20 characters long and descriptive. Return ONLY valid JSON."
+            response2 = groq_client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": retry_prompt}],
+                timeout=90.0
+            )
+            raw2 = response2.choices[0].message.content.strip()
+            advice_list = parse_ai_json(raw2)
+            if not isinstance(advice_list, list) or len(advice_list) == 0:
+                raise ValueError("Retry also failed")
+        except Exception as e2:
+            print(f"Retry also failed: {e2}")
+            parts = [p.strip() for p in raw.split("\n\n") if p.strip()]
+            if not parts:
+                # Generic fallback when AI output is completely unparseable
+                advice_list = [{
+                    "title": "Explore your field",
+                    "category": "Research",
+                    "fit": "Start by researching different roles and opportunities in your chosen field to understand what interests you most.",
+                    "outcome": "A clearer understanding of available paths and requirements.",
+                    "roadmap": ["Research job descriptions", "Identify required skills", "Talk to people in the field", "Create a learning plan"],
+                    "risks": ["Information overload", "Changing interests"],
+                    "links": []
+                }]
+            else:
+                # Fallback: wrap each paragraph into a suggestion object
+                advice_list = [{
+                    "title": f"Suggestion {idx+1}",
+                    "category": "Explore",
+                    "fit": p,
+                    "outcome": "A clearer next step based on your profile.",
+                    "roadmap": ["Start with research", "Learn the basics", "Build a small proof", "Share and get feedback"],
+                    "risks": ["Requires consistency", "Competitive field"],
+                    "links": []
+                } for idx, p in enumerate(parts[:5])]
 
     # Validate for repetitive content — regenerate if >30% titles are duplicates
     titles = [item.get("title", "").lower().strip() for item in advice_list]
@@ -147,7 +179,7 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
         } for i in range(7)]
 
     session["last_advice"] = advice_list
-    # Ensure every suggestion has all expected keys
+    # Ensure every suggestion has all expected keys and correct types
     for item in advice_list:
         item.setdefault("title", "Untitled Path")
         item.setdefault("category", "Explore")
@@ -156,6 +188,19 @@ REVIEW YOUR OUTPUT BEFORE SUBMITTING:
         item.setdefault("roadmap", [])
         item.setdefault("risks", [])
         item.setdefault("links", [])
+        # Normalize risks — AI sometimes returns objects instead of strings
+        def _to_str(v):
+            if isinstance(v, str): return v
+            if isinstance(v, dict):
+                return v.get("risk") or v.get("text") or v.get("description") or v.get("name") or str(v)
+            return str(v)
+        item["risks"] = [_to_str(r) for r in item["risks"]]
+        # Normalize roadmap steps to strings
+        item["roadmap"] = [_to_str(s) for s in item["roadmap"]]
+        # Normalize title, category, fit, outcome to strings
+        for k in ("title","category","fit","outcome"):
+            if not isinstance(item.get(k), str):
+                item[k] = str(item[k]) if item.get(k) else ""
     if len(advice_list):
         print("need more advice")
 
