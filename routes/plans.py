@@ -331,7 +331,7 @@ Rules:
 
     session["pending_extended_plan"] = extended
     return jsonify({"plan": extended})
-
+#wa
 @app.route("/plan/lock", methods=["POST"])
 @login_required
 def plan_lock():
