@@ -24,15 +24,16 @@ init_db()
 @login_required
 def courses():
     """Render course listing page; mark courses owned by the current user."""
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name, locked FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    locked = user[0]["locked"] if user else 0
 
     course_list = db.execute("SELECT * FROM courses ORDER BY id DESC")
     # Flag each course as owned by the current session user
     for c in course_list:
         c["is_owner"] = (c["owner_id"] == session["user_id"])
 
-    return render_template("courses.html", username=username, courses=course_list)
+    return render_template("courses.html", username=username, courses=course_list, locked=locked)
 
 
 @app.route("/delete_course/<int:course_id>", methods=["POST"])

@@ -35,12 +35,31 @@ body{
     font-family:Inter,Segoe UI,sans-serif;
     color:var(--text);
     min-height:100vh;
-    padding:40px 20px;
+    padding:0;
 }
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.brand{font-size:1.8rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.brand span{color:var(--accent);}
+.nav-link{font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;margin-top:3px;}
+.nav-link:hover{color:var(--accent);}
 
 .container{
     max-width:900px;
     margin:0 auto;
+    padding:40px 20px;
 }
 
 .logo-wrap{
@@ -365,15 +384,18 @@ textarea.form-control{
 
 <body>
 
-<div class="container">
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
 
-<div class="logo-wrap">
-    <h1 class="brand">
-        <a href="/">
-            Up<span>ward</span>
-        </a>
-    </h1>
-</div>
+<div class="container">
 
 <div class="breadcrumb">
     <a href="/courses">Courses</a> /

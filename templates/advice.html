@@ -47,6 +47,10 @@ body{
 }
 
 .brand span{color:var(--accent);}
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;margin-top:3px;}
+.nav-link:hover{color:var(--accent);}
 
 .username{font-weight:700;}
 .logout{color:var(--text-secondary);text-decoration:none;}
@@ -219,13 +223,16 @@ a:hover{
 
 <body>
 
-<div class="navbar">
-    <a href="/" class="brand">Up<span>ward</span></a>
-    <div>
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+    </div>
+    <div class="nav-right">
         <span class="username">{{ username }}</span>
         <a class="logout" href="/logout">Logout</a>
     </div>
-</div>
+</nav>
 
 <div class="container">
 

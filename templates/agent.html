@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Agent - Upward</title>
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+    flex-shrink:0;
+}
+.brand{font-size:1.8rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.brand span{color:var(--accent);}
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.nav-link{font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;margin-top:3px;}
+.nav-link:hover,.nav-link.active{color:var(--accent);}
+.username{font-weight:700;font-size:.9rem;}
+.logout{color:var(--text-secondary);text-decoration:none;font-size:.9rem;}
+.logout:hover{color:var(--accent);}
+
+/* Chat area */
+.chat-container{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    max-width:900px;
+    width:100%;
+    margin:0 auto;
+    padding:20px;
+    overflow:hidden;
+}
+.chat-box{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:10px 0;
+}
+.bubble{
+    padding:14px 18px;
+    border-radius:14px;
+    max-width:75%;
+    line-height:1.7;
+    font-size:.95rem;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+.bubble.user{
+    background:var(--sidebar);
+    color:white;
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+}
+.bubble.assistant{
+    background:white;
+    border:1px solid var(--border);
+    color:var(--text);
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+}
+.cursor{
+    display:inline-block;
+    width:8px;
+    height:16px;
+    background:var(--accent);
+    animation:blink .7s infinite;
+    vertical-align:middle;
+    margin-left:2px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Input bar */
+.input-bar{
+    flex-shrink:0;
+    padding:16px 0;
+    border-top:1px solid var(--border);
+    background:var(--bg);
+}
+.input-row{
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+}
+.input-row textarea{
+    flex:1;
+    padding:14px 16px;
+    border:2px solid var(--border);
+    border-radius:12px;
+    font-size:.95rem;
+    font-family:inherit;
+    resize:none;
+    outline:none;
+    background:white;
+    color:var(--text);
+    min-height:52px;
+    max-height:140px;
+}
+.input-row textarea:focus{border-color:var(--accent);}
+.send-btn{
+    padding:14px 24px;
+    background:var(--sidebar);
+    color:white;
+    border:none;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:.95rem;
+    white-space:nowrap;
+    height:52px;
+}
+.send-btn:hover{background:var(--sidebar-deep);}
+.send-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.actions-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0 0;
+    gap:10px;
+}
+.lock-warning{
+    font-size:.8rem;
+    color:var(--text-secondary);
+}
+.clear-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:6px 14px;
+    font-size:.8rem;
+    color:var(--text-secondary);
+    cursor:pointer;
+}
+.clear-btn:hover{border-color:var(--danger);color:var(--danger);}
+.empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-secondary);
+}
+.empty-state h3{font-size:1.4rem;margin-bottom:8px;color:var(--text);}
+.empty-state p{font-size:.95rem;}
+
+@media(max-width:768px){
+    .navbar{padding:0 14px;height:60px;}
+    .navbar .brand{font-size:1.4rem;}
+    .nav-left{gap:12px;}
+    .nav-right{gap:8px;}
+    .chat-container{padding:10px;width:100%;}
+    .bubble{max-width:85%;font-size:.9rem;padding:12px 14px;}
+    .input-row textarea{font-size:.9rem;padding:12px 14px;}
+    .send-btn{padding:12px 18px;font-size:.9rem;}
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+
+{% if locked %}
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <div class="empty-state" id="empty-state">
+            <h3>Ask your career agent</h3>
+            <p>Your profile and plan are loaded. Ask about next steps, skills, courses, or anything career-related.</p>
+        </div>
+    </div>
+
+    <div class="input-bar">
+        <div class="input-row">
+            <textarea id="prompt" rows="1" placeholder="Ask something about your career..." oninput="autoResize(this)"></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+        <div class="actions-bar">
+            <span class="lock-warning">Your plan and profile are attached to this conversation.</span>
+            <button class="clear-btn" onclick="clearChat()">Clear history</button>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="chat-container" style="justify-content:center;align-items:center;text-align:center;">
+    <div style="max-width:500px;">
+        <h2 style="margin-bottom:12px;">Pin a plan first</h2>
+        <p style="color:var(--text-secondary);margin-bottom:24px;">The career agent is available after you complete onboarding and pin a career plan.</p>
+        <a href="/onboarding" class="send-btn" style="display:inline-block;text-decoration:none;padding:14px 28px;">Build My Profile</a>
+    </div>
+</div>
+{% endif %}
+
+<script>
+const chatBox = document.getElementById("chat-box");
+const promptInput = document.getElementById("prompt");
+const sendBtn = document.getElementById("send-btn");
+let loading = false;
+
+promptInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+
+function autoResize(el){
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+}
+
+function addBubble(text, type){
+    const b = document.createElement("div");
+    b.className = "bubble " + type;
+    b.textContent = text;
+    chatBox.appendChild(b);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return b;
+}
+
+// Convert URLs to clickable links, escape everything else
+function linkify(text){
+    const escaped = String(text||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    return escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--accent);text-decoration:underline;">$1</a>');
+}
+
+function showCursor(bubble){
+    const c = document.createElement("span");
+    c.className = "cursor";
+    bubble.appendChild(c);
+    return c;
+}
+
+async function sendMessage(){
+    const prompt = promptInput.value.trim();
+    if(!prompt || loading) return;
+    loading = true;
+    sendBtn.disabled = true;
+    promptInput.value = "";
+    promptInput.style.height = "auto";
+
+    document.getElementById("empty-state")?.remove();
+    addBubble(prompt, "user");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "bubble assistant";
+    wrapper.innerHTML = "";
+    const cursor = showCursor(wrapper);
+    chatBox.appendChild(wrapper);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    let fullText = "";
+
+    try{
+        const res = await fetch("/api/chat", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({prompt})
+        });
+        if(!res.ok) throw new Error("Failed");
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while(true){
+            const {done, value} = await reader.read();
+            if(done) break;
+            fullText += decoder.decode(value);
+        }
+    }catch(e){
+        fullText += "\n\nSorry, something went wrong. Try again.";
+    }
+
+    // Slow typewriter effect — reveal chars at 25ms each
+    let pos = 0;
+    function typeChar(){
+        if(pos >= fullText.length){
+            cursor.remove();
+            loading = false;
+            sendBtn.disabled = false;
+            return;
+        }
+        // Advance a few chars at a time for speed control
+        const next = Math.min(pos + 3, fullText.length);
+        wrapper.innerHTML = linkify(fullText.slice(0, next));
+        wrapper.appendChild(cursor);
+        pos = next;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        setTimeout(typeChar, 25);
+    }
+    typeChar();
+}
+
+async function clearChat(){
+    if(!confirm("Clear all chat history?")) return;
+    await fetch("/api/chat/clear", {method:"POST"});
+    chatBox.innerHTML = `<div class="empty-state" id="empty-state">
+        <h3>Ask your career agent</h3>
+        <p>Your profile and plan are loaded. Ask about next steps, skills, courses, or anything career-related.</p>
+    </div>`;
+}
+
+// Load chat history on page load
+async function loadHistory(){
+    try{
+        const res = await fetch("/api/chat_history");
+        const json = await res.json();
+        const msgs = json.messages || [];
+        if(msgs.length){
+            document.getElementById("empty-state")?.remove();
+            msgs.forEach(m => addBubble(m.content, m.role));
+        }
+    }catch(e){}
+}
+{% if locked %}
+loadHistory();
+{% endif %}
+</script>
+
+</body>
+</html>

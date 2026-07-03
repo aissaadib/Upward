@@ -55,6 +55,7 @@ from routes.auth import *
 from routes.home import *
 from routes.advice import *
 from routes.plans import *
+from routes.agent import *
 from routes.onboarding import *
 from routes.courses import *
 from routes.test import *

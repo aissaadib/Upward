@@ -77,7 +77,7 @@ body{
 
 .nav-link.active,
 .nav-link:hover{
-    color: #3ec3d5;
+    color: var(--accent);
 }
 
 .nav-right{
@@ -293,6 +293,9 @@ body{
         <a href="/courses" class="nav-link active">
             Courses
         </a>
+        {% if locked %}
+        <a href="/agent" class="nav-link">Agent</a>
+        {% endif %}
         <a href="/test" class="btn btn-primary">Create a Course</a>
     </div>
 

@@ -69,18 +69,16 @@ body{
     color:var(--accent);
 }
 
-.course{
-    margin-top: 3px;
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-link{
+    margin-top:3px;
     font-size:1.5rem;
     font-weight:900;
     letter-spacing:-1px;
     text-decoration:none;
     color:inherit;
 }
-.course:hover
-{
-    color: #3ec3d5;
-}
+.nav-link:hover{color:var(--accent);}
 .nav-right{
     display:flex;
     align-items:center;
@@ -326,14 +324,12 @@ body{
 <body>
 
 <nav class="navbar">
-    <div style="display: flex; gap: 20px;">
-        <a href="/" class="brand">
-            Up<span>ward</span>
-        </a>
-    
-        <a href="/courses" class="course">
-           Courses
-        </a>
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+        {% if locked_plan %}
+        <a href="/agent" class="nav-link">Agent</a>
+        {% endif %}
     </div>    
     <div class="nav-right">
 
