@@ -311,10 +311,6 @@ function render(){
         "Needs portfolio work"
     ];
 
-    const resources = Array.isArray(d.links)
-    ? d.links
-    : [];
-
     box.innerHTML = `
         <h2>${esc(d.title)}</h2>
 
@@ -335,10 +331,13 @@ function render(){
         ${risks.map(r=>`<div class="risk">${esc(r)}</div>`).join("")}
 
         <div class="section-title">Resources</div>
-        ${resources.map(r=>`
+        ${[
+            {label:"Google this path", url:`https://www.google.com/search?q=${encodeURIComponent(d.title + " " + (d.category||"career"))}`},
+            {label:"YouTube tutorials", url:`https://www.youtube.com/results?search_query=${encodeURIComponent(d.title + " career guide")}`},
+            {label:"LinkedIn jobs", url:`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(d.title)}`}
+        ].map(r=>`
             <a class="resource" href="${r.url}" target="_blank">
-                ${esc(r.label)}
-            </a>
+                ${esc(r.label)} →</a>
         `).join("")}
 
         <button type="button" class="btn btn-lock" onclick="choosePlan(${active})">

@@ -200,7 +200,33 @@ Rules:
         "skills_to_build": []
     })
 
-    # 4. Phases (6 months)
+    # 4. Courses and programs
+    courses_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
+
+USER PROFILE:
+{profile}
+
+Generate ONLY a list of specific courses, programs, or certifications they should take for this path. Do NOT repeat any previous content.
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "courses": [
+    {{"name": "Exact course/program name", "provider": "Coursera/edX/Udemy/etc", "description": "What they will learn and why it matters", "why": "Why this specific course for their situation"}}
+  ]
+}}
+
+Rules:
+- Include 4-6 courses relevant to their path
+- Use well-known platforms: Coursera, edX, Udemy, freeCodeCamp, Khan Academy, LinkedIn Learning, etc.
+- Consider their budget (prefer free if budget is limited)
+- Each course must have a unique focus
+- Do NOT include URLs — only course name and provider"""
+
+    courses_data = call_ai_for_section(courses_prompt, "courses", {
+        "courses": []
+    })
+
+    # 5. Phases (6 months)
     phases_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
@@ -245,7 +271,7 @@ Rules:
         ]
     })
 
-    # 5. Pitfalls and risks
+    # 6. Pitfalls and risks
     risks_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
@@ -269,27 +295,27 @@ Rules:
         "risks": suggestion.get("risks", [])
     })
 
-    # 6. Links and resources
+    # 7. Additional resources (name + platform only, no URLs)
     links_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
 
-Generate ONLY additional resources and links. Do NOT repeat any previous content.
+Generate ONLY additional resource recommendations. Do NOT repeat any previous content or courses.
 
 Respond ONLY with valid JSON (no markdown):
 {{
-  "links": [{{"label": "Resource", "url": "https://...", "when": "When to use it"}}]
+  "links": [{{"name": "Resource name", "platform": "YouTube/Reddit/Medium/Podcast/etc", "description": "What it covers and why useful", "when": "When in their journey to use it"}}]
 }}
 
 Rules:
-- Provide 3-5 high-quality, reputable resources
-- Include when in their journey they should use each resource
-- Consider their budget (prioritize free resources)
-- URLs must be real and working"""
+- Provide 3-5 resources (blogs, communities, YouTube channels, podcasts, tools)
+- No URLs — just resource name and platform
+- Consider their budget (prefer free)
+- Each resource must be different from previous sections"""
 
     links_data = call_ai_for_section(links_prompt, "links", {
-        "links": suggestion.get("links", [])
+        "links": []
     })
 
     # Combine all sections into one plan dict
@@ -297,6 +323,7 @@ Rules:
         **basic_data,
         **habits_data,
         **skills_data,
+        **courses_data,
         **phases_data,
         **risks_data,
         **links_data

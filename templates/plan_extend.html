@@ -390,35 +390,37 @@ ul li::before{
 }
 
 @media(max-width:900px){
+    .container{width:92%;padding:30px 0 80px;}
+    .navbar{padding:0 14px;height:60px;}
+    .navbar div{display:flex;align-items:center;gap:8px;}
+    .navbar span{font-size:.85rem;}
+    .hero{margin-bottom:40px;}
+    .hero h1{font-size:clamp(1.8rem,7vw,2.8rem);letter-spacing:-1px;}
+    .hero p{font-size:.95rem;}
+    .phase-head{flex-direction:column;gap:8px;}
+    .phase{border-left:3px solid var(--accent);padding-left:20px;padding-bottom:30px;margin-bottom:0;}
+    .phase::before,.phase::after{display:none;}
+    .highlight{padding:16px;border-radius:12px;font-size:.9rem;}
+    .actions{position:static;transform:none;width:100%;flex-direction:column;gap:8px;padding:12px;margin-top:30px;}
+    .btn{width:100%;padding:12px 16px;font-size:.9rem;}
+    .card{margin-top:30px;padding-top:16px;}
+    ul li{padding-left:18px;font-size:.9rem;}
+    .pill{font-size:.8rem;padding:8px 12px;}
+}
 
-    .container{
-        width:92%;
-    }
-
-    .navbar{
-        padding:0 18px;
-    }
-
-    
-    .phase-head{
-        flex-direction:column;
-    }
-
-    .actions{
-        position:static;
-    }
-  
-    .phase{
-    border-left:3px solid var(--accent);
-    padding-left:24px;
-    margin-bottom:40px;
-    }
-    .highlight{
-    background:#eefcff;
-    padding:20px;
-    border-radius:14px;
-    }
-
+@media(max-width:480px){
+    .container{width:94%;padding:20px 0 60px;}
+    .navbar{padding:0 10px;height:52px;}
+    .brand{font-size:1.4rem;}
+    .hero h1{font-size:clamp(1.4rem,6vw,1.8rem);}
+    .hero p{font-size:.85rem;line-height:1.6;}
+    .badge{font-size:.65rem;padding:6px 10px;}
+    .section-title{font-size:.7rem;}
+    .phase{padding-left:14px;padding-bottom:24px;}
+    .phase h3{font-size:.95rem;}
+    .phase-month{font-size:.65rem;padding:4px 10px;}
+    .card{margin-top:20px;padding-top:12px;}
+    .actions{padding:10px;gap:6px;}
 }
 </style>
 </head>
@@ -463,6 +465,7 @@ function esc(s){
 function renderPlan(p){
     const phases = p.phases || [];
     const skills = p.skills_to_build || [];
+    const courses = p.courses || [];
     const habits = p.weekly_habits || [];
     const metrics = p.success_metrics || [];
     const pitfalls = p.pitfalls || [];
@@ -513,6 +516,22 @@ function renderPlan(p){
             `).join("")}
         </div>` : ""}
 
+        ${courses.length ? `
+        <div class="card">
+            <div class="section-title">Courses & Programs</div>
+            ${courses.map(c => `
+                <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                    <strong>${esc(c.name)}</strong>
+                    ${c.provider ? ` <span class="pill">${esc(c.provider)}</span>` : ""}
+                    ${c.description ? `<p style="color:var(--text-secondary);margin-top:6px;">${esc(c.description)}</p>` : ""}
+                    ${c.why ? `<p style="color:var(--text-secondary);font-size:.9rem;margin-top:4px;"><em>Why: ${esc(c.why)}</em></p>` : ""}
+                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent(c.name + " " + (c.provider||"course"))}" target="_blank" style="margin-top:8px;display:inline-flex;border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--text);font-weight:600;">
+                        Find this course →
+                    </a>
+                </div>
+            `).join("")}
+        </div>` : ""}
+
         ${metrics.length ? `
         <div class="card">
             <div class="section-title">Success metrics</div>
@@ -526,8 +545,18 @@ function renderPlan(p){
 
         ${links.length ? `
         <div class="card">
-            <div class="section-title">Key resources</div>
-            ${links.map(r=>`<a class="resource" href="${esc(r.url)}" target="_blank">${esc(r.label)}${r.when ? ` <span style="color:var(--text-secondary);">(${esc(r.when)})</span>` : ""}</a>`).join("")}
+            <div class="section-title">Additional Resources</div>
+            ${links.map(r=>`
+                <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                    <strong>${esc(r.name||r.label)}</strong>
+                    ${r.platform ? ` <span class="pill">${esc(r.platform)}</span>` : ""}
+                    ${(r.description||r.label) ? `<p style="color:var(--text-secondary);margin-top:6px;">${esc(r.description||r.label)}</p>` : ""}
+                    ${r.when ? `<p style="color:var(--text-secondary);font-size:.9rem;margin-top:4px;"><em>When: ${esc(r.when)}</em></p>` : ""}
+                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent((r.name||r.label) + " " + (r.platform||""))}" target="_blank" style="margin-top:8px;display:inline-flex;border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--text);font-weight:600;">
+                        Find this resource →
+                    </a>
+                </div>
+            `).join("")}
         </div>` : ""}
         {% if locked == 0 %}
             <div class="actions">    
