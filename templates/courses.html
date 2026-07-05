@@ -122,6 +122,53 @@ body{
     font-size:1.05rem;
 }
 
+/* ── Tag filter bar ── */
+.tag-filter{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:20px 0 0;
+    border-bottom:1px solid var(--border);
+    margin-bottom:0;
+}
+.tag-filter .filter-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:.8rem;
+    font-weight:700;
+    cursor:pointer;
+    background:white;
+    border:1.5px solid var(--border);
+    color:var(--text-secondary);
+    transition:.15s;
+    user-select:none;
+}
+.tag-filter .filter-tag:hover{
+    border-color:var(--accent);
+    color:var(--text);
+}
+.tag-filter .filter-tag.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:white;
+}
+.tag-filter .filter-tag.all-tag{
+    border-color:var(--sidebar);
+    color:var(--sidebar);
+}
+.tag-filter .filter-tag.all-tag.active{
+    background:var(--sidebar);
+    color:white;
+}
+.tag-filter .filter-count{
+    font-size:.7rem;
+    font-weight:400;
+    opacity:.7;
+}
+
 .section{
     padding:40px 0 80px;
 }
@@ -148,6 +195,10 @@ body{
     box-shadow:0 6px 20px rgba(30,34,64,.06);
 }
 
+.course-card.hidden{
+    display:none;
+}
+
 .course-title{
     font-size:1.15rem;
     font-weight:800;
@@ -170,6 +221,12 @@ body{
     color:var(--accent);
     padding:4px 10px;
     border-radius:999px;
+    cursor:pointer;
+    transition:.15s;
+}
+.tag:hover{
+    background:var(--accent);
+    color:white;
 }
 
 .course-content{
@@ -248,6 +305,24 @@ body{
     background:#2eb3c5;
 }
 
+.btn-seed{
+    background:white;
+    border:1.5px solid var(--border);
+    color:var(--text-secondary);
+    padding:8px 16px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.8rem;
+    cursor:pointer;
+    text-decoration:none;
+    transition:.15s;
+    margin-left:12px;
+}
+.btn-seed:hover{
+    border-color:var(--accent);
+    color:var(--text);
+}
+
 .empty-state{
     margin-top:40px;
     padding:60px 20px;
@@ -265,19 +340,9 @@ body{
     .nav-left{
         gap:14px;
     }
+    .tag-filter{gap:6px;}
+    .tag-filter .filter-tag{font-size:.75rem;padding:4px 10px;}
 }
-
-/* ── In-app confirmation modal ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal-box{background:white;border-radius:16px;padding:28px;width:min(400px,90%);box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;}
-.modal-box p{margin:0 0 24px;font-size:1.05rem;line-height:1.6;color:var(--text);}
-.modal-actions{display:flex;gap:10px;justify-content:center;}
-.modal-btn{padding:12px 24px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:.9rem;min-width:100px;}
-.modal-btn.confirm{background:var(--danger);color:white;}
-.modal-btn.cancel{background:#f3f4f6;color:var(--text);}
-.modal-btn.confirm:hover{opacity:.9;}
-.modal-btn.cancel:hover{background:#e5e7eb;}
 </style>
 </head>
 
@@ -323,16 +388,28 @@ body{
     <section class="section">
 
         {% if courses %}
-        <div class="course-grid">
+
+        <div class="tag-filter" id="tag-filter">
+            <span class="filter-tag all-tag active" onclick="filterByTag('')" id="filter-all">All</span>
+            {% for tag in all_tags %}
+            <span class="filter-tag" onclick="filterByTag('{{ tag|e }}')" data-tag="{{ tag|e }}">#{{ tag }} <span class="filter-count">{{ tag_counts[tag] }}</span></span>
+            {% endfor %}
+            {% if session.get('user_id') %}
+            <a href="/seed_courses" class="btn-seed" onclick="return confirm('Add sample courses to test the tag filter?')">+ Add sample courses</a>
+            {% endif %}
+        </div>
+
+        <div class="course-grid" id="course-grid">
             {% for item in courses %}
-            <div class="course-card">
+            <div class="course-card" data-tags="{{ item.tags|lower if item.tags else '' }}">
                 <a href="/lessons/{{ item.id }}" style="text-decoration:none;color:inherit;">
                 <div class="course-title">{{ item.title }}</div>
                 
                 {% if item.tags %}
                 <div class="course-tags">
                     {% for tag in item.tags.split(',') %}
-                        <span class="tag">{{ tag.strip() }}</span>
+                        {% set t = tag.strip() %}
+                        <span class="tag" onclick="event.stopPropagation();filterByTag('{{ t|e }}')">#{{ t }}</span>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -355,16 +432,21 @@ body{
                 
                 {% if item.is_owner %}
                 <div class="course-actions">
-                    <button class="btn-danger-sm" onclick="event.preventDefault(); showConfirm('Delete this course and all its lessons?').then(ok => ok && fetch('/delete_course/{{ item.id }}', {method:'POST'}).then(()=>location.reload()));">Delete</button>
+                    <button class="btn-danger-sm" onclick="event.preventDefault(); if(confirm('Delete this course and all its lessons?')){fetch('/delete_course/{{ item.id }}', {method:'POST'}).then(()=>location.reload());}">Delete</button>
                 </div>
                 {% endif %}
 
             </div>
             {% endfor %}
         </div>
+
+        <div class="empty-state" id="empty-filter" style="display:none;">
+            No courses match this tag.
+        </div>
+
         {% else %}
         <div class="empty-state">
-            No courses are available yet. Check back soon.
+            No courses yet. <a href="/seed_courses" style="color:var(--accent);font-weight:700;">Add sample courses</a> to test the tag filter.
         </div>
         {% endif %}
 
@@ -372,38 +454,36 @@ body{
 
 </main>
 
-<!-- ── In-app confirmation modal ── -->
-<div class="modal-overlay" id="confirm-modal">
-    <div class="modal-box">
-        <p id="confirm-msg">Are you sure?</p>
-        <div class="modal-actions">
-            <button class="modal-btn cancel" onclick="closeConfirm()">Cancel</button>
-            <button class="modal-btn confirm" id="confirm-yes">Confirm</button>
-        </div>
-    </div>
-</div>
-
 <script>
-let __confirmResolve = null;
-function showConfirm(msg){
-    return new Promise(resolve => {
-        __confirmResolve = resolve;
-        document.getElementById("confirm-msg").textContent = msg;
-        document.getElementById("confirm-modal").classList.add("open");
-        document.getElementById("confirm-yes").onclick = () => { closeConfirm(); resolve(true); };
-    });
-}
-function closeConfirm(v){
-    document.getElementById("confirm-modal").classList.remove("open");
-}
-document.addEventListener("click", function(e){
-    const m = document.getElementById("confirm-modal");
-    if(!m || !m.classList.contains("open")) return;
-    if(e.target === m || e.target.classList.contains("modal-btn") && e.target.classList.contains("cancel")){
-        closeConfirm();
-        if(__confirmResolve) { __confirmResolve(false); __confirmResolve = null; }
+let activeTag = "";
+
+function filterByTag(tag){
+    activeTag = tag;
+    const cards = document.querySelectorAll(".course-card");
+    const filters = document.querySelectorAll(".filter-tag");
+    let visible = 0;
+
+    filters.forEach(f => f.classList.remove("active"));
+    if(!tag){
+        document.getElementById("filter-all").classList.add("active");
+    } else {
+        document.querySelectorAll(`.filter-tag[data-tag]`).forEach(el => {
+            if(el.getAttribute("data-tag") === tag) el.classList.add("active");
+        });
     }
-});
+
+    cards.forEach(card => {
+        const tags = (card.getAttribute("data-tags") || "").toLowerCase();
+        if(!tag || tags.split(",").map(t => t.trim()).includes(tag.toLowerCase())){
+            card.classList.remove("hidden");
+            visible++;
+        } else {
+            card.classList.add("hidden");
+        }
+    });
+
+    document.getElementById("empty-filter").style.display = (visible === 0 && tag) ? "block" : "none";
+}
 </script>
 
 </body>
