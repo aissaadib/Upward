@@ -27,7 +27,6 @@ def build_profile_summary(answers):
         f"Risk tolerance: {answers.get('q6c', 'Not provided')}",
         f"5-year success vision: {answers.get('q6d', 'Not provided')}",
         f"Learning style: {answers.get('q8a', 'Not provided')}",
-        f"Portfolio status: {answers.get('q8b', 'Not provided')}",
         f"Confidence level: {answers.get('q8c', 'Not provided')}",
         f"Country: {answers.get('q11', 'Not provided')}",
     ]

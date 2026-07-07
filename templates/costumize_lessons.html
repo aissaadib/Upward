@@ -573,10 +573,10 @@ extractBtn.addEventListener('click', function() {
     const file = fileInput.files[0];
     if (!file) return;
     extractBtn.disabled = true;
-    extractBtn.textContent = '⏳ Extracting...';
+    extractBtn.textContent = ' Extracting...';
     const fd = new FormData();
     fd.append('file', file);
-    editor.innerHTML = '<p style="color:var(--text-secondary);">⏳ Extracting and formatting content...</p>';
+    editor.innerHTML = '<p style="color:var(--text-secondary);"> Extracting and formatting content...</p>';
     editor.classList.remove('empty');
 
     fetch('/api/extract_lesson', { method: 'POST', body: fd })

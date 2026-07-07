@@ -54,7 +54,7 @@ body{
     margin-bottom:18px;
 }
 
-input{
+input:not([type="file"]){
     width:100%;
     padding:14px 16px;
     border:1px solid var(--border);
@@ -63,10 +63,15 @@ input{
     font-size:.95rem;
 }
 
-input:focus{
+input:not([type="file"]):focus{
     outline:none;
     border-color:var(--accent);
 }
+
+.file-input{display:none;}
+.file-upload-btn{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:8px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;cursor:pointer;text-align:center;font-weight:600;transition:.15s;}
+.file-upload-btn:hover{border-color:var(--accent);}
+.file-name{font-size:.85rem;color:var(--accent);font-weight:600;margin-top:8px;}
 
 .btn{
     width:100%;
@@ -116,7 +121,7 @@ input:focus{
         Create your account.
     </p>
 
-    <form action="/register" method="POST">
+    <form action="/register" method="POST" enctype="multipart/form-data">
 
         <div class="form-group">
             <input
@@ -152,6 +157,13 @@ input:focus{
                 placeholder="Confirm password"
                 autocomplete="new-password"
                 required>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+            <label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">Resume / CV (PDF)</label>
+            <input type="file" name="resume" accept=".pdf" class="file-input" id="resume-input" required onchange="document.getElementById('resume-name').textContent=this.files[0]?.name||'';document.getElementById('resume-btn').textContent=this.files[0]?'Change file':'Choose PDF file'">
+            <button type="button" class="file-upload-btn" id="resume-btn" onclick="document.getElementById('resume-input').click()">Choose PDF file</button>
+            <p class="file-name" id="resume-name"></p>
         </div>
 
         {% if error %}

@@ -8,6 +8,22 @@ import smtplib
 import json
 from email.mime.text import MIMEText
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+
+def extract_text_from_pdf(file_path):
+    """Extract text content from a PDF file using PyPDF2."""
+    try:
+        import PyPDF2
+        text = ""
+        with open(file_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
+        return text.strip()
+    except Exception as e:
+        print(f"Error extracting text from PDF: {e}")
+        return None
 
 
 def send_code(to_email, code):
@@ -55,10 +71,28 @@ def register():
             return render_template("register.html", error="Email already registered")
         if db.execute("SELECT * FROM users WHERE name = ?", username):
             return render_template("register.html", error="Username already taken")
+
+        # Handle required resume upload
+        resume_file = request.files.get("resume")
+        if not resume_file or not resume_file.filename:
+            return render_template("register.html", error="Resume / CV is required")
+        if not resume_file.filename.lower().endswith(".pdf"):
+            return render_template("register.html", error="Resume must be a PDF file")
+
+        upload_folder = os.path.join(os.getcwd(), 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        filename = secure_filename(f"pending_{email}_{resume_file.filename}")
+        file_path = os.path.join(upload_folder, filename)
+        resume_file.save(file_path)
+        resume_text = extract_text_from_pdf(file_path)
+        if not resume_text:
+            return render_template("register.html", error="Could not read text from your PDF. Try a different file.")
+
         code = str(random.randint(100000, 999999))
         session["pending_email"]    = email
         session["pending_username"] = username
         session["pending_hash"]     = generate_password_hash(password)
+        session["pending_resume"]   = resume_text
         session["verify_code"]      = code
         try:
             send_code(email, code)
@@ -87,8 +121,9 @@ def verify():
     if request.method == "POST":
         entered = request.form.get("code")
         if entered == session.get("verify_code"):
-            db.execute("INSERT INTO users (name, email, hash, locked) VALUES (?, ?, ?, ?)",
-                       session["pending_username"], session["pending_email"], session["pending_hash"], 0)
+            resume_text = session.get("pending_resume")
+            db.execute("INSERT INTO users (name, email, hash, resume, locked) VALUES (?, ?, ?, ?, ?)",
+                       session["pending_username"], session["pending_email"], session["pending_hash"], resume_text, 0)
             user_id = db.execute("SELECT id FROM users WHERE email = ?",
                                  session["pending_email"])[0]["id"]
             session.clear()

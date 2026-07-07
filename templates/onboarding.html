@@ -50,10 +50,7 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 .btn-next.active:hover{background:#1e2240;}
 .btn-back{width:56px;border:1.5px solid var(--border);background:white;border-radius:12px;cursor:pointer;font-size:1rem;transition:.15s;}
 .btn-back:hover{border-color:var(--accent);}
-.file-input{display:none;}
-.file-upload-btn{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;cursor:pointer;text-align:center;font-weight:600;transition:.15s;}
-.file-upload-btn:hover{border-color:var(--accent);background:#eefcff;}
-.file-selected{margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:600;}
+
 </style>
 </head>
 <body>
@@ -68,7 +65,7 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
     </div>
     <form id="form" action="/onboarding" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="answers" id="answers-input">
-        <input type="file" name="resume_file" id="resume-file-input" style="display:none;">
+
     </form>
     <div id="screen"></div>
 </div>
@@ -239,27 +236,7 @@ const allQuestions = [
         "Learning by doing at work"
     ]
 },
-{
-    key:"q8b",
-    type:"options",
-    q:"Do you already have a portfolio, resume, or public work?",
-    sub:"This helps determine your starting point.",
-    options:[
-        "Yes, strong portfolio",
-        "Yes, but needs improvement",
-        "Only a resume",
-        "Very little",
-        "Nothing yet"
-    ]
-},
-{
-    key:"q8b_upload",
-    type:"file",
-    q:"Upload your resume or portfolio (optional)",
-    sub:"This helps us understand your background better. PDF files only.",
-    showWhen: {key: "q8b", not: "Nothing yet"}, // Only show if user has at least some experience
-    optional: true
-},
+
 {
     key:"q8c",
     type:"options",
@@ -456,12 +433,6 @@ function render(){
                 return `<button type="button" class="option-btn${sel}" onclick="toggleDynamic('${opt.replace(/'/g,"\\'")}', this)">${opt}</button>`;
             }).join("");
         })();
-    } else if(q.type === "file"){
-        // Hidden file input triggered by a styled button
-        html += `<input type="file" id="file-input" accept=".pdf" class="file-input" onchange="updateFile(this)">`;
-        html += `<button type="button" class="file-upload-btn" onclick="document.getElementById('file-input').click()">${answers[q.key] ? 'Change file' : 'Choose PDF file'}</button>`;
-        if(answers[q.key]) html += `<p class="file-selected">Selected: ${answers[q.key].name}</p>`;
-        if(q.optional) html += `<p class="skip-hint">You can skip this one.</p>`;
     } else if(q.type === "country"){
         // Custom country dropdown with flag emojis
         const val = answers[q.key] || "";
@@ -522,7 +493,6 @@ function isValid(q){
     const val = answers[q.key];
     if(q.optional) return true;
     if(q.type === "multi" || q.type === "dynamic_multi") return val && val.length > 0;
-    if(q.type === "file") return !!val;
     return !!val;
 }
 
@@ -581,21 +551,6 @@ function updateText(val){
     answers[getActiveQuestions()[i].key] = val;
     const nb = document.getElementById("btn-next");
     if(nb) nb.classList.toggle("active", !!val || !!getActiveQuestions()[i].optional);
-}
-
-// Store uploaded file reference and show its name
-function updateFile(input){
-    const file = input.files[0];
-    if(file){
-        answers[getActiveQuestions()[i].key] = file;
-        document.querySelector(".file-selected")?.remove();
-        const p = document.createElement("p");
-        p.className = "file-selected";
-        p.textContent = `Selected: ${file.name}`;
-        input.parentNode.insertBefore(p, input.nextSibling);
-        const nb = document.getElementById("btn-next");
-        if(nb) nb.classList.add("active");
-    }
 }
 
 // Apply a custom typed-in answer for questions with the "other" option
@@ -681,17 +636,6 @@ function back(){
 function finish(){
     document.getElementById("progress").style.width = "100%";
     document.getElementById("answers-input").value = JSON.stringify(answers);
-
-    // Move uploaded file to the hidden form input for actual upload
-    const fileInput = document.getElementById("file-input");
-    const hiddenFileInput = document.getElementById("resume-file-input");
-    if(fileInput && fileInput.files[0] && hiddenFileInput){
-        const file = fileInput.files[0];
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        hiddenFileInput.files = dataTransfer.files;
-    }
-
     document.getElementById("form").submit();
 }
 
