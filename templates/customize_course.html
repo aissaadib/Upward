@@ -326,6 +326,20 @@ textarea.form-control{
     font-size:.9rem;
 }
 
+/* ── Tag input (itch.io style) ── */
+.tag-input-wrap{position:relative;}
+.tag-input-inner{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;background:white;cursor:text;transition:border-color .2s;min-height:46px;align-items:center;}
+.tag-input-inner:focus-within{border-color:var(--accent);}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;background:#eafcff;color:var(--accent);padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;}
+.tag-pill .tag-x{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.9rem;padding:0 2px;line-height:1;opacity:.6;}
+.tag-pill .tag-x:hover{opacity:1;}
+.tag-input-field{flex:1;min-width:120px;border:none;outline:none;font-size:.9rem;padding:4px 0;background:transparent;}
+.tag-suggestions{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--border);border-radius:8px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.06);}
+.tag-suggestions.open{display:block;}
+.tag-suggestion{padding:8px 14px;cursor:pointer;font-size:.85rem;font-weight:600;transition:background .1s;}
+.tag-suggestion:hover,.tag-suggestion.highlighted{background:#f3f4f6;}
+.tag-suggestion .scount{font-weight:400;color:var(--text-secondary);font-size:.75rem;margin-left:6px;}
+
 @media(max-width:768px){
     .navbar{
         padding:0 18px;
@@ -498,8 +512,14 @@ textarea.form-control{
                     <input type="number" name="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Tags (comma-separated)</label>
-                    <input type="text" name="tags" class="form-control" placeholder="e.g., python, beginner, web development">
+                    <label class="form-label">Tags</label>
+                    <div id="tag-input-wrap" class="tag-input-wrap">
+                        <div class="tag-input-inner">
+                            <input type="text" class="tag-input-field" placeholder="Type a tag and press Enter or comma">
+                        </div>
+                        <div class="tag-suggestions"></div>
+                        <input type="hidden" name="tags" class="tag-hidden" value="">
+                    </div>
                 </div>
             </div>
 
@@ -517,6 +537,85 @@ textarea.form-control{
     </section>
 
 </main>
+
+<script>
+const SUGGESTED_TAGS = ["python","javascript","react","frontend","backend","web","mobile","data-science","machine-learning","design","ui-ux","figma","devops","docker","kubernetes","database","sql","security","game-dev","unity","css","html","node","api","flutter","dart","go","rust","java","csharp","php","ruby","swift","kotlin","aws","git","testing","agile","blockchain","ai","beginner","advanced","tutorial","project"];
+
+function initTagInput(){
+    const wrap = document.getElementById("tag-input-wrap");
+    if(!wrap) return;
+    const inner = wrap.querySelector(".tag-input-inner");
+    const input = wrap.querySelector(".tag-input-field");
+    const hidden = wrap.querySelector(".tag-hidden");
+    const suggest = wrap.querySelector(".tag-suggestions");
+    const tags = [];
+
+    function render(){
+        inner.querySelectorAll(".tag-pill").forEach(el => el.remove());
+        tags.forEach(t => {
+            const pill = document.createElement("span");
+            pill.className = "tag-pill";
+            pill.innerHTML = `#${t} <button type="button" class="tag-x" onclick="removeTag('${t}')">✕</button>`;
+            inner.insertBefore(pill, input);
+        });
+        input.focus();
+        hidden.value = tags.join(",");
+    }
+
+    window.addTag = function(t){
+        t = String(t).trim().toLowerCase().replace(/[^a-z0-9-]/g,"");
+        if(!t || tags.includes(t)) return;
+        tags.push(t);
+        render();
+        suggest.classList.remove("open");
+        if(input) input.value = "";
+    };
+
+    window.removeTag = function(t){
+        const idx = tags.indexOf(t);
+        if(idx > -1){ tags.splice(idx, 1); render(); }
+    };
+
+    input.addEventListener("input", function(){
+        const q = this.value.toLowerCase().trim();
+        if(!q){
+            suggest.classList.remove("open");
+            return;
+        }
+        const matches = SUGGESTED_TAGS.filter(s => s.includes(q) && !tags.includes(s)).slice(0, 6);
+        if(!matches.length){
+            suggest.classList.remove("open");
+            return;
+        }
+        suggest.innerHTML = matches.map(s => `<div class="tag-suggestion highlighted" onclick="addTag('${s}')">#${s}</div>`).join("");
+        suggest.classList.add("open");
+    });
+
+    input.addEventListener("keydown", function(e){
+        if(e.key === "Enter" || e.key === ","){
+            e.preventDefault();
+            const q = this.value.trim();
+            if(q){ window.addTag(q); }
+        }
+        if(e.key === "Backspace" && !this.value && tags.length){
+            tags.pop();
+            render();
+        }
+    });
+
+    inner.addEventListener("click", function(e){
+        if(e.target === inner || e.target === input) input.focus();
+    });
+
+    document.addEventListener("click", function(e){
+        if(!e.target.closest(".tag-input-wrap")){
+            suggest.classList.remove("open");
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initTagInput);
+</script>
 
 </body>
 </html>

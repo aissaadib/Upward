@@ -304,17 +304,6 @@ body{
     }
 }
 
-/* ── In-app confirmation modal ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal-box{background:white;border-radius:16px;padding:28px;width:min(400px,90%);box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;}
-.modal-box p{margin:0 0 24px;font-size:1.05rem;line-height:1.6;color:var(--text);}
-.modal-actions{display:flex;gap:10px;justify-content:center;}
-.modal-btn{padding:12px 24px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:.9rem;min-width:100px;}
-.modal-btn.confirm{background:var(--danger);color:white;}
-.modal-btn.cancel{background:#f3f4f6;color:var(--text);}
-.modal-btn.confirm:hover{opacity:.9;}
-.modal-btn.cancel:hover{background:#e5e7eb;}
 </style>
 </head>
 
@@ -366,7 +355,7 @@ body{
                 {% if is_owner %}
                 <div class="lesson-actions" onclick="event.stopPropagation()">
                     <a href="/edit_lesson/{{ lesson.num }}" class="btn-edit">Edit</a>
-                    <button class="btn-danger" onclick="showConfirm('Delete this lesson?').then(ok => ok && fetch('/delete_lesson/{{ lesson.num }}', {method:'POST'}).then(()=>location.reload()));">Delete</button>
+                    <button class="btn-danger" onclick="if(confirm('Delete this lesson?')){fetch('/delete_lesson/{{ lesson.num }}', {method:'POST'}).then(()=>location.reload());}">Delete</button>
                 </div>
                 {% endif %}
             </div>
@@ -386,38 +375,7 @@ body{
 
 </main>
 
-<!-- ── In-app confirmation modal ── -->
-<div class="modal-overlay" id="confirm-modal">
-    <div class="modal-box">
-        <p id="confirm-msg">Are you sure?</p>
-        <div class="modal-actions">
-            <button class="modal-btn cancel" onclick="closeConfirm()">Cancel</button>
-            <button class="modal-btn confirm" id="confirm-yes">Confirm</button>
-        </div>
-    </div>
-</div>
-
 <script>
-let __confirmResolve = null;
-function showConfirm(msg){
-    return new Promise(resolve => {
-        __confirmResolve = resolve;
-        document.getElementById("confirm-msg").textContent = msg;
-        document.getElementById("confirm-modal").classList.add("open");
-        document.getElementById("confirm-yes").onclick = () => { closeConfirm(); resolve(true); };
-    });
-}
-function closeConfirm(v){
-    document.getElementById("confirm-modal").classList.remove("open");
-}
-document.addEventListener("click", function(e){
-    const m = document.getElementById("confirm-modal");
-    if(!m || !m.classList.contains("open")) return;
-    if(e.target === m || e.target.classList.contains("modal-btn") && e.target.classList.contains("cancel")){
-        closeConfirm();
-        if(__confirmResolve) { __confirmResolve(false); __confirmResolve = null; }
-    }
-});
 </script>
 
 </body>

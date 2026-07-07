@@ -43,7 +43,7 @@ ul{padding-left:18px;line-height:1.8;color:var(--text-secondary);}
 .btn{display:inline-block;padding:14px 22px;border-radius:12px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-size:.95rem;}
 .btn-ghost{background:white;border:1.5px solid var(--border);color:var(--text);}
 .btn-danger{background:#fff3f3;border:1.5px solid #ffcdd2;color:var(--danger);}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
+
 .modal-card{background:var(--danger);color:white;padding:32px;border-radius:16px;max-width:400px;width:90%;text-align:center;}
 .modal-card h2{font-size:1.5rem;margin-bottom:12px;}
 .modal-card p{margin-bottom:24px;line-height:1.6;opacity:0.9;}
@@ -168,35 +168,10 @@ ul{padding-left:18px;line-height:1.8;color:var(--text-secondary);}
 
     <div class="actions">
         <a href="/" class="btn btn-ghost">Back to home</a>
-        <button type="button" class="btn btn-danger" onclick="showLeaveModal()">Leave this plan</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="leaveModal">
-    <div class="modal-card">
-        <h2>Leave this plan?</h2>
-        <p>This will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.</p>
-        <div class="modal-actions">
-            <button class="modal-btn-cancel" onclick="hideLeaveModal()">Cancel</button>
-            <button class="modal-btn-confirm" onclick="confirmLeave()">Leave plan</button>
-        </div>
+        <button type="button" class="btn btn-danger" onclick="if(confirm('Leave this plan? This will permanently remove your current roadmap and progress.')){document.getElementById('leaveForm').submit();}">Leave this plan</button>
     </div>
 </div>
 
 <form action="/plan/leave" method="POST" id="leaveForm" style="display:none;"></form>
-
-<script>
-// Show/hide the "Leave plan" confirmation modal
-function showLeaveModal() {
-    document.getElementById('leaveModal').style.display = 'flex';
-}
-function hideLeaveModal() {
-    document.getElementById('leaveModal').style.display = 'none';
-}
-// Submit the leave form on confirmation
-function confirmLeave() {
-    document.getElementById('leaveForm').submit();
-}
-</script>
 </body>
 </html>

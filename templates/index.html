@@ -307,17 +307,6 @@ body{
     line-height:1.6;
 }
 
-/* ── In-app confirmation modal ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal-box{background:white;border-radius:16px;padding:28px;width:min(400px,90%);box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;}
-.modal-box p{margin:0 0 24px;font-size:1.05rem;line-height:1.6;color:var(--text);}
-.modal-actions{display:flex;gap:10px;justify-content:center;}
-.modal-btn{padding:12px 24px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:.9rem;min-width:100px;}
-.modal-btn.confirm{background:var(--danger);color:white;}
-.modal-btn.cancel{background:#f3f4f6;color:var(--text);}
-.modal-btn.confirm:hover{opacity:.9;}
-.modal-btn.cancel:hover{background:#e5e7eb;}
 </style>
 </head>
 
@@ -377,7 +366,7 @@ body{
     </p>
 
     <form id="leave-form" action="/plan/leave" method="POST">
-        <button type="button" class="btn btn-leave" onclick="showConfirm('Leave this plan and permanently delete your current roadmap?').then(ok => ok && document.getElementById('leave-form').submit());">Leave this plan</button>
+        <button type="button" class="btn btn-leave" onclick="if(confirm('Leave this plan and permanently delete your current roadmap?')){document.getElementById('leave-form').submit();}">Leave this plan</button>
     </form>
 </div>
                 </div>
@@ -389,29 +378,6 @@ body{
             {% endif %}
         </div>
         
-        {% if courses %}
-        <section class="section" style="margin-top:40px;">
-            <div class="section-label">Available Courses</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;">
-                {% for c in courses %}
-                <a href="/lessons/{{ c.id }}" style="text-decoration:none;color:inherit;display:block;background:white;border:1px solid var(--border);border-radius:14px;padding:20px;transition:.2s;">
-                    <h3 style="font-size:1rem;margin-bottom:6px;">{{ c.title }}</h3>
-                    {% if c.description %}
-                    <p style="font-size:.85rem;color:var(--text-secondary);margin:0;">{{ c.description[:120] }}{% if c.description|length > 120 %}…{% endif %}</p>
-                    {% endif %}
-                    {% if c.tags %}
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
-                        {% for tag in c.tags.split(',')[:3] %}
-                        <span style="background:#f3f4f6;padding:4px 10px;border-radius:999px;font-size:.75rem;font-weight:600;">{{ tag.strip() }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </a>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-
     </section>
 
     <section class="section">
@@ -524,39 +490,8 @@ body{
 
 </main>
 
-<!-- ── In-app confirmation modal ── -->
-<div class="modal-overlay" id="confirm-modal">
-    <div class="modal-box">
-        <p id="confirm-msg">Are you sure?</p>
-        <div class="modal-actions">
-            <button class="modal-btn cancel" onclick="closeConfirm()">Cancel</button>
-            <button class="modal-btn confirm" id="confirm-yes">Confirm</button>
-        </div>
-    </div>
-</div>
 
-<script>
-let __confirmResolve = null;
-function showConfirm(msg){
-    return new Promise(resolve => {
-        __confirmResolve = resolve;
-        document.getElementById("confirm-msg").textContent = msg;
-        document.getElementById("confirm-modal").classList.add("open");
-        document.getElementById("confirm-yes").onclick = () => { closeConfirm(); resolve(true); };
-    });
-}
-function closeConfirm(v){
-    document.getElementById("confirm-modal").classList.remove("open");
-}
-document.addEventListener("click", function(e){
-    const m = document.getElementById("confirm-modal");
-    if(!m || !m.classList.contains("open")) return;
-    if(e.target === m || e.target.classList.contains("modal-btn") && e.target.classList.contains("cancel")){
-        closeConfirm();
-        if(__confirmResolve) { __confirmResolve(false); __confirmResolve = null; }
-    }
-});
-</script>
+
 
 </body>
 </html>
