@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <title>Upward</title>
 
 <style>
@@ -275,7 +274,19 @@ body{
 }
 
 .btn-leave:hover{
-    background:#ff0015;
+    background:#ffe0e0;
+}
+
+.leave-plan-wrap{
+    margin-top:20px;
+}
+
+.leave-warning{
+    font-size:.9rem;
+    color:var(--text-secondary);
+    max-width:650px;
+    margin-bottom:12px;
+    line-height:1.6;
 }
 
 @media(max-width:768px){
@@ -295,16 +306,6 @@ body{
     .feature-grid{
         gap:30px;
     }
-    .leave-plan-wrap{
-    margin-top:20px;
-}
-
-.leave-warning{
-    font-size:.9rem;
-    color:var(--text-secondary);
-    max-width:650px;
-    margin-bottom:12px;
-    line-height:1.6;
 }
 
 </style>
@@ -321,15 +322,12 @@ body{
         {% endif %}
     </div>    
     <div class="nav-right">
-
-        <span class="username">
-            {{ username }}
-        </span>
-
-        <a href="/logout" class="logout">
-            Logout
-        </a>
-
+        {% if username %}
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+        {% else %}
+        <a href="/login" class="btn" style="padding:8px 18px;font-size:.85rem;">Log in</a>
+        {% endif %}
     </div>
 
 </nav>
@@ -347,13 +345,14 @@ body{
         <p>
             Personalized roadmaps, salary forecasting,
             skill gap analysis, opportunity discovery,
-            and career planning built around your goals.
+            career planning, and an AI career coach
+            built around your goals.
         </p>
 
         <div class="cta">
             {% if locked_plan %}
             {% set p = locked_plan.extended or {} %}
-        {% set basic = locked_plan.basic or {} %}
+            {% set basic = locked_plan.basic or {} %}
             <section class="pinned-plan">
                 <div class="pinned-label">📌 Your main plan</div>
                 <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
@@ -361,20 +360,17 @@ body{
                 <div class="pinned-actions">
                     <a href="/plan" class="btn">View full roadmap</a>
                     <div class="leave-plan-wrap">
-    <p class="leave-warning">
-        Leaving your plan will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.
-    </p>
-
-    <form id="leave-form" action="/plan/leave" method="POST">
-        <button type="button" class="btn btn-leave" onclick="if(confirm('Leave this plan and permanently delete your current roadmap?')){document.getElementById('leave-form').submit();}">Leave this plan</button>
-    </form>
-</div>
+                        <p class="leave-warning">Leaving your plan will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.</p>
+                        <form id="leave-form" action="/plan/leave" method="POST">
+                            <button type="button" class="btn btn-leave" onclick="if(confirm('Leave this plan and permanently delete your current roadmap?')){document.getElementById('leave-form').submit();}">Leave this plan</button>
+                        </form>
+                    </div>
                 </div>
             </section>
+            {% elif username %}
+            <a href="/onboarding" class="btn">Build My Profile</a>
             {% else %}
-            <a href="/onboarding" class="btn">
-                Build My Profile
-            </a>
+            <a href="/login" class="btn">Get Started</a>
             {% endif %}
         </div>
         
@@ -413,17 +409,27 @@ body{
             </div>
 
             <div class="feature">
-                <h3>Opportunity Discovery</h3>
+                <h3>AI Career Agent</h3>
                 <p>
-                    Find careers and opportunities that
-                    match your strengths.
+                    Chat with an AI coach that knows your profile, 
+                    plan, and progress. Get instant answers about 
+                    your roadmap, skill gaps, and next steps.
                 </p>
             </div>
 
             <div class="feature">
-                <h3>Course System</h3>
+                <h3>Smart Course Search</h3>
                 <p>
-                    Browse structured severant courses any diffrent topics 
+                    Find courses by #tag with autocomplete suggestions. 
+                    Add tags to your own courses with a fast pill-style input.
+                </p>
+            </div>
+
+            <div class="feature">
+                <h3>Opportunity Discovery</h3>
+                <p>
+                    Find careers and opportunities that
+                    match your strengths.
                 </p>
             </div>
 
@@ -468,6 +474,16 @@ body{
                 <span>Progress tracking</span>
             </div>
 
+            <div class="outcome">
+                <div class="dot"></div>
+                <span>AI career coach chat</span>
+            </div>
+
+            <div class="outcome">
+                <div class="dot"></div>
+                <span>#tag course discovery</span>
+            </div>
+
         </div>
 
     </section>
@@ -482,9 +498,11 @@ body{
             Complete your profile and generate your first career plan.
         </p>
 
-        <a href="/onboarding" class="btn">
-            Get Started
-        </a>
+        {% if username %}
+        <a href="/onboarding" class="btn">Get Started</a>
+        {% else %}
+        <a href="/login" class="btn">Get Started</a>
+        {% endif %}
 
     </section>
 
