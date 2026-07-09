@@ -45,6 +45,16 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
 db = SQL("sqlite:///upward.db")
+
+# Ensure required tables exist
+db.execute("""CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    hash TEXT NOT NULL,
+    resume TEXT,
+    locked INTEGER DEFAULT 0
+)""")
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
