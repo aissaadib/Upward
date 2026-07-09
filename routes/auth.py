@@ -39,7 +39,6 @@ def send_code(to_email, code):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Authenticate user by email/password and set session user_id on success."""
-    session.clear()
     if request.method == "POST":
         email    = request.form.get("email")
         password = request.form.get("password")
@@ -51,6 +50,7 @@ def login():
         if not check_password_hash(rows[0]["hash"], password):
             return render_template("login.html", error="Invalid password")
         session["user_id"] = rows[0]["id"]
+        session["username"] = rows[0]["name"]
         return redirect("/")
     return render_template("login.html")
 
@@ -105,7 +105,9 @@ def register():
 @login_required
 def logout():
     """Clear the session and redirect to login."""
-    session.clear()
+    for k in list(session.keys()):
+        if k != "user_id":
+            session.pop(k, None)
     return redirect("/login")
 
 @app.route("/login/google")
@@ -126,8 +128,13 @@ def verify():
                        session["pending_username"], session["pending_email"], session["pending_hash"], resume_text, 0)
             user_id = db.execute("SELECT id FROM users WHERE email = ?",
                                  session["pending_email"])[0]["id"]
-            session.clear()
+            # Clean up pending keys, keep user_id and username
+            username = session["pending_username"]
+            for k in list(session.keys()):
+                if k.startswith("pending_") or k == "verify_code":
+                    session.pop(k, None)
             session["user_id"] = user_id
+            session["username"] = username
             return redirect("/")
         else:
             return render_template("verify.html", error="Wrong code, try again")

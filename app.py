@@ -38,7 +38,7 @@ def login_required(f):
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
-app.config["SESSION_PERMANENT_LIFETIME"] = 86400  # 24 hours
+app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 hours
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = "flask_session"
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")

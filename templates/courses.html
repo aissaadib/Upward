@@ -322,7 +322,27 @@ body{
     color:white;
 }
 
-.course-rating{
+.btn-success-sm{
+    background:white;
+    border:1.5px solid var(--success);
+    color:var(--success);
+    padding:4px 12px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:.75rem;
+    cursor:pointer;
+    transition:.2s;
+}
+.btn-success-sm:hover{
+    background:var(--success);
+    color:white;
+}
+.owned-badge{
+    color:var(--success);
+    font-size:.75rem;
+    font-weight:700;
+    padding:4px 0;
+}
     font-weight:700;
     font-size:.95rem;
     color:#ffd700;
@@ -455,6 +475,14 @@ body{
                 {% if item.is_owner %}
                 <div class="course-actions">
                     <button class="btn-danger-sm" onclick="event.preventDefault(); if(confirm('Delete this course and all its lessons?')){fetch('/delete_course/{{ item.id }}', {method:'POST'}).then(()=>location.reload());}">Delete</button>
+                </div>
+                {% elif item.price == 0 and item.id not in owned_ids %}
+                <div class="course-actions">
+                    <button class="btn-success-sm" onclick="event.preventDefault(); fetch('/obtain_course/{{ item.id }}', {method:'POST'}).then(r=>{if(r.ok)location.reload();else r.text().then(t=>alert(t));});">Obtain</button>
+                </div>
+                {% elif item.id in owned_ids %}
+                <div class="course-actions">
+                    <span class="owned-badge">✓ Owned</span>
                 </div>
                 {% endif %}
 

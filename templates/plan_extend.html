@@ -456,21 +456,21 @@ ul li::before{
 {% endif %}
 
 <script>
-// Escape HTML entities to prevent XSS when rendering dynamic plan content
+// Escape HTML entities and handle objects gracefully
 function esc(s){
-    return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    return String(s==null?"":(typeof s==="object"?JSON.stringify(s):s)).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
+function toStr(a){return typeof a==="string"?a:typeof a==="object"?JSON.stringify(a):String(a||"");}
+function toArr(a){return Array.isArray(a)?a:typeof a==="string"?[a]:[];}
 
-// Render the full extended plan (phases, skills, habits, metrics, risks, resources)
 function renderPlan(p){
-    const phases = p.phases || [];
-    const skills = p.skills_to_build || [];
-    const courses = p.courses || [];
-    const habits = p.weekly_habits || [];
-    const metrics = p.success_metrics || [];
-    const pitfalls = p.pitfalls || [];
-    const risks = p.risks || [];
-    const links = p.links || [];
+    const phases = toArr(p.phases);
+    const skills = toArr(p.skills_to_build);
+    const courses = toArr(p.courses);
+    const habits = toArr(p.weekly_habits);
+    const metrics = toArr(p.success_metrics);
+    const risks = toArr(p.risks);
+    const links = toArr(p.links);
 
     document.getElementById("plan-title").textContent = p.title || document.getElementById("plan-title").textContent;
 
@@ -484,7 +484,7 @@ function renderPlan(p){
         ${habits.length ? `
         <div class="card">
             <div class="section-title">Weekly habits</div>
-            <ul>${habits.map(h=>`<li>${esc(h)}</li>`).join("")}</ul>
+            <ul>${habits.map(h=>`<li>${esc(toStr(h))}</li>`).join("")}</ul>
         </div>` : ""}
 
         <div class="card">
@@ -496,8 +496,11 @@ function renderPlan(p){
                         <span class="phase-month">Month ${esc(ph.month)}</span>
                     </div>
                     ${ph.focus ? `<p style="color:var(--text-secondary);margin-bottom:10px;">${esc(ph.focus)}</p>` : ""}
-                    ${ph.actions?.length ? `<strong>Actions</strong><ul>${ph.actions.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>` : ""}
+                    ${ph.weekly_focus?.length ? `<div style="margin:10px 0 12px;padding:12px;background:#f8f9fb;border-radius:8px;font-size:.9rem;"><strong style="display:block;margin-bottom:6px;">Weekly breakdown:</strong>${ph.weekly_focus.map((w,i)=>`<div style="margin-bottom:4px;">• <strong>Week ${i+1}:</strong> ${esc(toStr(w))}</div>`).join("")}</div>` : ""}
+                    ${ph.actions?.length ? `<strong>Actions</strong><ul>${ph.actions.map(a=>`<li>${esc(toStr(a))}</li>`).join("")}</ul>` : ""}
+                    ${ph.tools?.length ? `<div style="margin-top:8px;"><strong>Tools:</strong> ${ph.tools.map(t=>`<span class="pill">${esc(t)}</span>`).join(" ")}</div>` : ""}
                     ${ph.skills?.length ? `<div class="pill-row">${ph.skills.map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>` : ""}
+                    ${ph.reading?.length ? `<div style="margin-top:10px;font-size:.9rem;"><strong>Reading:</strong><ul>${ph.reading.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
                     ${ph.deliverable ? `<div class="highlight" style="margin-top:12px;"><strong>Deliverable:</strong> ${esc(ph.deliverable)}</div>` : ""}
                     ${ph.resources?.length ? ph.resources.map(r=>`<a class="resource" href="${esc(r.url)}" target="_blank">${esc(r.label)}${r.why ? ` — ${esc(r.why)}` : ""}</a>`).join("") : ""}
                 </div>
@@ -535,12 +538,12 @@ function renderPlan(p){
         ${metrics.length ? `
         <div class="card">
             <div class="section-title">Success metrics</div>
-            <ul>${metrics.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>
+            <ul>${metrics.map(m=>`<li>${esc(toStr(m))}</li>`).join("")}</ul>
         </div>` : ""}
         ${risks.length ? `
         <div class="card">
             <div class="section-title">Risks & reality check</div>
-            ${risks.map(r=>`<div class="risk">${esc(r)}</div>`).join("")}
+            ${risks.map(r=>`<div class="risk">${esc(toStr(r))}</div>`).join("")}
         </div>` : ""}
 
         ${links.length ? `
