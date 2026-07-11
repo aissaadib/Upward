@@ -315,6 +315,9 @@ body{
             Up<span>ward</span>
         </a>
         <a href="/courses" class="nav-link">Courses</a>
+        {% if is_admin %}
+        <a href="/admin" class="nav-link">Admin</a>
+        {% endif %}
     </div>
     <div class="nav-right">
         <span class="username">{{ username }}</span>

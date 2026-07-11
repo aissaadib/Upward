@@ -1,6 +1,6 @@
 """Authentication routes: login, register, logout, email verification."""
 
-from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required
+from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required, ADMIN_EMAIL
 from flask import render_template, request, redirect, session
 import os
 import random
@@ -51,6 +51,9 @@ def login():
             return render_template("login.html", error="Invalid password")
         session["user_id"] = rows[0]["id"]
         session["username"] = rows[0]["name"]
+        # Auto-grant admin if email matches
+        if ADMIN_EMAIL and rows[0]["email"].lower().strip() == ADMIN_EMAIL:
+            db.execute("UPDATE users SET admin = 1 WHERE id = ?", rows[0]["id"])
         return redirect("/")
     return render_template("login.html")
 
@@ -135,6 +138,9 @@ def verify():
                     session.pop(k, None)
             session["user_id"] = user_id
             session["username"] = username
+            # Auto-grant admin if email matches
+            if ADMIN_EMAIL and session.get("pending_email", "").lower().strip() == ADMIN_EMAIL:
+                db.execute("UPDATE users SET admin = 1 WHERE id = ?", user_id)
             return redirect("/")
         else:
             return render_template("verify.html", error="Wrong code, try again")

@@ -1,9 +1,19 @@
-"""Courses routes — list, view, obtain, and delete user-created courses."""
+"""Courses routes — list, view, subscribe/unsubscribe, delete, and PayPal payments."""
 
-from app import app, db, login_required
-from flask import render_template, session, redirect, jsonify
+from app import app, db, login_required, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE
+from flask import render_template, session, redirect, jsonify, request
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
+import requests
+import base64
+
+
+def paypal_headers():
+    """Return auth headers for PayPal REST API calls."""
+    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
+        return None
+    token = base64.b64encode(f"{PAYPAL_CLIENT_ID}:{PAYPAL_CLIENT_SECRET}".encode()).decode()
+    return {"Authorization": f"Basic {token}", "Content-Type": "application/json"}
 
 
 def init_db():
@@ -48,19 +58,23 @@ def get_all_tags(course_list):
 @login_required
 def courses():
     """Render course listing page with tag filter."""
-    user = db.execute("SELECT name, locked FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name, locked, admin FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
     locked = user[0]["locked"] if user else 0
+    is_admin = bool(user[0].get("admin")) if user else False
 
     course_list = db.execute("SELECT * FROM courses ORDER BY id DESC")
     for c in course_list:
         c["is_owner"] = (c["owner_id"] == session["user_id"])
 
-    owned = db.execute("SELECT course_id FROM owners WHERE user_id = ? AND ending_date > datetime('now')", session["user_id"])
+    owned = db.execute("SELECT course_id FROM owners WHERE user_id = ?", session["user_id"])
     owned_ids = {r["course_id"] for r in owned}
 
+    purchased = db.execute("SELECT course_id FROM purchases WHERE user_id = ? AND status = 'completed'", session["user_id"])
+    purchased_ids = {r["course_id"] for r in purchased}
+
     all_tags, _ = get_all_tags(course_list)
-    return render_template("courses.html", username=username, courses=course_list, locked=locked, all_tags=all_tags, owned_ids=owned_ids)
+    return render_template("courses.html", username=username, courses=course_list, locked=locked, all_tags=all_tags, owned_ids=owned_ids, purchased_ids=purchased_ids, is_admin=is_admin)
 
 
 @app.route("/delete_course/<int:course_id>", methods=["POST"])
@@ -77,21 +91,123 @@ def delete_course(course_id):
     return "OK"
 
 
-@app.route("/obtain_course/<int:course_id>", methods=["POST"])
+@app.route("/toggle_subscription/<int:course_id>", methods=["POST"])
 @login_required
-def obtain_course(course_id):
-    """Obtain a free course — inserts into owners table with 1-month access."""
+def toggle_subscription(course_id):
+    """Subscribe or unsubscribe from a course (toggle)."""
     course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
     if not course:
         return "Not found", 404
-    if course[0]["price"] != 0:
-        return "Only free courses can be obtained", 403
-    existing = db.execute("SELECT * FROM owners WHERE course_id = ? AND user_id = ? AND ending_date > datetime('now')",
+    existing = db.execute("SELECT * FROM owners WHERE course_id = ? AND user_id = ?",
                           course_id, session["user_id"])
     if existing:
-        return "Already obtained", 409
-    now = datetime.now(timezone.utc)
-    ending = now + timedelta(days=30)
-    db.execute("INSERT INTO owners (course_id, user_id, booking_date, ending_date) VALUES (?, ?, ?, ?)",
-               course_id, session["user_id"], now.isoformat(), ending.isoformat())
-    return "OK"
+        db.execute("DELETE FROM owners WHERE course_id = ? AND user_id = ?",
+                   course_id, session["user_id"])
+        return jsonify({"subscribed": False})
+    else:
+        now = datetime.now(timezone.utc)
+        ends = now + timedelta(days=30)
+        db.execute("INSERT INTO owners (course_id, user_id, booking_date, ending_date) VALUES (?, ?, ?, ?)",
+                   course_id, session["user_id"], now.isoformat(), ends.isoformat())
+        return jsonify({"subscribed": True})
+
+
+@app.route("/create-paypal-order", methods=["POST"])
+@login_required
+def create_paypal_order():
+    """Create a PayPal order and return the approval URL."""
+    course_id = request.form.get("course_id")
+    if not course_id:
+        return jsonify({"error": "Missing course_id"}), 400
+
+    course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
+    if not course:
+        return jsonify({"error": "Course not found"}), 404
+
+    # Already subscribed?
+    existing = db.execute("SELECT * FROM owners WHERE course_id = ? AND user_id = ?",
+                          course_id, session["user_id"])
+    if existing:
+        return jsonify({"error": "Already subscribed"}), 400
+
+    price = float(course[0]["price"])
+
+    headers = paypal_headers()
+    if not headers:
+        return jsonify({"error": "PayPal not configured. Contact admin."}), 500
+
+    payload = {
+        "intent": "CAPTURE",
+        "purchase_units": [{
+            "amount": {"currency_code": "MAD", "value": f"{price:.2f}"},
+            "custom_id": str(course_id),
+            "description": course[0]["title"]
+        }],
+        "application_context": {
+            "return_url": request.host_url.rstrip("/") + "/paypal-return",
+            "cancel_url": request.host_url.rstrip("/") + "/courses",
+            "user_action": "PAY_NOW",
+            "brand_name": "Upward"
+        }
+    }
+
+    resp = requests.post(
+        f"{PAYPAL_API_BASE}/v2/checkout/orders",
+        json=payload,
+        headers=headers
+    )
+
+    if resp.status_code not in (200, 201):
+        return jsonify({"error": "PayPal API error", "details": resp.text}), 500
+
+    order = resp.json()
+
+    approval_url = None
+    for link in order.get("links", []):
+        if link["rel"] == "approve":
+            approval_url = link["href"]
+            break
+
+    if not approval_url:
+        return jsonify({"error": "No approval URL from PayPal"}), 500
+
+    session["paypal_order_id"] = order["id"]
+    session["paypal_course_id"] = int(course_id)
+
+    return jsonify({"approval_url": approval_url})
+
+
+@app.route("/paypal-return")
+@login_required
+def paypal_return():
+    """PayPal redirects here after the user approves payment."""
+    order_id = request.args.get("token")
+    course_id = session.pop("paypal_course_id", None)
+    session.pop("paypal_order_id", None)
+
+    if not order_id or not course_id:
+        return "Payment verification failed — missing order details.", 400
+
+    headers = paypal_headers()
+    if not headers:
+        return "PayPal not configured", 500
+
+    resp = requests.post(
+        f"{PAYPAL_API_BASE}/v2/checkout/orders/{order_id}/capture",
+        headers=headers
+    )
+
+    if resp.status_code not in (200, 201):
+        return "Payment capture failed. Please contact support.", 500
+
+    capture_data = resp.json()
+
+    if capture_data.get("status") == "COMPLETED":
+        now = datetime.now(timezone.utc)
+        db.execute(
+            "INSERT INTO owners (course_id, user_id, booking_date, ending_date) VALUES (?, ?, ?, ?)",
+            course_id, session["user_id"], now.isoformat(), now.isoformat()
+        )
+        return render_template("payment_success.html", course_id=course_id)
+
+    return "Payment not completed. Please try again.", 400

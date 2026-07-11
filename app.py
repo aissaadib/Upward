@@ -7,6 +7,7 @@ from cs50 import SQL
 from flask import Flask, session, redirect, jsonify, request
 from flask_session import Session
 from groq import Groq
+import stripe
 
 
 def load_local_env(path=".env"):
@@ -36,6 +37,19 @@ def login_required(f):
     return decorated_function
 
 
+def admin_required(f):
+    """Decorator that requires the user to be an admin."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("user_id") is None:
+            return redirect("/login")
+        user = db.execute("SELECT admin FROM users WHERE id = ?", session["user_id"])
+        if not user or not user[0].get("admin"):
+            return redirect("/")
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 hours
@@ -55,6 +69,76 @@ db.execute("""CREATE TABLE IF NOT EXISTS users (
     resume TEXT,
     locked INTEGER DEFAULT 0
 )""")
+
+# Add admin column silently (safe for existing DBs)
+try:
+    db.execute("ALTER TABLE users ADD COLUMN admin INTEGER DEFAULT 0")
+except Exception:
+    pass
+
+# Add thumbnail and created_at to courses (for existing DBs)
+try:
+    db.execute("ALTER TABLE courses ADD COLUMN thumbnail TEXT DEFAULT ''")
+except Exception:
+    pass
+try:
+    db.execute("ALTER TABLE courses ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP")
+except Exception:
+    pass
+try:
+    db.execute("ALTER TABLE courses ADD COLUMN stripe_price_id TEXT DEFAULT ''")
+except Exception:
+    pass
+
+# Create purchases table for Stripe payments
+db.execute("""CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    stripe_session_id TEXT UNIQUE,
+    subscription_id TEXT,
+    payment_intent TEXT,
+    amount INTEGER,
+    currency TEXT DEFAULT 'mad',
+    status TEXT DEFAULT 'completed',
+    current_period_end TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+)""")
+
+try:
+    db.execute("ALTER TABLE purchases ADD COLUMN subscription_id TEXT")
+except Exception:
+    pass
+try:
+    db.execute("ALTER TABLE purchases ADD COLUMN current_period_end TEXT")
+except Exception:
+    pass
+
+# Create locked_plans table if missing
+db.execute("""CREATE TABLE IF NOT EXISTS locked_plans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    basic_plan TEXT NOT NULL,
+    extended_plan TEXT,
+    locked_at TEXT DEFAULT CURRENT_TIMESTAMP
+)""")
+
+# Stripe configuration
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
+# Admin email for auto-granting admin on login/register
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").lower().strip()
+
+# PayPal configuration (kept for backward compatibility)
+PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "")
+PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
+PAYPAL_MODE = os.environ.get("PAYPAL_MODE", "sandbox")
+PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com" if PAYPAL_MODE == "sandbox" else "https://api-m.paypal.com"
+
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
@@ -70,6 +154,8 @@ from routes.onboarding import *
 from routes.courses import *
 from routes.test import *
 from routes.lessons import *
+from routes.purchases import *
+from routes.admin import *
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

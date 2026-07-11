@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchases - Admin - Upward</title>
+<style>
+:root{
+    --sidebar:#23273c;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Inter,Segoe UI,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
+.navbar{height:70px;display:flex;justify-content:space-between;align-items:center;padding:0 32px;border-bottom:1px solid var(--border);background:white;position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:20px;}
+.brand{font-size:1.8rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.brand span{color:var(--accent);}
+.nav-link{margin-top:3px;font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.nav-link:hover{color:var(--accent);}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.username{font-size:.9rem;font-weight:700;}
+.logout{text-decoration:none;color:var(--text-secondary);font-size:.9rem;}
+.logout:hover{color:var(--accent);}
+.container{width:min(1100px,90%);margin:auto;}
+.hero{padding:60px 0 20px;}
+.hero h1{font-size:clamp(2.2rem,6vw,3rem);letter-spacing:-1.5px;}
+.hero p{margin-top:12px;color:var(--text-secondary);font-size:1.05rem;}
+table{width:100%;border-collapse:collapse;margin-top:30px;background:white;border-radius:16px;overflow:hidden;}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:.9rem;}
+th{background:var(--bg);font-weight:700;color:var(--text-secondary);text-transform:uppercase;font-size:.75rem;letter-spacing:.05em;}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-weight:600;font-size:.8rem;cursor:pointer;text-decoration:none;display:inline-block;margin-top:20px;}
+.btn-secondary:hover{background:#e8e8ee;}
+.empty{padding:60px 20px;text-align:center;color:var(--text-secondary);}
+@media(max-width:768px){.navbar{padding:0 18px;}.nav-left{gap:14px;}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+        <a href="/admin" class="nav-link" style="color:var(--accent);">Admin</a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+<main class="container">
+    <section class="hero">
+        <h1>Purchases</h1>
+        <p>All course purchases and payment records.</p>
+    </section>
+
+    {% if purchases %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th>Date</th>
+                <th>Sub ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in purchases %}
+            <tr>
+                <td>#{{ p.id }}</td>
+                <td>{{ p.user_name }}</td>
+                <td>{{ p.email }}</td>
+                <td>{{ p.course_title }}</td>
+                <td>{{ "%.2f"|format(p.amount / 100) }} MAD</td>
+                <td>
+                    {% if p.status == 'completed' %}
+                        <span style="color:var(--success);font-weight:700;">active</span>
+                    {% elif p.status == 'past_due' %}
+                        <span style="color:#f59e0b;font-weight:700;">past due</span>
+                    {% elif p.status == 'expired' %}
+                        <span style="color:var(--danger);font-weight:700;">expired</span>
+                    {% else %}
+                        {{ p.status }}
+                    {% endif %}
+                </td>
+                <td style="font-size:.85rem;">{{ (p.current_period_end or '')[:10] or 'lifetime' }}</td>
+                <td>{{ p.created_at[:10] }}</td>
+                <td style="font-size:.75rem;color:var(--text-secondary);max-width:100px;overflow:hidden;text-overflow:ellipsis;">{{ p.subscription_id or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No purchases yet.</div>
+    {% endif %}
+
+    <p style="text-align:center;"><a href="/admin" class="btn-secondary">← Back to Dashboard</a></p>
+</main>
+</body>
+</html>

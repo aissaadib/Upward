@@ -4,6 +4,7 @@ from app import app, db, login_required, groq_client
 from flask import render_template, request, session, redirect, jsonify
 import PyPDF2
 from services.ai import parse_ai_json
+from routes.purchases import has_course_access
 
 
 def init_lessons_db():
@@ -16,7 +17,6 @@ def init_lessons_db():
             content TEXT
         )
     """)
-    # Handle older schema that may lack the title column
     try:
         db.execute("ALTER TABLE lessons ADD COLUMN title TEXT")
     except Exception:
@@ -34,6 +34,10 @@ def lessons(course_id):
         return redirect("/courses")
     course = course[0]
 
+    # Access control
+    if not has_course_access(session["user_id"], course_id):
+        return redirect("/courses")
+
     lesson_list = db.execute(
         "SELECT * FROM lessons WHERE course_id = ? ORDER BY num ASC",
         course_id
@@ -41,15 +45,17 @@ def lessons(course_id):
 
     is_owner = course["owner_id"] == session["user_id"]
 
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name, admin FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    is_admin = bool(user[0].get("admin")) if user else False
 
     return render_template(
         "lessons.html",
         username=username,
         course=course,
         lessons=lesson_list,
-        is_owner=is_owner
+        is_owner=is_owner,
+        is_admin=is_admin
     )
 
 
@@ -170,7 +176,6 @@ def extract_lesson():
         return jsonify({"error": "No file provided"}), 400
 
     try:
-        # Extract raw text from PDF or plain text file
         if file.filename.endswith('.pdf'):
             pdf_reader = PyPDF2.PdfReader(file)
             text = ""
@@ -187,7 +192,6 @@ def extract_lesson():
         if not text:
             return jsonify({"error": "Could not extract text from file"}), 400
 
-        # Ask AI to format the raw text into clean HTML
         prompt = f"""You are an educational content formatter. Format the following lesson text into clean HTML WITHOUT summarizing or rewriting it. Keep the EXACT content but make it readable.
 
 LESSON TEXT:
@@ -232,12 +236,18 @@ def lesson_display(lesson_id):
         return redirect("/courses")
     course = course[0]
 
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    # Access control
+    if not has_course_access(session["user_id"], course["id"]):
+        return redirect("/courses")
+
+    user = db.execute("SELECT name, admin FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    is_admin = bool(user[0].get("admin")) if user else False
 
     return render_template(
         "lesson_display.html",
         username=username,
         lesson=lesson,
-        course=course
+        course=course,
+        is_admin=is_admin
     )

@@ -320,6 +320,9 @@ body{
         {% if locked_plan %}
         <a href="/agent" class="nav-link">Agent</a>
         {% endif %}
+        {% if is_admin %}
+        <a href="/admin" class="nav-link">Admin</a>
+        {% endif %}
     </div>    
     <div class="nav-right">
         {% if username %}

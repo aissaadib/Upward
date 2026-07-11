@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Courses - Admin - Upward</title>
+<style>
+:root{
+    --sidebar:#23273c;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Inter,Segoe UI,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
+.navbar{height:70px;display:flex;justify-content:space-between;align-items:center;padding:0 32px;border-bottom:1px solid var(--border);background:white;position:sticky;top:0;z-index:100;}
+.nav-left{display:flex;align-items:center;gap:20px;}
+.brand{font-size:1.8rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.brand span{color:var(--accent);}
+.nav-link{margin-top:3px;font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
+.nav-link:hover{color:var(--accent);}
+.nav-right{display:flex;align-items:center;gap:14px;}
+.username{font-size:.9rem;font-weight:700;}
+.logout{text-decoration:none;color:var(--text-secondary);font-size:.9rem;}
+.logout:hover{color:var(--accent);}
+.container{width:min(1100px,90%);margin:auto;}
+.hero{padding:60px 0 20px;}
+.hero h1{font-size:clamp(2.2rem,6vw,3rem);letter-spacing:-1.5px;}
+.hero p{margin-top:12px;color:var(--text-secondary);font-size:1.05rem;}
+.msg{padding:12px 16px;border-radius:10px;margin:16px 0;font-size:.9rem;}
+.msg-success{background:#e1fae8;color:#1a8a3a;}
+.msg-error{background:#fde8ea;color:#c81e2e;}
+.form-card{background:white;border:1px solid var(--border);border-radius:16px;padding:24px;margin:24px 0;}
+.form-card h2{margin-bottom:16px;font-size:1.3rem;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-weight:600;font-size:.85rem;margin-bottom:4px;color:var(--text);}
+.form-group input,.form-group textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.9rem;outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group textarea{min-height:80px;resize:vertical;}
+.btn{background:var(--accent);color:white;border:none;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;}
+.btn:hover{background:#2eb3c5;}
+.btn-danger{background:var(--danger);color:white;border:none;padding:6px 14px;border-radius:8px;font-weight:700;font-size:.8rem;cursor:pointer;}
+.btn-danger:hover{background:#d9444f;}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-weight:600;font-size:.8rem;cursor:pointer;text-decoration:none;display:inline-block;}
+.btn-secondary:hover{background:#e8e8ee;}
+table{width:100%;border-collapse:collapse;margin-top:20px;background:white;border-radius:16px;overflow:hidden;}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:.9rem;}
+th{background:var(--bg);font-weight:700;color:var(--text-secondary);text-transform:uppercase;font-size:.75rem;letter-spacing:.05em;}
+td:last-child{white-space:nowrap;display:flex;gap:6px;align-items:center;}
+.edit-form{display:none;margin-top:12px;padding:16px;background:var(--bg);border-radius:12px;}
+.edit-form.open{display:block;}
+.toggle-link{color:var(--accent);cursor:pointer;font-size:.85rem;font-weight:600;}
+@media(max-width:768px){.navbar{padding:0 18px;}.nav-left{gap:14px;}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+        <a href="/courses" class="nav-link">Courses</a>
+        <a href="/admin" class="nav-link" style="color:var(--accent);">Admin</a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+<main class="container">
+    <section class="hero">
+        <h1>Manage Courses</h1>
+        <p>Add, edit, or delete courses.</p>
+    </section>
+
+    {% set msg = request.args.get('msg') %}
+    {% set err = request.args.get('error') %}
+    {% if msg %}<div class="msg msg-success">{{ msg }}</div>{% endif %}
+    {% if err %}<div class="msg msg-error">{{ err }}</div>{% endif %}
+
+    <div class="form-card">
+        <h2>Add New Course</h2>
+        <form method="POST" action="/admin/courses/add">
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price (MAD/month, 0 = free)</label>
+                <input type="number" name="price" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Tags (comma-separated)</label>
+                <input type="text" name="tags" placeholder="e.g. python, data-science, beginner">
+            </div>
+            <div class="form-group">
+                <label>Stripe Price ID (for monthly subscriptions)</label>
+                <input type="text" name="stripe_price_id" placeholder="price_xxxxxxxxxxxxx" style="font-family:monospace;">
+                <p style="font-size:.75rem;color:var(--text-secondary);margin-top:4px;">Create a recurring price in Stripe Dashboard → Products → Add Product → set "Recurring (Monthly)" → paste the resulting <strong>price_xxx</strong> ID here.</p>
+            </div>
+            <button class="btn" type="submit">Add Course</button>
+        </form>
+    </div>
+
+    {% if courses %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in courses %}
+            <tr>
+                <td>#{{ c.id }}</td>
+                <td>{{ c.title }}</td>
+                <td>{{ c.price }} MAD</td>
+                <td>{{ c.owner_id }}</td>
+                <td>
+                    <span class="toggle-link" onclick="toggleEdit({{ c.id }})">✎ Edit</span>
+                    <form method="POST" action="/admin/courses/{{ c.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this course and all its data?')">
+                        <button class="btn-danger" type="submit">Delete</button>
+                    </form>
+                    <div class="edit-form" id="edit-{{ c.id }}">
+                        <form method="POST" action="/admin/courses/{{ c.id }}/edit">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" name="title" value="{{ c.title }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" required>{{ c.description or '' }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (MAD/month)</label>
+                                <input type="number" name="price" value="{{ c.price }}" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Tags</label>
+                                <input type="text" name="tags" value="{{ c.tags or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Stripe Price ID</label>
+                                <input type="text" name="stripe_price_id" value="{{ c.stripe_price_id or '' }}" style="font-family:monospace;">
+                            </div>
+                            <button class="btn" type="submit">Save</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="margin-top:16px;text-align:center;"><a href="/admin" class="btn-secondary">← Back to Dashboard</a></p>
+    {% else %}
+    <p style="margin-top:20px;color:var(--text-secondary);">No courses yet.</p>
+    {% endif %}
+</main>
+<script>
+function toggleEdit(id){
+    var el = document.getElementById("edit-" + id);
+    el.classList.toggle("open");
+}
+</script>
+</body>
+</html>
