@@ -89,6 +89,12 @@ body{
 .username{
     font-size:.9rem;
     font-weight:700;
+    text-decoration:none;
+    color:inherit;
+}
+
+.username:hover{
+    color:var(--accent);
 }
 
 .logout{
@@ -530,9 +536,7 @@ body{
 
     <div class="nav-right">
 
-        <span class="username">
-            {{ username }}
-        </span>
+        <a href="/profile" class="username">{{ username }}</a>
 
         <a href="/logout" class="logout">
             Logout

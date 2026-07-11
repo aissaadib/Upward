@@ -156,6 +156,7 @@ from routes.test import *
 from routes.lessons import *
 from routes.purchases import *
 from routes.admin import *
+from routes.profile import *
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
