@@ -37,6 +37,10 @@ def init_db():
             ending_date TEXT
         )
     """)
+    try:
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_owners_unique ON owners (course_id, user_id)")
+    except Exception:
+        pass
 init_db()
 
 
@@ -107,8 +111,11 @@ def toggle_subscription(course_id):
     else:
         now = datetime.now(timezone.utc)
         ends = now + timedelta(days=30)
-        db.execute("INSERT INTO owners (course_id, user_id, booking_date, ending_date) VALUES (?, ?, ?, ?)",
-                   course_id, session["user_id"], now.isoformat(), ends.isoformat())
+        try:
+            db.execute("INSERT INTO owners (course_id, user_id, booking_date, ending_date) VALUES (?, ?, ?, ?)",
+                       course_id, session["user_id"], now.isoformat(), ends.isoformat())
+        except Exception:
+            return jsonify({"subscribed": False}), 409
         return jsonify({"subscribed": True})
 
 

@@ -500,7 +500,7 @@ textarea.form-control{
         </div>
 
         <form method="POST" action="/create_course">
-
+            {{ csrf_input|safe }}
             <div class="form-group">
                 <label class="form-label">Course Title</label>
                 <input type="text" name="title" class="form-control" placeholder="e.g., Introduction to Python Programming" required>

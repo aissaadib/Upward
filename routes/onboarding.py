@@ -1,6 +1,6 @@
 """Onboarding route — collects career profile answers and builds AI profile."""
 
-from app import app, login_required, db, groq_client
+from app import app, login_required, db, groq_client, check_rate_limit, csrf_required
 from flask import render_template, session, redirect, jsonify, request
 import json
 from services.profile import build_profile_summary
@@ -13,6 +13,9 @@ def generate_tools():
     field = data.get("field", "").strip()
     if not field:
         return jsonify({"error": "No field provided"}), 400
+    user_id = session["user_id"]
+    if not check_rate_limit(f"ai:tools:{user_id}", max_attempts=10, window=3600):
+        return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
 
     prompt = f"""List 16 or fewer of the most popular tools, software, technologies, or skills that someone in "{field}" should know.
 Return ONLY a valid JSON array of strings, like: ["Tool 1","Tool 2",...]. No markdown, no explanation."""
@@ -42,6 +45,9 @@ def generate_skills():
     field = data.get("field", "").strip()
     if not field:
         return jsonify({"error": "No field provided"}), 400
+    user_id = session["user_id"]
+    if not check_rate_limit(f"ai:skills:{user_id}", max_attempts=10, window=3600):
+        return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
 
     prompt = f"""List 5 or fewer of the most important core skills that someone in "{field}" should master.
 Return ONLY a valid JSON array of strings, like: ["Skill 1","Skill 2",...]. No markdown, no explanation."""
@@ -65,6 +71,7 @@ Return ONLY a valid JSON array of strings, like: ["Skill 1","Skill 2",...]. No m
 
 @app.route("/onboarding", methods=["GET", "POST"])
 @login_required
+@csrf_required
 def onboarding():
     """Handle the onboarding questionnaire: save answers, load stored resume, build AI profile."""
     user_id = session["user_id"]

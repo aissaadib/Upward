@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <title>Add Lesson - {{ course.title }}</title>
 
 <style>
@@ -416,6 +417,7 @@ textarea.form-control{
 {% endif %}
 
 <form method="POST" action="{% if lesson %}/update_lesson/{{ lesson.num }}{% else %}/create_lesson/{{ course.id }}{% endif %}" enctype="multipart/form-data">
+    {{ csrf_input|safe }}
 
     <div class="form-group">
         <label class="form-label">Lesson Title</label>

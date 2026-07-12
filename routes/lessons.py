@@ -1,6 +1,6 @@
 """Lessons routes — create, read, update, delete lessons and extract content from files."""
 
-from app import app, db, login_required, groq_client
+from app import app, db, login_required, groq_client, csrf_required
 from flask import render_template, request, session, redirect, jsonify
 import PyPDF2
 from services.ai import parse_ai_json
@@ -83,6 +83,7 @@ def customize_lesson(course_id):
 
 @app.route("/create_lesson/<int:course_id>", methods=["POST"])
 @login_required
+@csrf_required
 def create_lesson(course_id):
     """Insert a new lesson into the database for the given course."""
     course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
@@ -133,6 +134,7 @@ def edit_lesson(lesson_id):
 
 @app.route("/update_lesson/<int:lesson_id>", methods=["POST"])
 @login_required
+@csrf_required
 def update_lesson(lesson_id):
     """Update an existing lesson's title and content."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)
@@ -155,6 +157,7 @@ def update_lesson(lesson_id):
 
 @app.route("/delete_lesson/<int:lesson_id>", methods=["POST"])
 @login_required
+@csrf_required
 def delete_lesson(lesson_id):
     """Delete a lesson, verifying the current user owns the parent course."""
     lesson = db.execute("SELECT * FROM lessons WHERE num = ?", lesson_id)

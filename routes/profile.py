@@ -1,6 +1,6 @@
 """Profile routes — update CV, change password, edit username."""
 
-from app import app, db, login_required
+from app import app, db, login_required, csrf_required
 from flask import render_template, request, session, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -43,6 +43,7 @@ def profile():
 
 @app.route("/profile/update", methods=["POST"])
 @login_required
+@csrf_required
 def profile_update():
     """Update username and/or upload a new resume/CV."""
     new_name = request.form.get("username", "").strip()
@@ -83,6 +84,20 @@ def profile_update():
                                    has_resume=bool(u.get("resume")),
                                    error="Resume must be a PDF file.")
 
+        resume_file.seek(0, os.SEEK_END)
+        file_size = resume_file.tell()
+        resume_file.seek(0)
+        MAX_FILE_SIZE = 10 * 1024 * 1024
+        if file_size > MAX_FILE_SIZE:
+            user = db.execute("SELECT name, email, resume, locked, admin FROM users WHERE id = ?",
+                              session["user_id"])
+            u = user[0] if user else {}
+            return render_template("profile.html",
+                                   username=new_name,
+                                   email=u.get("email", ""),
+                                   has_resume=bool(u.get("resume")),
+                                   error="File too large. Maximum size is 10 MB.")
+
         upload_folder = os.path.join(os.getcwd(), 'uploads')
         os.makedirs(upload_folder, exist_ok=True)
         filename = secure_filename(f"profile_{session['user_id']}_{resume_file.filename}")
@@ -92,12 +107,15 @@ def profile_update():
         if resume_text:
             db.execute("UPDATE users SET resume = ? WHERE id = ?",
                        resume_text, session["user_id"])
+        else:
+            os.remove(file_path)
 
     return redirect("/profile?msg=Profile updated")
 
 
 @app.route("/profile/change-password", methods=["POST"])
 @login_required
+@csrf_required
 def profile_change_password():
     """Change the user's password after verifying current password."""
     current = request.form.get("current_password", "")

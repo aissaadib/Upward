@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Email - Upward</title>
 <style>
 
 :root{
@@ -219,7 +225,7 @@ body{
 }
 
 </style>
-
+</head>
 <body>
 
 <div class="container">
@@ -250,6 +256,8 @@ body{
 </div>
 
 <form action="/verify" method="POST">
+
+    {{ csrf_input|safe }}
 
     <div class="mb-3">
         <input
@@ -288,3 +296,4 @@ body{
 </div>
 
 </body>
+</html>

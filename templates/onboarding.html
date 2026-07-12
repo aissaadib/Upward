@@ -64,6 +64,7 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
         <div class="progress-fill" id="progress"></div>
     </div>
     <form id="form" action="/onboarding" method="POST" enctype="multipart/form-data">
+        {{ csrf_input|safe }}
         <input type="hidden" name="answers" id="answers-input">
 
     </form>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <title>Courses - Upward</title>
 
 <style>
@@ -535,7 +536,6 @@ body{
         {% if is_admin %}
         <a href="/admin" class="nav-link">Admin</a>
         {% endif %}
-        <a href="/test" class="btn btn-primary">Create a Course</a>
     </div>
 
     <div class="nav-right">
@@ -555,6 +555,7 @@ body{
     <section class="hero">
         <h1>Courses</h1>
         <p>Browse the courses available right now.</p>
+        <a href="/test" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Create a Course</a>
     </section>
 
     <section class="section">
@@ -660,6 +661,10 @@ function filterByTag(tag){
     searchInput.focus();
 }
 
+function filterByTagEncoded(encodedTag){
+    filterByTag(decodeURIComponent(encodedTag));
+}
+
 function filterCourses(q){
     q = q.toLowerCase().trim();
     const cards = document.querySelectorAll(".course-card");
@@ -695,8 +700,8 @@ function showSuggestions(q){
         return;
     }
     ac.innerHTML = matches.map((t, i) =>
-        `<div class="ac-item${i === 0 ? ' highlighted' : ''}" data-tag="${t}" onclick="selectTag('${t}')">
-            <span class="ac-tag">#${t}</span>
+        `<div class="ac-item${i === 0 ? ' highlighted' : ''}" data-tag="${encodeURIComponent(t)}" onclick="filterByTagEncoded('${encodeURIComponent(t)}')">
+            <span class="ac-tag">#${t.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
             <span class="ac-hint">filter by tag</span>
         </div>`
     ).join("");
@@ -744,7 +749,7 @@ searchInput.addEventListener("keydown", function(e){
     } else if(e.key === "Enter" || e.key === "Tab"){
         if(items[acIndex]){
             e.preventDefault();
-            selectTag(items[acIndex].getAttribute("data-tag"));
+            selectTag(decodeURIComponent(items[acIndex].getAttribute("data-tag")));
         }
     } else if(e.key === "Escape"){
         ac.classList.remove("open");
@@ -789,6 +794,10 @@ function buyCourse(courseId){
         alert('Checkout setup failed');
     });
 }
+</script>
+
+<script>
+(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
 </script>
 
 </body>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <title>Teaching Assessment - Upward</title>
 
 <style>
@@ -312,7 +313,7 @@ body{
 {% endif %}
 
 <form method="POST" enctype="multipart/form-data" id="uploadForm">
-
+    {{ csrf_input|safe }}
     <div class="form-group">
         <label class="form-label">Teaching Field (What do you want to teach?)</label>
         <input type="text" name="major" class="form-control" placeholder="e.g., Computer Science, Mathematics, English" required>
@@ -341,6 +342,7 @@ body{
 </div>
 
 <form id="ratingForm" method="POST" action="/rate_resume">
+    {{ csrf_input|safe }}
     <input type="hidden" name="resume_text" value="{{ resume_text }}">
     <input type="hidden" name="major" value="{{ major }}">
 </form>

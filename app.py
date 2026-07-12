@@ -2,7 +2,10 @@
 
 import os
 import json
+import time
+import secrets
 from functools import wraps
+from collections import defaultdict
 from cs50 import SQL
 from flask import Flask, session, redirect, jsonify, request
 from flask_session import Session
@@ -24,6 +27,33 @@ def load_local_env(path=".env"):
 
 load_local_env()
 
+
+# ── CSRF Protection ──────────────────────────────────────────────
+csrf_exempt_endpoints = set()
+
+def csrf_exempt(f):
+    """Decorator to exempt a route from CSRF validation."""
+    csrf_exempt_endpoints.add(f.__name__)
+    return f
+
+def generate_csrf_token():
+    """Generate and store a CSRF token in the session."""
+    if "_csrf_token" not in session:
+        session["_csrf_token"] = secrets.token_hex(32)
+    return session["_csrf_token"]
+
+# ── Rate Limiting ────────────────────────────────────────────────
+rate_limits = defaultdict(list)
+
+def check_rate_limit(key, max_attempts=5, window=60):
+    """Returns True if request is within limit, False if rate-limited."""
+    now = time.time()
+    key_attempts = rate_limits[key]
+    rate_limits[key] = [t for t in key_attempts if now - t < window]
+    if len(rate_limits[key]) >= max_attempts:
+        return False
+    rate_limits[key].append(now)
+    return True
 
 def login_required(f):
     """Decorator that redirects unauthenticated users to /login, or returns 401 for JSON requests."""
@@ -55,8 +85,44 @@ app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 hours
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = "flask_session"
-app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+secret_key = os.environ.get("SECRET_KEY")
+if not secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is required. Set it in .env or the environment.")
+app.secret_key = secret_key
+
 Session(app)
+
+# ── CSRF validation ──────────────────────────────────────────────
+def csrf_required(f):
+    """Decorator that validates CSRF token on POST/PUT/DELETE requests."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method in ("POST", "PUT", "DELETE"):
+            token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
+            if not token or token != session.get("_csrf_token"):
+                if request.is_json:
+                    return jsonify({"error": "CSRF validation failed"}), 403
+                return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.context_processor
+def inject_csrf():
+    return {"csrf_token": generate_csrf_token(), "csrf_input": f'<input type="hidden" name="csrf_token" value="{generate_csrf_token()}">'}
+
+# ── Security headers ─────────────────────────────────────────────
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if request.path.startswith("/stripe"):
+        pass
+    return response
 
 db = SQL("sqlite:///upward.db")
 
@@ -159,4 +225,4 @@ from routes.admin import *
 from routes.profile import *
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

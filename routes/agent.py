@@ -1,6 +1,6 @@
 """Agent route — AI career chatbot with persistent chat history."""
 
-from app import app, db, groq_client, login_required
+from app import app, db, groq_client, login_required, check_rate_limit
 from flask import render_template, session, jsonify, Response, stream_with_context, request
 from routes.plans import get_locked_plan
 import json
@@ -106,6 +106,8 @@ def chat():
         return jsonify({"error": "No prompt"}), 400
 
     user_id = session["user_id"]
+    if not check_rate_limit(f"ai:chat:{user_id}", max_attempts=30, window=3600):
+        return jsonify({"error": "Chat rate limit exceeded. Please wait before sending more messages."}), 429
 
     # Save user message
     db.execute(

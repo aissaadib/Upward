@@ -1,6 +1,6 @@
 """Advice routes — generates AI-powered career suggestions based on user profile."""
 
-from app import app, db, groq_client, login_required
+from app import app, db, groq_client, login_required, check_rate_limit
 from flask import render_template, redirect, session, jsonify
 from services.ai import parse_ai_json
 import time
@@ -19,6 +19,9 @@ def advice():
 @login_required
 def generate_advice():
     """Call the AI to generate 7 career suggestions based on the user's stored profile."""
+    user_id = session["user_id"]
+    if not check_rate_limit(f"ai:{user_id}", max_attempts=10, window=3600):
+        return jsonify({"error": "AI rate limit exceeded. Please wait before generating more advice."}), 429
 
     profile = session.get("career_profile", "")
     if not profile:

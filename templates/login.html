@@ -126,6 +126,8 @@ input:focus{
 
     <form action="/login" method="POST">
 
+        {{ csrf_input|safe }}
+
         <div class="form-group">
             <input
                 type="email"

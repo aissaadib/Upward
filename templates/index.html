@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <title>Upward</title>
 
 <style>
@@ -371,6 +372,7 @@ body{
                     <div class="leave-plan-wrap">
                         <p class="leave-warning">Leaving your plan will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.</p>
                         <form id="leave-form" action="/plan/leave" method="POST">
+                            {{ csrf_input|safe }}
                             <button type="button" class="btn btn-leave" onclick="if(confirm('Leave this plan and permanently delete your current roadmap?')){document.getElementById('leave-form').submit();}">Leave this plan</button>
                         </form>
                     </div>
@@ -520,5 +522,8 @@ body{
 
 
 
+<script>
+(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
+</script>
 </body>
 </html>

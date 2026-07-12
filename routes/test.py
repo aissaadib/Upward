@@ -1,6 +1,6 @@
 """Teaching-readiness test routes — resume upload, AI rating, and course creation."""
 
-from app import app, db, groq_client, login_required
+from app import app, db, groq_client, login_required, csrf_required, check_rate_limit
 from flask import render_template, request, session, redirect
 from services.ai import parse_ai_json
 import PyPDF2
@@ -8,6 +8,7 @@ import re
 
 @app.route("/test", methods=["GET", "POST"])
 @login_required
+@csrf_required
 def test():
     """Render the resume upload page or process a submitted resume + teaching field."""
     if request.method == "GET":
@@ -44,6 +45,7 @@ def test():
 
 @app.route("/rate_resume", methods=["POST"])
 @login_required
+@csrf_required
 def rate_resume():
     """Call AI to evaluate the resume across 9 teaching-readiness dimensions and compute a weighted rating."""
     resume_text = request.form.get("resume_text", "")
@@ -51,6 +53,10 @@ def rate_resume():
 
     if not resume_text or not major:
         return {"error": "Missing resume or major"}, 400
+
+    user_id = session["user_id"]
+    if not check_rate_limit(f"ai:rate:{user_id}", max_attempts=10, window=3600):
+        return {"error": "Rate limit exceeded. Try again later."}, 429
 
     prompt = f"""You are an extremely strict evaluator of teaching readiness.
 
@@ -253,6 +259,7 @@ def customize_course():
 
 @app.route("/create_course", methods=["POST"])
 @login_required
+@csrf_required
 def create_course():
     """Insert a new course into the database with title, description, price, tags, and AI rating."""
     title = request.form.get("title", "").strip()

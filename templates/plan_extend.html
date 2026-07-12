@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <title>Build Your Plan - Upward</title>
 <style>
 :root{
@@ -564,6 +565,7 @@ function renderPlan(p){
         {% if locked == 0 %}
             <div class="actions">    
                 <form action="/plan/lock" method="POST" style="display:inline;">
+                    {{ csrf_input|safe }}
                     <button type="submit" class="btn btn-primary">Pin as my main plan</button>
                 </form>       
             </div>
@@ -597,6 +599,9 @@ async function load(){
 
 // Load the plan on page load
 load();
+</script>
+<script>
+(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
 </script>
 </body>
 </html>

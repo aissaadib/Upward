@@ -83,6 +83,7 @@ td:last-child{white-space:nowrap;display:flex;gap:6px;align-items:center;}
     <div class="form-card">
         <h2>Add New Course</h2>
         <form method="POST" action="/admin/courses/add">
+            {{ csrf_input|safe }}
             <div class="form-group">
                 <label>Title</label>
                 <input type="text" name="title" required>
@@ -124,11 +125,12 @@ td:last-child{white-space:nowrap;display:flex;gap:6px;align-items:center;}
                 <td>{{ c.owner_id }}</td>
                 <td>
                     <span class="toggle-link" onclick="toggleEdit({{ c.id }})">✎ Edit</span>
-                    <form method="POST" action="/admin/courses/{{ c.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this course and all its data?')">
+                    <form method="POST" action="/admin/courses/{{ c.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this course and all its data?')">{{ csrf_input|safe }}
                         <button class="btn-danger" type="submit">Delete</button>
                     </form>
                     <div class="edit-form" id="edit-{{ c.id }}">
                         <form method="POST" action="/admin/courses/{{ c.id }}/edit">
+                            {{ csrf_input|safe }}
                             <div class="form-group">
                                 <label>Title</label>
                                 <input type="text" name="title" value="{{ c.title }}" required>

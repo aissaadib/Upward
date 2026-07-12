@@ -123,6 +123,8 @@ input:not([type="file"]):focus{
 
     <form action="/register" method="POST" enctype="multipart/form-data">
 
+        {{ csrf_input|safe }}
+
         <div class="form-group">
             <input
                 type="text"

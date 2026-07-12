@@ -1,6 +1,6 @@
 """Authentication routes: login, register, logout, email verification."""
 
-from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required, ADMIN_EMAIL
+from app import app, db, SMTP_EMAIL, SMTP_PASSWORD, SMTP_SERVER, login_required, ADMIN_EMAIL, check_rate_limit, csrf_required
 from flask import render_template, request, redirect, session
 import os
 import random
@@ -37,18 +37,22 @@ def send_code(to_email, code):
         server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
 
 @app.route("/login", methods=["GET", "POST"])
+@csrf_required
 def login():
     """Authenticate user by email/password and set session user_id on success."""
     if request.method == "POST":
-        email    = request.form.get("email")
+        email    = (request.form.get("email") or "").strip()
         password = request.form.get("password")
         if not email or not password:
             return render_template("login.html", error="Fill up all fields")
+        if len(email) > 254 or len(password) > 128:
+            return render_template("login.html", error="Invalid input")
+        ip = request.remote_addr or "unknown"
+        if not check_rate_limit(f"login:{ip}", max_attempts=5, window=60):
+            return render_template("login.html", error="Too many attempts. Try again later.")
         rows = db.execute("SELECT * FROM users WHERE email = ?", email)
-        if len(rows) != 1:
-            return render_template("login.html", error="No account with that email")
-        if not check_password_hash(rows[0]["hash"], password):
-            return render_template("login.html", error="Invalid password")
+        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], password):
+            return render_template("login.html", error="Invalid email or password")
         session["user_id"] = rows[0]["id"]
         session["username"] = rows[0]["name"]
         # Auto-grant admin if email matches
@@ -58,22 +62,36 @@ def login():
     return render_template("login.html")
 
 @app.route("/register", methods=["GET", "POST"])
+@csrf_required
 def register():
     """Register a new user: validate inputs, send verification code, redirect to /verify."""
+    # Preserve CSRF token across session clear
+    csrf_token = session.get("_csrf_token")
     session.clear()
+    if csrf_token:
+        session["_csrf_token"] = csrf_token
     if request.method == "POST":
-        username     = request.form.get("username")
-        email        = request.form.get("email")
+        username     = (request.form.get("username") or "").strip()
+        email        = (request.form.get("email") or "").strip()
         password     = request.form.get("password")
         confirmation = request.form.get("confirmation")
         if not username or not email or not password or not confirmation:
             return render_template("register.html", error="Fill up all fields")
+        if len(username) > 100 or len(email) > 254 or len(password) > 128:
+            return render_template("register.html", error="Invalid input length")
         if password != confirmation:
             return render_template("register.html", error="Passwords do not match")
-        if db.execute("SELECT * FROM users WHERE email = ?", email):
-            return render_template("register.html", error="Email already registered")
-        if db.execute("SELECT * FROM users WHERE name = ?", username):
-            return render_template("register.html", error="Username already taken")
+        if len(password) < 6:
+            return render_template("register.html", error="Password must be at least 6 characters")
+        ip = request.remote_addr or "unknown"
+        if not check_rate_limit(f"register:{ip}", max_attempts=3, window=60):
+            return render_template("register.html", error="Too many attempts. Try again later.")
+        existing_email = db.execute("SELECT 1 FROM users WHERE email = ?", email)
+        if existing_email:
+            return render_template("register.html", error="Registration failed. Please try again.")
+        existing_user = db.execute("SELECT 1 FROM users WHERE name = ?", username)
+        if existing_user:
+            return render_template("register.html", error="Registration failed. Please try again.")
 
         # Handle required resume upload
         resume_file = request.files.get("resume")
@@ -81,6 +99,12 @@ def register():
             return render_template("register.html", error="Resume / CV is required")
         if not resume_file.filename.lower().endswith(".pdf"):
             return render_template("register.html", error="Resume must be a PDF file")
+        resume_file.seek(0, os.SEEK_END)
+        file_size = resume_file.tell()
+        resume_file.seek(0)
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+        if file_size > MAX_FILE_SIZE:
+            return render_template("register.html", error="File too large. Maximum size is 10 MB.")
 
         upload_folder = os.path.join(os.getcwd(), 'uploads')
         os.makedirs(upload_folder, exist_ok=True)
@@ -89,6 +113,7 @@ def register():
         resume_file.save(file_path)
         resume_text = extract_text_from_pdf(file_path)
         if not resume_text:
+            os.remove(file_path)
             return render_template("register.html", error="Could not read text from your PDF. Try a different file.")
 
         code = str(random.randint(100000, 999999))
@@ -108,9 +133,7 @@ def register():
 @login_required
 def logout():
     """Clear the session and redirect to login."""
-    for k in list(session.keys()):
-        if k != "user_id":
-            session.pop(k, None)
+    session.clear()
     return redirect("/login")
 
 @app.route("/login/google")
@@ -119,6 +142,7 @@ def login_google():
     return redirect("/")
 
 @app.route("/verify", methods=["GET", "POST"])
+@csrf_required
 def verify():
     """Verify email code, insert user into DB, and log them in."""
     if "pending_email" not in session:
@@ -133,13 +157,14 @@ def verify():
                                  session["pending_email"])[0]["id"]
             # Clean up pending keys, keep user_id and username
             username = session["pending_username"]
+            pending_email = session.get("pending_email", "")
             for k in list(session.keys()):
                 if k.startswith("pending_") or k == "verify_code":
                     session.pop(k, None)
             session["user_id"] = user_id
             session["username"] = username
             # Auto-grant admin if email matches
-            if ADMIN_EMAIL and session.get("pending_email", "").lower().strip() == ADMIN_EMAIL:
+            if ADMIN_EMAIL and pending_email.lower().strip() == ADMIN_EMAIL:
                 db.execute("UPDATE users SET admin = 1 WHERE id = ?", user_id)
             return redirect("/")
         else:
