@@ -59,14 +59,18 @@ def has_course_access(user_id, course_id):
     now_iso = datetime.now(timezone.utc).isoformat()
     # Check owners table (free subscriptions — 1 month expiry)
     sub = db.execute(
-        "SELECT ending_date FROM owners WHERE course_id = ? AND user_id = ?",
+        "SELECT booking_date, ending_date FROM owners WHERE course_id = ? AND user_id = ?",
         course_id, user_id
     )
     if sub:
         end = sub[0].get("ending_date")
+        start = sub[0].get("booking_date")
         if end and end > now_iso:
             return True
-        # Expired — clean up silently
+        # Legacy record (ending_date == booking_date) — lifetime access
+        if end and start and end[:19] == start[:19]:
+            return True
+        # Truly expired — clean up
         if end and end <= now_iso:
             db.execute("DELETE FROM owners WHERE course_id = ? AND user_id = ?",
                        course_id, user_id)

@@ -269,6 +269,10 @@ body{
     border-color:var(--border);
 }
 
+.course-card.clickable{
+    cursor:pointer;
+}
+
 .course-title{
     font-size:1.15rem;
     font-weight:800;
@@ -568,7 +572,7 @@ body{
             {% set is_purchased = item.id in purchased_ids %}
             {% set is_owned = item.id in owned_ids %}
             {% set has_access = is_purchased or is_owned or item.is_owner %}
-            <div class="course-card{% if not has_access and item.price > 0 %} locked{% endif %}" data-search="{{ (item.title + ' ' + (item.description or '') + ' ' + (item.tags or ''))|lower }}">
+            <div class="course-card{% if not has_access and item.price > 0 %} locked{% endif %}{% if has_access %} clickable{% endif %}" data-search="{{ (item.title + ' ' + (item.description or '') + ' ' + (item.tags or ''))|lower }}"{% if has_access %} onclick="if(event.target.closest('.course-actions,.tag'))return;window.location='/lessons/{{ item.id }}'"{% endif %}>
                 <div class="course-title">{{ item.title }}</div>
 
                 {% if item.tags %}
