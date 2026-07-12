@@ -99,11 +99,7 @@ td:last-child{white-space:nowrap;display:flex;gap:6px;align-items:center;}
                 <label>Tags (comma-separated)</label>
                 <input type="text" name="tags" placeholder="e.g. python, data-science, beginner">
             </div>
-            <div class="form-group">
-                <label>Stripe Price ID (for monthly subscriptions)</label>
-                <input type="text" name="stripe_price_id" placeholder="price_xxxxxxxxxxxxx" style="font-family:monospace;">
-                <p style="font-size:.75rem;color:var(--text-secondary);margin-top:4px;">Create a recurring price in Stripe Dashboard → Products → Add Product → set "Recurring (Monthly)" → paste the resulting <strong>price_xxx</strong> ID here.</p>
-            </div>
+            <p style="font-size:.78rem;color:var(--text-secondary);">Stripe product + monthly price will be created automatically when saved.</p>
             <button class="btn" type="submit">Add Course</button>
         </form>
     </div>
@@ -149,10 +145,10 @@ td:last-child{white-space:nowrap;display:flex;gap:6px;align-items:center;}
                                 <label>Tags</label>
                                 <input type="text" name="tags" value="{{ c.tags or '' }}">
                             </div>
-                            <div class="form-group">
-                                <label>Stripe Price ID</label>
-                                <input type="text" name="stripe_price_id" value="{{ c.stripe_price_id or '' }}" style="font-family:monospace;">
-                            </div>
+                            {% if c.stripe_price_id %}
+                            <p style="font-size:.78rem;color:var(--text-secondary);margin-bottom:10px;">Stripe: <code>{{ c.stripe_price_id }}</code></p>
+                            <input type="hidden" name="stripe_price_id" value="{{ c.stripe_price_id }}">
+                            {% endif %}
                             <button class="btn" type="submit">Save</button>
                         </form>
                     </div>

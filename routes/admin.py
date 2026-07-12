@@ -2,6 +2,7 @@
 
 from app import app, db, login_required, admin_required, STRIPE_PUBLISHABLE_KEY
 from flask import render_template, request, session, redirect
+from routes.purchases import sync_stripe_price
 
 
 @app.route("/admin")
@@ -62,6 +63,8 @@ def admin_add_course():
         "INSERT INTO courses (owner_id, title, description, price, tags, rating, stripe_price_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
         session["user_id"], title, description, max(price, 0), tags, None, stripe_price_id
     )
+    course_id = db.execute("SELECT MAX(id) AS id FROM courses")[0]["id"]
+    sync_stripe_price(course_id)
     return redirect("/admin/courses?msg=Course added")
 
 
@@ -88,10 +91,17 @@ def admin_edit_course(course_id):
     except ValueError:
         price = 0
 
+    # Don't overwrite stripe_price_id if not sent (auto-generated)
+    if not stripe_price_id:
+        existing = db.execute("SELECT stripe_price_id FROM courses WHERE id = ?", course_id)
+        if existing and existing[0].get("stripe_price_id"):
+            stripe_price_id = existing[0]["stripe_price_id"]
+
     db.execute(
         "UPDATE courses SET title = ?, description = ?, price = ?, tags = ?, stripe_price_id = ? WHERE id = ?",
         title, description, max(price, 0), tags, stripe_price_id, course_id
     )
+    sync_stripe_price(course_id)
     return redirect("/admin/courses?msg=Course updated")
 
 

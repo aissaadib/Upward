@@ -6,6 +6,43 @@ import stripe
 from datetime import datetime, timezone, timedelta
 
 
+def sync_stripe_price(course_id):
+    """Create or update a Stripe product + monthly recurring price for a course.
+
+    Called automatically when a course is saved with price > 0.
+    Sets courses.stripe_price_id so the checkout flow can use it.
+    """
+    if not STRIPE_SECRET_KEY:
+        return
+    course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
+    if not course or course[0]["price"] <= 0:
+        return
+    course = course[0]
+    existing_id = (course.get("stripe_price_id") or "").strip()
+
+    try:
+        # If a price ID exists, try to update the product name
+        if existing_id:
+            try:
+                price = stripe.Price.retrieve(existing_id)
+                stripe.Product.modify(price.product, name=course["title"])
+            except stripe.error.StripeError:
+                existing_id = ""  # stale ID — create fresh
+        # No valid price ID — create product + monthly price
+        if not existing_id:
+            product = stripe.Product.create(name=course["title"])
+            price = stripe.Price.create(
+                product=product.id,
+                unit_amount=int(course["price"] * 100),
+                currency="mad",
+                recurring={"interval": "month"},
+            )
+            db.execute("UPDATE courses SET stripe_price_id = ? WHERE id = ?",
+                       price.id, course_id)
+    except stripe.error.StripeError:
+        pass  # silently fail — admin can retry
+
+
 def has_course_access(user_id, course_id):
     """Return True if the user has active access to the given course.
 
@@ -80,8 +117,13 @@ def create_checkout_session():
 
     stripe_price_id = course.get("stripe_price_id", "").strip()
     if not stripe_price_id:
+        sync_stripe_price(int(course_id))
+        course = db.execute("SELECT * FROM courses WHERE id = ?", course_id)
+        if course:
+            stripe_price_id = (course[0].get("stripe_price_id") or "").strip()
+    if not stripe_price_id:
         return jsonify({
-            "error": "This course is not yet configured for monthly billing. Contact admin."
+            "error": "Could not create Stripe price. Try editing the course in Admin first."
         }), 500
 
     try:
