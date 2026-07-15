@@ -9,10 +9,11 @@ import time
 @login_required
 def advice():
     """Render the advice page after resetting the user's locked status."""
-    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name, plan_access FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
+    plan_access = user[0]["plan_access"] if user else 0
     db.execute("UPDATE users SET locked = 0 WHERE id = ?", session["user_id"])
-    return render_template("advice.html", username=username)
+    return render_template("advice.html", username=username, plan_access=plan_access)
 
 
 @app.route("/generate_advice", methods=["POST"])

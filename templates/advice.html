@@ -265,6 +265,10 @@ a:hover{
 </div>
 
 <script>
+// CSRF interceptor — patch fetch before any calls are made
+(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
+
+var planAccess = {{ plan_access | tojson }};
 
 // Career path suggestions: user can browse, select, and lock a plan
 let data = []; // Career path suggestions from the API
@@ -348,9 +352,13 @@ function render(){
                 ${esc(r.label)} →</a>
         `).join("")}
 
+        ${planAccess ? `
         <button type="button" class="btn btn-lock" onclick="choosePlan(${active})">
             Choose as my main plan
-        </button>
+        </button>` : `
+        <button type="button" class="btn btn-lock" onclick="buyPlan(${active})">
+            Buy Extended Plan — 130 MAD
+        </button>`}
     `;
 }
 
@@ -381,6 +389,29 @@ async function choosePlan(index){
     }
 }
 
+// Buy extended plan — save to session then redirect to Stripe checkout
+async function buyPlan(index){
+    const suggestion = data[index];
+    if(!suggestion) return;
+    try {
+        await fetch("/plan/select", {
+            method:"POST", credentials:"include",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(suggestion)
+        });
+        const res = await fetch("/create-plan-checkout", {
+            method:"POST", credentials:"include",
+            headers:{"Content-Type":"application/json"}
+        });
+        const json = await res.json();
+        if(!res.ok) throw new Error(json.error || "Payment setup failed");
+        window.location.href = json.url;
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+}
+
 // Fetch career path suggestions from the server based on the user's profile
 async function generate(){
     const res = await fetch("/generate_advice", {
@@ -406,10 +437,6 @@ async function generate(){
 // Load suggestions on page load
 generate();
 
-</script>
-
-<script>
-(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
 </script>
 </body>
 </html>

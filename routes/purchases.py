@@ -1,6 +1,6 @@
 """Purchases routes — Stripe subscriptions, webhook handler, and access helpers."""
 
-from app import app, db, login_required, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
+from app import app, db, login_required, csrf_required, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
 from flask import render_template, request, session, redirect, jsonify
 import stripe
 from datetime import datetime, timezone, timedelta
@@ -41,6 +41,111 @@ def sync_stripe_price(course_id):
                        price.id, course_id)
     except stripe.error.StripeError:
         pass  # silently fail — admin can retry
+
+
+PLAN_PRICE_ID = None
+
+def get_plan_price_id():
+    """Get or create the Stripe price ID for the 130 MAD Extended Plan one-time purchase."""
+    global PLAN_PRICE_ID
+    if not STRIPE_SECRET_KEY:
+        return None
+    if PLAN_PRICE_ID:
+        return PLAN_PRICE_ID
+    try:
+        name = "Extended Career Plan"
+        products = stripe.Product.search(query=f"name:'{name}' AND active:'true'", limit=1)
+        if products.data:
+            product = products.data[0]
+        else:
+            product = stripe.Product.create(name=name)
+        prices = stripe.Price.list(product=product.id, active=True, limit=1, type="one_time")
+        if prices.data:
+            PLAN_PRICE_ID = prices.data[0].id
+        else:
+            price = stripe.Price.create(
+                product=product.id,
+                unit_amount=13000,
+                currency="mad",
+            )
+            PLAN_PRICE_ID = price.id
+    except stripe.error.StripeError:
+        return None
+    return PLAN_PRICE_ID
+
+
+@app.route("/create-plan-checkout", methods=["POST"])
+@login_required
+@csrf_required
+def create_plan_checkout():
+    """Create a Stripe Checkout Session for the 130 MAD Extended Plan."""
+    if not STRIPE_SECRET_KEY:
+        return jsonify({"error": "Stripe is not configured. Contact admin."}), 500
+
+    price_id = get_plan_price_id()
+    if not price_id:
+        return jsonify({"error": "Could not set up plan pricing. Try again later."}), 500
+
+    user_id = session["user_id"]
+    existing = db.execute("SELECT plan_access FROM users WHERE id = ?", user_id)
+    if existing and existing[0].get("plan_access"):
+        return jsonify({"error": "You already have access to the Extended Plan."}), 400
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="payment",
+            success_url=request.host_url.rstrip("/") + "/checkout/plan-success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.host_url.rstrip("/") + "/advice",
+            metadata={
+                "plan_purchase": "true",
+                "user_id": str(user_id),
+            },
+        )
+        return jsonify({"url": checkout_session.url})
+    except stripe.error.StripeError as e:
+        return jsonify({"error": f"Stripe error: {e.user_message or str(e)}"}), 500
+
+
+@app.route("/checkout/plan-success")
+@login_required
+def checkout_plan_success():
+    """Show plan payment success page."""
+    session_id = request.args.get("session_id")
+    granted = False
+
+    if session_id and STRIPE_SECRET_KEY:
+        try:
+            checkout_session = stripe.checkout.Session.retrieve(session_id)
+            metadata = checkout_session.metadata or {}
+            user_id = metadata.get("user_id")
+
+            if (checkout_session.payment_status == "paid"
+                    and user_id and str(session["user_id"]) == user_id
+                    and metadata.get("plan_purchase") == "true"):
+
+                existing = db.execute(
+                    "SELECT 1 FROM purchases WHERE stripe_session_id = ?", session_id
+                )
+                if not existing:
+                    db.execute(
+                        """INSERT INTO purchases
+                           (user_id, course_id, stripe_session_id, payment_intent, amount, currency, status)
+                           VALUES (?, ?, ?, ?, ?, ?, 'completed')""",
+                        session["user_id"], -1, session_id,
+                        checkout_session.payment_intent,
+                        checkout_session.amount_total,
+                        checkout_session.currency or "mad",
+                    )
+                db.execute("UPDATE users SET plan_access = 1 WHERE id = ?", session["user_id"])
+                granted = True
+        except stripe.error.StripeError:
+            pass
+
+    return render_template("payment_success.html",
+                           username=session.get("username", "User"),
+                           verified=granted,
+                           is_plan=True)
 
 
 def has_course_access(user_id, course_id):
@@ -236,8 +341,9 @@ def stripe_webhook():
         metadata = checkout_session.get("metadata", {})
         course_id = metadata.get("course_id")
         user_id = metadata.get("user_id")
+        plan_purchase = metadata.get("plan_purchase")
 
-        if not course_id or not user_id:
+        if not user_id:
             return jsonify({"error": "Missing metadata"}), 400
 
         existing = db.execute(
@@ -248,29 +354,44 @@ def stripe_webhook():
             return jsonify({"status": "already recorded"}), 200
 
         if checkout_session.get("payment_status") == "paid":
-            sub_id = checkout_session.get("subscription")
-            period_end = None
-            if sub_id:
-                try:
-                    sub = stripe.Subscription.retrieve(sub_id)
-                    period_end = get_period_end(sub)
-                except stripe.error.StripeError:
-                    period_end = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+            if plan_purchase == "true":
+                db.execute(
+                    "UPDATE users SET plan_access = 1 WHERE id = ?",
+                    int(user_id)
+                )
+                db.execute(
+                    """INSERT INTO purchases
+                       (user_id, course_id, stripe_session_id, payment_intent, amount, currency, status)
+                       VALUES (?, ?, ?, ?, ?, ?, 'completed')""",
+                    int(user_id), -1, checkout_session.get("id"),
+                    checkout_session.get("payment_intent"),
+                    checkout_session.get("amount_total"),
+                    checkout_session.get("currency") or "mad",
+                )
+            elif course_id:
+                sub_id = checkout_session.get("subscription")
+                period_end = None
+                if sub_id:
+                    try:
+                        sub = stripe.Subscription.retrieve(sub_id)
+                        period_end = get_period_end(sub)
+                    except stripe.error.StripeError:
+                        period_end = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
-            db.execute(
-                """INSERT INTO purchases
-                   (user_id, course_id, stripe_session_id, subscription_id,
-                    payment_intent, amount, currency, status, current_period_end)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', ?)""",
-                int(user_id),
-                int(course_id),
-                checkout_session.get("id"),
-                sub_id,
-                checkout_session.get("payment_intent"),
-                checkout_session.get("amount_total"),
-                checkout_session.get("currency") or "mad",
-                period_end,
-            )
+                db.execute(
+                    """INSERT INTO purchases
+                       (user_id, course_id, stripe_session_id, subscription_id,
+                        payment_intent, amount, currency, status, current_period_end)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', ?)""",
+                    int(user_id),
+                    int(course_id),
+                    checkout_session.get("id"),
+                    sub_id,
+                    checkout_session.get("payment_intent"),
+                    checkout_session.get("amount_total"),
+                    checkout_session.get("currency") or "mad",
+                    period_end,
+                )
 
     # Monthly renewal — extend access by another month
     elif event_type == "invoice.payment_succeeded":

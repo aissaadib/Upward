@@ -73,17 +73,19 @@ def plan_extend():
     locked_value = locked[0]["locked"] if locked else 0
 
     user = db.execute(
-        "SELECT name FROM users WHERE id = ?",
+        "SELECT name, plan_access FROM users WHERE id = ?",
         user_id
     )
 
     username = user[0]["name"] if user else "User"
+    plan_access = user[0]["plan_access"] if user else 0
 
     return render_template(
         "plan_extend.html",
         username=username,
         suggestion=plan,
-        locked=locked_value
+        locked=locked_value,
+        plan_access=plan_access
     )
 
 
@@ -109,6 +111,9 @@ def call_ai_for_section(prompt, section_name, fallback_data):
 def generate_extended_plan():
     """Generate a detailed 6-month plan by calling AI for each section separately."""
     user_id = session["user_id"]
+    plan_access = db.execute("SELECT plan_access FROM users WHERE id = ?", user_id)
+    if not plan_access or not plan_access[0].get("plan_access"):
+        return jsonify({"error": "You need to purchase the Extended Plan to generate it. 130 MAD — one-time."}), 402
     if not check_rate_limit(f"ai:plan:{user_id}", max_attempts=5, window=3600):
         return jsonify({"error": "AI rate limit exceeded. Please wait before generating a new plan."}), 429
     profile = session.get("career_profile", "")

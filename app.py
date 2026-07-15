@@ -142,6 +142,12 @@ try:
 except Exception:
     pass
 
+# Add plan_access column silently (safe for existing DBs)
+try:
+    db.execute("ALTER TABLE users ADD COLUMN plan_access INTEGER DEFAULT 0")
+except Exception:
+    pass
+
 # Add thumbnail and created_at to courses (for existing DBs)
 try:
     db.execute("ALTER TABLE courses ADD COLUMN thumbnail TEXT DEFAULT ''")

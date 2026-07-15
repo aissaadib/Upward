@@ -73,6 +73,9 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif
 </div>
 
 <script>
+// CSRF interceptor — patch fetch before any calls are made
+(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
+
 // Special marker value for "None" in multi-select questions
 const NONE_OPTION = "None";
 

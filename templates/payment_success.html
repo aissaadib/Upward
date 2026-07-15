@@ -19,11 +19,13 @@ p{color:#6b7280;margin-bottom:8px;line-height:1.6;}
 <div class="card">
 <div class="check">✓</div>
 <h1>Payment Successful!</h1>
-<p>Your payment was processed and you now have full access to the course.</p>
+<p>Your payment was processed and you now have full access{% if not is_plan %} to the course{% endif %}.</p>
 {% if not verified %}
 <p style="font-size:.85rem;color:#f59e0b;">Your access will be granted momentarily. If it doesn't appear, please refresh the page.</p>
 {% endif %}
-<a href="/courses" class="btn">Go to Courses</a>
+<a href="{% if is_plan %}/plan/extend{% else %}/courses{% endif %}" class="btn">
+    {% if is_plan %}Go to My Plan{% else %}Go to Courses{% endif %}
+</a>
 </div>
 </body>
 </html>
