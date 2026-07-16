@@ -35,39 +35,43 @@ body{
 }
 
 .navbar{
-    height:72px;
+    height:70px;
     display:flex;
     justify-content:space-between;
     align-items:center;
     padding:0 32px;
-    background:white;
     border-bottom:1px solid var(--border);
+    background:white;
     position:sticky;
     top:0;
     z-index:100;
 }
 
 .brand{
-    font-size:1.9rem;
+    font-size:1.8rem;
     font-weight:900;
-    text-decoration:none;
-    color:var(--text);
     letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
 }
 
-.brand span{
-    color:var(--accent);
+.brand span{color:var(--accent);}
+
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-right{display:flex;align-items:center;gap:14px;}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+    text-decoration:none;
+    color:inherit;
 }
 
 .logout{
-    color:var(--text-secondary);
     text-decoration:none;
-    margin-left:14px;
+    color:var(--text-secondary);
 }
-
-.logout:hover{
-    color:var(--accent);
-}
+.logout:hover{color:var(--accent);}
 
 .container{
     width:min(1300px,95%);
@@ -392,7 +396,7 @@ ul li::before{
 
 @media(max-width:900px){
     .container{width:92%;padding:30px 0 80px;}
-    .navbar{padding:0 14px;height:60px;}
+    .navbar{padding:0 18px;}
     .navbar div{display:flex;align-items:center;gap:8px;}
     .navbar span{font-size:.85rem;}
     .hero{margin-bottom:40px;}
@@ -411,7 +415,7 @@ ul li::before{
 
 @media(max-width:480px){
     .container{width:94%;padding:20px 0 60px;}
-    .navbar{padding:0 10px;height:52px;}
+    .navbar{padding:0 12px;}
     .brand{font-size:1.4rem;}
     .hero h1{font-size:clamp(1.4rem,6vw,1.8rem);}
     .hero p{font-size:.85rem;line-height:1.6;}
@@ -426,13 +430,15 @@ ul li::before{
 </style>
 </head>
 <body>
-<div class="navbar">
-    <a href="/" class="brand">Up<span>ward</span></a>
-    <div>
-        <span>{{ username }}</span>
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="/" class="brand">Up<span>ward</span></a>
+    </div>
+    <div class="nav-right">
+        <span class="username">{{ username }}</span>
         <a class="logout" href="/logout">Logout</a>
     </div>
-</div>
+</nav>
 
 <div class="container">
     <div class="hero">
