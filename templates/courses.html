@@ -460,6 +460,89 @@ body{
     background:#e8e8ee;
 }
 
+.tabs{
+    display:flex;
+    gap:0;
+    border-bottom:1px solid var(--border);
+    margin-bottom:28px;
+    position:relative;
+}
+
+.tab{
+    position:relative;
+    padding:14px 28px;
+    font-size:.85rem;
+    font-weight:700;
+    cursor:pointer;
+    color:var(--text-secondary);
+    background:none;
+    border:none;
+    user-select:none;
+    transition:color .2s;
+    letter-spacing:.02em;
+}
+
+.tab::after{
+    content:"";
+    position:absolute;
+    bottom:-1px;
+    left:50%;
+    transform:translateX(-50%) scaleX(.4);
+    width:100%;
+    height:2px;
+    background:var(--accent);
+    border-radius:2px;
+    opacity:0;
+    transition:opacity .2s,transform .2s;
+}
+
+.tab:hover{
+    color:var(--text);
+}
+
+.tab.active{
+    color:var(--text);
+}
+
+.tab.active::after{
+    opacity:1;
+    transform:translateX(-50%) scaleX(1);
+}
+
+.tab:not(:last-child)::before{
+    content:"";
+    position:absolute;
+    right:0;
+    top:35%;
+    height:30%;
+    width:1px;
+    background:var(--border);
+}
+
+.tab-panel{
+    display:none;
+}
+
+.tab-panel.active{
+    display:block;
+}
+
+.section-header{
+    margin-bottom:24px;
+}
+
+.section-title{
+    font-size:1.6rem;
+    font-weight:800;
+    letter-spacing:-.5px;
+}
+
+.section-sub{
+    color:var(--text-secondary);
+    font-size:.95rem;
+    margin-top:4px;
+}
+
 .empty-state{
     margin-top:40px;
     padding:60px 20px;
@@ -468,6 +551,142 @@ body{
     border:1px dashed var(--border);
     border-radius:16px;
     color:var(--text-secondary);
+}
+
+.online-courses-wrap{
+    min-height:120px;
+}
+
+.online-loading{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    padding:80px 0;
+    color:var(--text-secondary);
+    font-size:.95rem;
+}
+
+.spinner-sm{
+    width:36px;
+    height:36px;
+    border:4px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    flex-shrink:0;
+}
+
+.online-error{
+    padding:40px 0;
+    color:var(--text-secondary);
+    font-size:.95rem;
+}
+
+.btn-link{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-weight:700;
+    font-size:.95rem;
+    cursor:pointer;
+    text-decoration:underline;
+    padding:0;
+}
+
+.btn-link:hover{
+    color:#2eb3c5;
+}
+
+.online-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:16px;
+    margin-top:4px;
+}
+
+.online-card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    transition:border-color .15s;
+}
+
+.online-card:hover{
+    border-color:var(--accent);
+}
+
+.online-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:8px;
+    gap:8px;
+}
+
+.online-card-title{
+    font-size:1rem;
+    font-weight:800;
+    line-height:1.3;
+}
+
+.online-card-free{
+    font-size:.65rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    background:#e1fae8;
+    color:#1a8a3a;
+    padding:2px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+
+.online-card-paid{
+    font-size:.65rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    background:#fff3e0;
+    color:#e65100;
+    padding:2px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+
+.online-card-platform{
+    font-size:.75rem;
+    color:var(--text-secondary);
+    font-weight:600;
+    margin-bottom:10px;
+}
+
+.online-card-desc{
+    font-size:.85rem;
+    color:var(--text-secondary);
+    line-height:1.5;
+    flex-grow:1;
+    margin-bottom:14px;
+}
+
+.online-card-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:.8rem;
+    font-weight:700;
+    color:var(--accent);
+    text-decoration:none;
+    align-self:flex-start;
+}
+
+.online-card-link:hover{
+    text-decoration:underline;
 }
 
 .spinner-overlay{
@@ -554,11 +773,18 @@ body{
 
     <section class="hero">
         <h1>Courses</h1>
-        <p>Browse the courses available right now.</p>
+        <p>Discover in-app courses and AI-recommended online resources for your career path.</p>
         <a href="/test" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Create a Course</a>
     </section>
 
-    <section class="section">
+    <div class="tabs" id="course-tabs">
+        <button class="tab active" data-tab="in-app">In-App Courses</button>
+        {% if locked_plan %}
+        <button class="tab" data-tab="online">Online Courses</button>
+        {% endif %}
+    </div>
+
+    <div class="tab-panel active" id="panel-in-app">
 
         {% if courses %}
 
@@ -637,7 +863,22 @@ body{
         </div>
         {% endif %}
 
-    </section>
+    </div>
+
+    <div class="tab-panel" id="panel-online">
+
+        <div class="online-courses-wrap">
+            <div class="online-loading" id="online-loading">
+                <div class="spinner-sm"></div>
+                <span>Generating recommendations for your path…</span>
+            </div>
+            <div class="online-error" id="online-error" style="display:none;">
+                <p>Could not load recommendations. <button class="btn-link" onclick="loadOnlineCourses()">Try again</button></p>
+            </div>
+            <div class="online-grid" id="online-grid"></div>
+        </div>
+
+    </div>
 
 </main>
 
@@ -794,6 +1035,82 @@ function buyCourse(courseId){
         alert('Checkout setup failed');
     });
 }
+
+let onlineCoursesCache = null;
+
+function loadOnlineCourses(){
+    const grid = document.getElementById("online-grid");
+    const loading = document.getElementById("online-loading");
+    const error = document.getElementById("online-error");
+    if(!grid) return;
+
+    if(onlineCoursesCache){
+        grid.innerHTML = onlineCoursesCache;
+        return;
+    }
+
+    loading.style.display = "flex";
+    error.style.display = "none";
+    grid.innerHTML = "";
+
+    fetch("/api/online-courses")
+        .then(r => r.json())
+        .then(data => {
+            loading.style.display = "none";
+            if(data.error){
+                error.style.display = "block";
+                error.querySelector("p").textContent = data.error;
+                return;
+            }
+            const courses = data.courses || [];
+            if(!courses.length){
+                error.style.display = "block";
+                error.querySelector("p").textContent = "No recommendations available right now.";
+                return;
+            }
+            const html = courses.map(c => {
+                const badge = c.free
+                    ? '<span class="online-card-free">Free</span>'
+                    : '<span class="online-card-paid">Paid</span>';
+                return `<div class="online-card">
+                    <div class="online-card-top">
+                        <div class="online-card-title">${c.title.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+                        ${badge}
+                    </div>
+                    <div class="online-card-platform">${c.platform.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+                    <div class="online-card-desc">${c.description.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+                    <a class="online-card-link" href="${c.url.replace(/</g,'&lt;').replace(/>/g,'&gt;')}" target="_blank" rel="noopener">
+                        Visit Course →
+                    </a>
+                </div>`;
+            }).join("");
+            onlineCoursesCache = html;
+            grid.innerHTML = html;
+        })
+        .catch(() => {
+            loading.style.display = "none";
+            error.style.display = "block";
+        });
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(tab => {
+        tab.addEventListener("click", function(){
+            const target = this.getAttribute("data-tab");
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            this.classList.add("active");
+            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+            const panel = document.getElementById("panel-" + target);
+            if(panel) panel.classList.add("active");
+            if(target === "online"){
+                loadOnlineCourses();
+            }
+        });
+    });
+    const onlineTab = document.querySelector('.tab[data-tab="online"]');
+    if(onlineTab) loadOnlineCourses();
+});
 </script>
 
 <script>

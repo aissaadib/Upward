@@ -18,6 +18,10 @@
     --border:#e1e0e6;
 }
 
+@media print { body { display: none !important; } }
+
+.lesson-body { user-select: none; -webkit-user-select: none; }
+
 *{
     margin:0;
     padding:0;
@@ -387,6 +391,14 @@ body{
 </main>
 
 <script>
+    // Anti-copy protections
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) || (e.ctrlKey && (e.key === 'U' || e.key === 'S' || e.key === 'P'))) {
+            e.preventDefault();
+        }
+    });
+
     // Font size slider - persist preference across visits
     const slider = document.getElementById('fontSize');
     const label = document.getElementById('sizeLabel');

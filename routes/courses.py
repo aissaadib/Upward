@@ -1,11 +1,14 @@
-"""Courses routes — list, view, subscribe/unsubscribe, delete, and PayPal payments."""
+"""Courses routes — list, view, subscribe/unsubscribe, delete, PayPal payments, and AI online course recommendations."""
 
-from app import app, db, login_required, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE
+from app import app, db, login_required, groq_client, check_rate_limit, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE
 from flask import render_template, session, redirect, jsonify, request
 from collections import Counter
 from datetime import datetime, timezone, timedelta
+from routes.plans import get_locked_plan
+from services.ai import parse_ai_json
 import requests
 import base64
+import urllib.parse
 
 
 def paypal_headers():
@@ -77,8 +80,88 @@ def courses():
     purchased = db.execute("SELECT course_id FROM purchases WHERE user_id = ? AND status = 'completed'", session["user_id"])
     purchased_ids = {r["course_id"] for r in purchased}
 
+    locked_plan = get_locked_plan(session["user_id"])
+
     all_tags, _ = get_all_tags(course_list)
-    return render_template("courses.html", username=username, courses=course_list, locked=locked, all_tags=all_tags, owned_ids=owned_ids, purchased_ids=purchased_ids, is_admin=is_admin)
+    return render_template("courses.html", username=username, courses=course_list, locked=locked, all_tags=all_tags, owned_ids=owned_ids, purchased_ids=purchased_ids, is_admin=is_admin, locked_plan=locked_plan)
+
+
+@app.route("/api/online-courses", methods=["GET"])
+@login_required
+def online_courses():
+    """Generate AI-powered online course recommendations based on the user's locked plan."""
+    user_id = session["user_id"]
+    if not check_rate_limit(f"ai:online:{user_id}", max_attempts=3, window=3600):
+        return jsonify({"error": "Please wait before requesting new recommendations."}), 429
+
+    locked_plan = get_locked_plan(user_id)
+    if not locked_plan:
+        return jsonify({"error": "No locked plan found. Pin a plan first."}), 400
+
+    plan = locked_plan.get("extended") or locked_plan.get("basic") or {}
+    path_title = plan.get("title", "Your career path")
+    profile = session.get("career_profile", "")
+
+    prompt = f"""You are a career guidance AI. A user is pursuing this career path: "{path_title}"
+
+USER PROFILE:
+{profile}
+
+Generate a list of 20 real online courses (from platforms like Coursera, Udemy, edX, LinkedIn Learning, YouTube, freeCodeCamp, etc.) that will help them advance in this specific path. Cover a range of topics relevant to their path — from fundamentals to advanced.
+
+For each course, provide:
+- title: The exact course name
+- platform: Where it's hosted (e.g. Coursera, Udemy, edX, YouTube)
+- description: 1 sentence on why it's relevant to their path
+- free: true/false
+
+Respond ONLY with valid JSON (no markdown):
+{{"courses": [
+  {{"title": "...", "platform": "...", "description": "...", "free": true/false}},
+]}}
+
+Be specific and practical. Recommend well-known, real courses that genuinely exist on these platforms. Include at least 20 entries."""
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            timeout=30.0
+        )
+        raw = response.choices[0].message.content.strip()
+        result = parse_ai_json(raw)
+        if isinstance(result, dict) and "courses" in result:
+            platform_searches = {
+                "coursera": "https://www.coursera.org/search?query=",
+                "udemy": "https://www.udemy.com/courses/search/?q=",
+                "edx": "https://www.edx.org/search?q=",
+                "youtube": "https://www.youtube.com/results?search_query=",
+                "linkedin": "https://www.linkedin.com/learning/search?keywords=",
+                "freecodecamp": "https://www.freecodecamp.org/news/search/?query=",
+                "pluralsight": "https://www.pluralsight.com/search?q=",
+                "skillshare": "https://www.skillshare.com/search?query=",
+                "codecademy": "https://www.codecademy.com/search?query=",
+                "khan academy": "https://www.khanacademy.org/search?referer=%2F&page_search_query=",
+                "mit opencourseware": "https://ocw.mit.edu/search/?q=",
+                "google": "https://www.google.com/search?q=",
+            }
+            import urllib.parse
+            for c in result["courses"]:
+                platform = (c.get("platform") or "").lower().strip()
+                query = urllib.parse.quote(f"{c['title']} course {platform}")
+                search_url = None
+                for key, base in platform_searches.items():
+                    if key in platform:
+                        search_url = base + urllib.parse.quote(c["title"])
+                        break
+                if not search_url:
+                    search_url = "https://www.google.com/search?q=" + query
+                c["url"] = search_url
+            return jsonify(result)
+        return jsonify({"courses": []})
+    except Exception as e:
+        print(f"AI online courses error: {e}")
+        return jsonify({"error": "Failed to generate recommendations."}), 500
 
 
 @app.route("/delete_course/<int:course_id>", methods=["POST"])

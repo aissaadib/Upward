@@ -412,6 +412,41 @@ body {
   .resource { padding: 7px 8px; }
   .path { padding: 6px 8px; }
 }
+
+.advice-overlay{
+    display:none;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(255,255,255,.88);
+    z-index:2000;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:20px;
+}
+
+.advice-overlay.open{
+    display:flex;
+}
+
+.advice-spinner{
+    width:44px;
+    height:44px;
+    border:4px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg);}
+}
+
+.advice-overlay-text{
+    color:var(--text-secondary);
+    font-size:.95rem;
+    font-weight:500;
+}
 </style>
 </head>
 
@@ -427,6 +462,11 @@ body {
     <a class="logout" href="/logout">Logout</a>
   </div>
 </nav>
+
+<div class="advice-overlay" id="advice-overlay">
+    <div class="advice-spinner"></div>
+    <div class="advice-overlay-text">Analyzing your profile and generating career paths…</div>
+</div>
 
 <div class="container">
 
@@ -629,24 +669,34 @@ async function buyPlan(index){
 }
 
 async function generate(){
-    const res = await fetch("/generate_advice", {
-        method: "POST",
-        credentials: "include",   
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({count:5})
-    });
+    const overlay = document.getElementById("advice-overlay");
+    overlay.classList.add("open");
 
-    const json = await res.json();
+    try {
+        const res = await fetch("/generate_advice", {
+            method: "POST",
+            credentials: "include",   
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({count:5})
+        });
 
-    if(json.error){
+        const json = await res.json();
+        overlay.classList.remove("open");
+
+        if(json.error){
+            document.getElementById("paths").innerHTML = 
+                `<p style="color:#ff5460;font-size:.9rem;">${json.error}</p>`;
+            return;
+        }
+
+        data = json.advice || [];
+        active = 0;
+        render();
+    } catch(e) {
+        overlay.classList.remove("open");
         document.getElementById("paths").innerHTML = 
-            `<p style="color:#ff5460;font-size:.9rem;">${json.error}</p>`;
-        return;
+            `<p style="color:#ff5460;font-size:.9rem;">Failed to load. Try again.</p>`;
     }
-
-    data = json.advice || [];
-    active = 0;
-    render();
 }
 
 generate();
