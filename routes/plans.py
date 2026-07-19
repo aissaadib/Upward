@@ -3,6 +3,7 @@
 from app import app, db, groq_client, login_required, csrf_required, check_rate_limit
 from flask import render_template, redirect, request, session, jsonify
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from services.ai import parse_ai_json
 
 def init_db():
@@ -95,7 +96,7 @@ def call_ai_for_section(prompt, section_name, fallback_data):
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
-            timeout=30.0
+            timeout=40.0
         )
         raw = response.choices[0].message.content.strip()
         result = parse_ai_json(raw)
@@ -106,14 +107,17 @@ def call_ai_for_section(prompt, section_name, fallback_data):
         print(f"AI error for {section_name}: {e}")
         return fallback_data
 
+
 @app.route("/generate_extended_plan", methods=["POST"])
 @login_required
 def generate_extended_plan():
-    """Generate a detailed 6-month plan by calling AI for each section separately."""
+    """Generate a detailed 6-month plan by calling AI for each section separately.
+
+    The generation is split into focused modular prompts so each response stays
+    coherent and detailed.  Earlier sections feed CONTEXT into later prompts so
+    the whole plan reads as one cohesive strategy rather than disjointed chunks.
+    """
     user_id = session["user_id"]
-    plan_access = db.execute("SELECT plan_access FROM users WHERE id = ?", user_id)
-    if not plan_access or not plan_access[0].get("plan_access"):
-        return jsonify({"error": "You need to purchase the Extended Plan to generate it. 130 MAD — one-time."}), 402
     if not check_rate_limit(f"ai:plan:{user_id}", max_attempts=5, window=3600):
         return jsonify({"error": "AI rate limit exceeded. Please wait before generating a new plan."}), 429
     profile = session.get("career_profile", "")
@@ -128,9 +132,9 @@ def generate_extended_plan():
     suggestion_text = json.dumps(suggestion, indent=2)
     path_title = suggestion.get("title", "Career Path")
 
-    # Generate each section with separate AI calls to keep responses focused
-
-    # 1. Basic plan info (title, summary, timeline, next action)
+    # ------------------------------------------------------------------
+    # 1. BASIC PLAN  (title, summary, timeline, next 48h action)
+    # ------------------------------------------------------------------
     basic_prompt = f"""You are a practical career strategist. A user chose this path: "{path_title}"
 
 USER PROFILE:
@@ -139,106 +143,355 @@ USER PROFILE:
 SELECTED PATH SUMMARY:
 {suggestion_text}
 
-Generate ONLY the basic plan information. Be specific to their situation.
+Generate ONLY the basic plan information. Be extremely specific to their situation — include real-world examples.
 
 Respond ONLY with valid JSON (no markdown):
 {{
   "title": "{path_title}",
-  "summary": "2-3 sentences on why this path works for them specifically",
+  "summary": "3-4 sentences on why this path works for them specifically. Reference their actual country, budget, time, education, and current skills. Include a concrete example of someone similar who succeeded.",
   "timeline_months": 6,
-  "next_action": "The single most important thing they should do in the next 48 hours"
+  "next_action": {{
+    "what": "The single most important thing to do in the next 48 hours",
+    "how": "Step-by-step instructions (5-8 concrete steps) on exactly how to do it — include specific websites to visit, exact search queries to use, what to click, what to write",
+    "time_needed": "Estimated time in hours",
+    "free_tools": ["tool 1 with exact website URL", "tool 2 with exact website URL"],
+    "example_output": "A realistic example of what their finished output should look like — include a mock screenshot description or sample text they should have produced"
+  }}
 }}
 
 Rules:
-- Be specific to their country, budget, time, education level, and current skills
-- No generic fluff"""
-
+- next_action.how must be so specific they can follow it blindfolded: 'Go to website.com, click "Sign Up", fill in X with Y, then click Download'
+- Include realistic example output text they can compare their work against
+- Reference their country's specific platforms, job boards, or learning resources"""
     basic_data = call_ai_for_section(basic_prompt, "basic info", {
         "title": path_title,
         "summary": suggestion.get("fit", "A structured path based on your profile."),
         "timeline_months": 6,
-        "next_action": suggestion.get("roadmap", ["Start today"])[0] if suggestion.get("roadmap") else "Review your first step."
+        "next_action": {
+            "what": suggestion.get("roadmap", ["Start today"])[0] if suggestion.get("roadmap") else "Review your first step.",
+            "how": "1. Open your browser and go to example.com\n2. Click 'Get Started'\n3. Create a free account using your email\n4. Complete the introductory tutorial\n5. Save your progress and share it with a friend for accountability",
+            "time_needed": "2 hours",
+            "free_tools": ["example.com (free learning platform)", "notion.so (free notes)"],
+            "example_output": "You should have: (1) A completed account on example.com, (2) At least 3 notes saved in Notion summarizing what you learned, (3) A screenshot of your progress to share."
+        }
     })
 
-    # 2. Weekly habits and success metrics
+    # Build context string for downstream prompts
+    basic_context = f"""Plan title: {basic_data.get('title', path_title)}
+Summary: {basic_data.get('summary', '')}
+Next 48h action: {basic_data.get('next_action', {}).get('what', '') if isinstance(basic_data.get('next_action'), dict) else basic_data.get('next_action', '')}"""
+
+    # ------------------------------------------------------------------
+    # 2. WEEKLY HABITS + DAILY SCHEDULE TEMPLATE
+    # ------------------------------------------------------------------
     habits_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
 
-Generate ONLY weekly habits and success metrics. Do NOT repeat the path title or summary.
+CONTEXT FROM PREVIOUS SECTION:
+{basic_context}
+
+Generate ONLY weekly habits and a daily schedule template. Do NOT repeat the path title or summary.
 
 Respond ONLY with valid JSON (no markdown):
 {{
-  "weekly_habits": ["3-4 consistent weekly habits specific to their situation"],
-  "success_metrics": ["4-5 measurable checkpoints to know they are on track"]
+  "weekly_habits": [
+    {{
+      "habit": "Name of habit",
+      "why": "Why this habit matters for their specific path — reference their actual situation",
+      "how": "Exact method with time block, specific tool/website, trigger, and duration (e.g. 'Every morning 7-7:30am before work, open Notion, review yesterday's notes for 15 min, then spend 15 min on freeCodeCamp JavaScript module')",
+      "time_per_week": "e.g. 5 hours",
+      "example_completion": "Describe exactly what 'done' looks like for this habit — e.g. '3 pages of handwritten notes + 1 completed coding challenge on freeCodeCamp'",
+      "tracking_method": "How to track completion using a free specific app or simple method (e.g. 'Mark an X on a paper calendar on the wall')",
+      "if_miss": "What to do if they miss a day — exact recovery strategy with no-guilt mindset"
+    }}
+  ],
+  "daily_schedule_template": {{
+    "morning_block": "What to do in the morning with exact duration and example activity (e.g. '6:30-7:00am — 30 min: Review yesterday's notes + plan today's 3 priorities in a notebook')",
+    "afternoon_block": "What to do in the afternoon with exact duration and example activity",
+    "evening_block": "What to do in the evening with exact duration and example activity",
+    "total_focus_hours_per_day": "Realistic number based on their constraints",
+    "weekend_adjustment": "How weekends differ — give an example Saturday and Sunday schedule"
+  }},
+  "success_metrics": [
+    {{
+      "metric": "Measurable checkpoint with example target",
+      "how_to_measure": "Exact method/tool to track it — include a sample tracking entry",
+      "target_by_month": "What specific number or state to hit by which month"
+    }}
+  ]
 }}
 
 Rules:
-- Habits must be actionable and realistic given their time constraints
-- Metrics must be measurable and specific
-- Reference their actual constraints from the profile"""
+- EVERY habit must include an 'example_completion' field showing what done looks like
+- Include exactly 4-5 habits with concrete recovery strategies
+- Reference their actual constraints (budget, job, family, location)
+- Use specific free tool names and websites, not generic terms"""
+    budget_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
-    habits_data = call_ai_for_section(habits_prompt, "habits and metrics", {
-        "weekly_habits": ["Block focused learning time", "Track progress weekly"],
-        "success_metrics": ["Complete month 1 deliverable", "Build one portfolio piece"]
-    })
+USER PROFILE:
+{profile}
 
-    # 3. Skills to build
+CONTEXT:
+{basic_context}
+
+Generate ONLY a budget breakdown and cost-saving strategy. Do NOT repeat previous content.
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "budget_breakdown": {{
+    "total_estimated_cost": "Total USD/MAD to execute this 6-month plan",
+    "can_be_done_free": true/false,
+    "essential_spend": [
+      {{"item": "What to spend on", "cost": "Amount", "why_essential": "Why this is worth paying for", "free_alternative": "How to get 90% of the value for free"}}
+    ],
+    "free_replacements": [
+      {{"paid_thing": "Common paid resource", "free_replacement": "Exact free substitute", "catch": "Any limitation of the free version"}}
+    ],
+    "money_making_options": ["1-2 ways to earn small income while learning to fund tools"]
+  }}
+}}
+
+Rules:
+- If their budget is $0, set can_be_done_free to true and show exactly how
+- If they have some budget, show where to spend for maximum ROI
+- essential_spend should be 0-3 items max
+- free_replacements should cover all common paid tools in this field
+- Money-making options must be realistic for their skill level"""
+
+    links_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
+
+USER PROFILE:
+{profile}
+
+CONTEXT:
+{basic_context}
+
+Generate ONLY additional resource recommendations. Do NOT repeat any previous content or courses.
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "links": [
+    {{
+      "name": "Resource name",
+      "platform": "YouTube/Reddit/Medium/Podcast/Discord/Newsletter/etc",
+      "description": "What it covers and why useful",
+      "when": "When in their journey to use it (e.g. Month 1-2, or 'When stuck on X')",
+      "how_to_use": "Exact way to consume this for maximum value (e.g. 'Watch 1 video per week and take notes')",
+      "best_for": "Beginner/intermediate/advanced"
+    }}
+  ]
+}}
+
+Rules:
+- Provide 5-7 resources (blogs, communities, YouTube channels, podcasts, tools, newsletters)
+- No URLs — just resource name and platform
+- Consider their budget (prefer free)
+- Each resource must be different from previous sections
+- how_to_use must be specific enough that they know exactly how to fit it into their schedule"""
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        future_habits = executor.submit(call_ai_for_section, habits_prompt, "habits and metrics", {
+            "weekly_habits": [
+                {"habit": "Block focused learning time", "why": "Consistency builds skill", "how": "2 hours every evening after dinner", "time_per_week": "14 hours", "example_completion": "Completed 2 freeCodeCamp exercises + wrote 1 page of notes", "tracking_method": "Calendar blocks", "if_miss": "Do 30 min instead of skipping"}
+            ],
+            "daily_schedule_template": {
+                "morning_block": "30 min review of previous day's notes",
+                "afternoon_block": "1-2 hours focused skill practice",
+                "evening_block": "30 min reading or video learning",
+                "total_focus_hours_per_day": "2",
+                "weekend_adjustment": "Double practice time on weekends if free"
+            },
+            "success_metrics": [
+                {"metric": "Complete month 1 deliverable", "how_to_measure": "Checklist in notebook", "target_by_month": "Month 1"}
+            ]
+        })
+        future_budget = executor.submit(call_ai_for_section, budget_prompt, "budget", {
+            "budget_breakdown": {
+                "total_estimated_cost": "$0",
+                "can_be_done_free": True,
+                "essential_spend": [],
+                "free_replacements": [],
+                "money_making_options": ["Freelance small tasks"]
+            }
+        })
+        future_links = executor.submit(call_ai_for_section, links_prompt, "links", {
+            "links": []
+        })
+        habits_data = future_habits.result()
+        budget_data = future_budget.result()
+        links_data = future_links.result()
+
+    habits_context = "Weekly habits: " + ", ".join([h.get("habit", "") for h in habits_data.get("weekly_habits", [])])
+
+    # ── ROUND 3: Skills (depends on habits) ─────────────────────────
     skills_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
+
+CONTEXT:
+{basic_context}
+{habits_context}
 
 Generate ONLY the skills they need to build. Do NOT repeat any previous content.
 
 Respond ONLY with valid JSON (no markdown):
 {{
   "skills_to_build": [
-    {{"skill": "Skill name", "priority": "high/medium/low", "how": "Exact way to learn it given their budget"}}
+    {{
+      "skill": "Skill name",
+      "priority": "high/medium/low",
+      "why": "Why this skill is critical for their path and timeline — include a real-world scenario showing impact",
+      "how": "Exact step-by-step learning path: what to read/watch/do in order with specific websites, chapters, and time estimates for each step",
+      "example_output": "A concrete example of what they should be able to create after learning this skill (e.g. 'A 3-page website with HTML/CSS that includes a navigation bar, contact form, and responsive grid')",
+      "free_resources": [
+        {{"name": "Exact resource name with website", "type": "interactive tutorial/video course/book/community", "how_to_use": "Exactly how to use this for max impact — e.g. 'Complete chapters 1-5, then build the mini-project before moving to chapter 6'", "time_needed": "Hours to complete", "example_takeaway": "What they will have learned or built after finishing this resource"}}
+      ],
+      "practice_projects": [
+        {{
+          "name": "Mini-project title",
+          "description": "What to build with exact requirements",
+          "steps": ["Step 1: exact action", "Step 2: exact action", "Step 3: exact action"],
+          "completion_criteria": "Checklist of exactly what 'done' looks like",
+          "example_screenshot_description": "Describe what the finished project should look like visually"
+        }}
+      ],
+      "time_estimate": "Total hours to reach job-ready level",
+      "certification_path": "Free or cheap cert to prove the skill (or 'Build portfolio piece' if no cert)",
+      "real_world_application": "Describe a real job task where this skill is used daily"
+    }}
   ]
 }}
 
 Rules:
-- Focus on skills most critical for this specific path
-- Consider their budget (use free resources if budget is limited)
-- Be specific about HOW to learn each skill"""
+- Focus on 5-8 skills most critical for this specific path
+- Every skill MUST include example_output showing what they can create
+- Each practice_project must have executable steps, not vague descriptions
+- Consider their budget — if zero, all resources must be 100% free
+- Order skills by priority (high first)"""
 
     skills_data = call_ai_for_section(skills_prompt, "skills", {
         "skills_to_build": []
     })
 
-    # 4. Courses and programs
+    skills_context = "Key skills: " + ", ".join([s.get("skill", "") for s in skills_data.get("skills_to_build", [])[:4]])
+
+    # ------------------------------------------------------------------
+    # 4. COURSES & PROGRAMS  (with study strategy)
+    # ------------------------------------------------------------------
     courses_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
 
-Generate ONLY a list of specific courses, programs, or certifications they should take for this path. Do NOT repeat any previous content.
+CONTEXT:
+{basic_context}
+{skills_context}
+
+Generate ONLY a list of specific courses, programs, or certifications with study strategies. Do NOT repeat any previous content.
 
 Respond ONLY with valid JSON (no markdown):
 {{
   "courses": [
-    {{"name": "Exact course/program name", "provider": "Coursera/edX/Udemy/etc", "description": "What they will learn and why it matters", "why": "Why this specific course for their situation"}}
+    {{
+      "name": "Exact course/program name",
+      "provider": "Coursera/edX/Udemy/freeCodeCamp/Khan Academy/LinkedIn Learning/etc",
+      "description": "What they will learn and why it matters for their specific path",
+      "why": "Why this specific course for their situation — reference their profile",
+      "study_schedule": "Exactly how many hours per week and for how many weeks, with example weekly breakdown",
+      "note_taking_method": "Recommended method with example (e.g. 'Cornell notes: divide page into cues, notes, summary. Here's a sample entry...')",
+      "how_to_apply": "Exactly how to apply each module's learning to a real project immediately — give an example",
+      "example_output_after_course": "What they should have built or know after completing (e.g. 'A working CRUD app with 3 features')",
+      "free_alternative": "A 100% free alternative with exact name and how it compares",
+      "completion_criteria": "How they know they are done and ready to move on — measurable checklist"
+    }}
   ]
 }}
 
 Rules:
 - Include 4-6 courses relevant to their path
-- Use well-known platforms: Coursera, edX, Udemy, freeCodeCamp, Khan Academy, LinkedIn Learning, etc.
-- Consider their budget (prefer free if budget is limited)
-- Each course must have a unique focus
-- Do NOT include URLs — only course name and provider"""
+- Each course must have an example_output_after_course field showing what they produce
+- study_schedule must include a concrete weekly plan example
+- Consider their budget — always provide a real free_alternative"""
 
     courses_data = call_ai_for_section(courses_prompt, "courses", {
         "courses": []
     })
 
-    # 5. Phases (6 months)
+    courses_context = "Courses: " + ", ".join([c.get("name", "") for c in courses_data.get("courses", [])[:3]])
+
+    # ------------------------------------------------------------------
+    # 5. PORTFOLIO PROJECTS  (step-by-step build instructions)
+    # ------------------------------------------------------------------
+    projects_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
+
+USER PROFILE:
+{profile}
+
+CONTEXT:
+{basic_context}
+{skills_context}
+{courses_context}
+
+Generate ONLY 2-3 portfolio project briefs. Do NOT repeat previous content.
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "portfolio_projects": [
+    {{
+      "name": "Project name",
+      "why": "Why this project matters for getting hired/income in their path — include a real example of someone who got hired with a similar project",
+      "difficulty": "beginner/intermediate/advanced",
+      "time_estimate": "Total hours",
+      "prerequisites": "Skills they need before starting this project",
+      "planning": "What to plan before building — wireframe, data model, user flow (with example sketch description)",
+      "step_by_step": [
+        "Step 1: exact action with specific tool and command/click path (e.g. 'Open VS Code, create a new folder called my-project, then run npm init -y')",
+        "Step 2: exact action with expected output description",
+        "... (10-15 steps total)"
+      ],
+      "expected_output_per_step": [
+        "What the project should look/behave like after step 1",
+        "What it should look like after step 2",
+        "..."
+      ],
+      "free_tools": ["exact tool name with website"],
+      "testing_criteria": "How to test each feature works — exact steps to verify",
+      "success_criteria": "Checklist for when project is 'done' with objective measures",
+      "example_screenshot_description": "Describe what the final project looks like visually",
+      "how_to_showcase": "Where and how to publish/display this for employers/clients — include exact platform and posting strategy"
+    }}
+  ]
+}}
+
+Rules:
+- Projects must be completable with free tools only
+- step_by_step must be granular: 'Open app X, click on menu Y, select option Z, type A'
+- Each project should demonstrate 2-3 key skills from the skills section
+- Include one beginner-friendly project and one intermediate/advanced
+- expected_output_per_step must mirror step_by_step array length"""
+
+    projects_data = call_ai_for_section(projects_prompt, "portfolio projects", {
+        "portfolio_projects": []
+    })
+
+    projects_context = "Projects: " + ", ".join([p.get("name", "") for p in projects_data.get("portfolio_projects", [])])
+
+    # ------------------------------------------------------------------
+    # 6. PHASES (6 months)  —  the core roadmap
+    # ------------------------------------------------------------------
     phases_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
+
+CONTEXT:
+{basic_context}
+{skills_context}
+{courses_context}
+{projects_context}
 
 Generate ONLY the 6-month phase breakdown. Do NOT repeat any previous content.
 
@@ -248,21 +501,78 @@ Respond ONLY with valid JSON (no markdown):
     {{
       "month": 1,
       "title": "Phase name",
-      "focus": "What this month is about",
-      "actions": ["5-7 specific weekly/biweekly actions"],
-      "skills": ["skills to build this month"],
-      "deliverable": "Concrete thing they should finish by end of month",
-      "resources": [{{"label": "Resource name", "url": "https://real-url.com", "why": "Why use this now"}}]
+      "focus": "What this month is about in one sentence",
+      "weekly_breakdown": [
+        {{
+          "week": 1,
+          "theme": "What this week focuses on",
+          "actions": [
+            {{
+              "what": "Exact action to take",
+              "how": "Step-by-step method with specific websites, tools, and commands — e.g. 'Go to freeCodeCamp.org, click 'Get Started', create account, begin Responsive Web Design module 1. Complete exercises 1-10.'",
+              "why_this_order": "Why this action comes before the next one",
+              "time_estimate": "Hours needed",
+              "tool": "Specific free tool with exact website or app name",
+              "example_output": "Describe what the finished task looks like — e.g. 'A screenshot showing 10 completed exercises on freeCodeCamp with green checkmarks'",
+              "output": "What they should produce by end (specific file, screenshot, code, notes)"
+            }}
+          ],
+          "mini_lecture": "A 2-3 sentence explanation of the key concept this week, written as if a mentor is explaining it simply with a real-world analogy",
+          "common_mistake": "The #1 mistake beginners make this week and exactly how to avoid it",
+          "checkpoint": "Mini-milestone with specific criteria to validate progress (e.g. 'Can explain concept X to a friend in 2 sentences')"
+        }}
+      ],
+      "skills_this_month": ["specific skills being built"],
+      "project_milestone": "Exact portfolio project milestone with what to build by end of month",
+      "deliverable": "Concrete output with acceptance criteria — e.g. 'A GitHub repo with 3 HTML pages that pass W3C validation'",
+      "deliverable_example": "A brief description or mock text of what the deliverable should resemble",
+      "resources": [
+        {{"label": "Resource name", "url": "Use generic reputable site like coursera.org or freecodecamp.org — NOT a specific page", "why": "Why use this now — tie to this month's focus", "how_to_use": "Exact way to get value: 'Watch sections 1-3, take notes in Cornell format, then build the practice project'", "time_needed": "Hours"}}
+      ],
+      "reflection_questions": ["2 specific questions to ask themselves at month end — not generic, tied to their actual progress"],
+      "if_ahead": "What to add if they are ahead of schedule",
+      "if_behind": "What to cut or simplify — give permission to reduce scope with exact instructions on what's least important to skip"
     }}
   ]
 }}
 
 Rules:
 - Exactly 6 phases (months 1-6)
-- Each month must have actionable steps, not vague advice
-- Use free or low-cost resources when budget is limited
-- Each phase should build on the previous one
-- URLs must be real reputable sites"""
+- Each month must have exactly 4 weekly_breakdown objects (weeks 1-4)
+- Each week must have 2-3 actions with example_output showing what 'done' looks like
+- Every week must include mini_lecture and common_mistake fields
+- Use free tools only
+- Each phase builds on the previous one
+- if_ahead gives enrichment, if_behind gives permission to cut"""
+    phases_data = call_ai_for_section(phases_prompt, "phases", {
+        "phases": [
+            {
+                "month": i + 1,
+                "title": step[:60] if isinstance(step, str) else f"Month {i+1}",
+                "focus": step if isinstance(step, str) else "",
+                "weekly_breakdown": [
+                    {
+                        "week": w,
+                        "theme": f"Week {w} focus",
+                        "actions": [{"what": "Continue learning", "how": "Follow course material", "why_this_order": "Builds on previous week", "time_estimate": "5h", "tool": "Laptop", "example_output": "Completed exercises with notes", "output": "Notes"}],
+                        "mini_lecture": "Keep practicing consistently — each week builds on the last.",
+                        "common_mistake": "Trying to learn too many things at once. Stick to one topic per week.",
+                        "checkpoint": "Review notes"
+                    }
+                    for w in range(1, 5)
+                ],
+                "skills_this_month": [],
+                "project_milestone": "",
+                "deliverable": f"Finish month {i+1} goals",
+                "deliverable_example": "A completed set of notes and exercises for this month's focus area.",
+                "resources": suggestion.get("links", [])[:1],
+                "reflection_questions": ["What did I learn this month?", "What was the hardest part and how did I overcome it?"],
+                "if_ahead": "Start previewing next month's topic.",
+                "if_behind": "Focus on the single most important action and skip optional readings."
+            }
+            for i, step in enumerate(suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6])
+        ]
+    })
 
     phases_data = call_ai_for_section(phases_prompt, "phases", {
         "phases": [
@@ -270,76 +580,176 @@ Rules:
                 "month": i + 1,
                 "title": step[:60] if isinstance(step, str) else f"Month {i+1}",
                 "focus": step if isinstance(step, str) else "",
-                "actions": [step] if isinstance(step, str) else [],
-                "skills": [],
+                "weekly_breakdown": [
+                    {
+                        "week": w,
+                        "theme": f"Week {w} focus",
+                        "actions": [{"what": "Continue learning", "how": "Follow course material", "time_estimate": "5h", "tool": "Laptop", "output": "Notes"}],
+                        "checkpoint": "Review notes"
+                    }
+                    for w in range(1, 5)
+                ],
+                "skills_this_month": [],
+                "project_milestone": "",
                 "deliverable": f"Finish month {i+1} goals",
                 "resources": suggestion.get("links", [])[:1],
+                "reflection_questions": ["What did I learn?", "What was hard?"],
+                "if_behind": "Focus on the single most important action."
             }
-            for i, step in enumerate(suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply"])[:6])
+            for i, step in enumerate(suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6])
         ]
     })
 
-    # 6. Pitfalls and risks
+    phases_context = "Phase flow: " + " -> ".join([f"Month {p.get('month')}: {p.get('title', '')}" for p in phases_data.get("phases", [])])
+
+    # ------------------------------------------------------------------
+    # 7. NETWORKING & APPLICATION STRATEGY
+    # ------------------------------------------------------------------
+    networking_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
+
+USER PROFILE:
+{profile}
+
+CONTEXT:
+{basic_context}
+{phases_context}
+
+Generate ONLY networking and job/income application strategy. Do NOT repeat previous content.
+
+Respond ONLY with valid JSON (no markdown):
+{{
+  "networking_strategy": {{
+    "where_to_meet_people": ["Platform 1 with exact website", "Platform 2", "Local/community option in their region"],
+    "who_to_connect_with": ["Specific type of person — e.g. 'Junior developers who got hired in the last 6 months'", "Profile of person 2"],
+    "outreach_templates": [
+      {{
+        "scenario": "e.g. Cold LinkedIn message to someone working at their dream company",
+        "template": "Exact message they can copy, paste, and personalize (keep under 150 words) — include [bracketed placeholders]",
+        "why_it_works": "Psychology behind this message — why it gets replies",
+        "example_response": "What a good reply looks like and how to continue the conversation"
+      }}
+    ],
+    "content_strategy": "What exact type of content to post/share to attract opportunities — include 3 example post topics with sample opening lines",
+    "example_post": "A complete example post they can adapt and post (100-150 words) with hashtags",
+    "frequency": "How often to network per week with a schedule example"
+  }},
+  "application_strategy": {{
+    "when_to_start_applying": "Which exact month to start sending applications and why",
+    "resume_tips": ["3 specific tips with examples of good vs bad resume phrasing"],
+    "resume_example_bullet": "Before/after example of a resume bullet point for this field",
+    "where_to_apply": ["Platform 1 with exact URL", "Platform 2", "Alternative for their country"],
+    "portfolio_presentation": "How to present their portfolio projects in applications — exact structure",
+    "interview_prep": "Step-by-step interview prep plan using free resources, with example questions and how to structure answers using STAR method",
+    "pricing_strategy": "If freelancing: what to charge at beginner, intermediate, and advanced level in their region with example project prices"
+  }}
+}}
+
+Rules:
+- Templates must be copy-paste ready with [bracket placeholders]
+- Include example_response showing what a positive reply looks like
+- Include example_post with hashtags
+- All advice must be free or near-free
+- Consider their specific country/region"""
+
+    # ------------------------------------------------------------------
+    # 9. PITFALLS, RISKS & CONTINGENCY PLANS
+    # ------------------------------------------------------------------
     risks_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
 
 USER PROFILE:
 {profile}
 
-Generate ONLY pitfalls and risks. Do NOT repeat any previous content.
+CONTEXT:
+{basic_context}
+{phases_context}
+
+Generate ONLY pitfalls and risks with detailed prevention and recovery. Do NOT repeat any previous content.
 
 Respond ONLY with valid JSON (no markdown):
 {{
-  "pitfalls": ["5 common mistakes for someone in their situation on this path"],
-  "risks": ["3 honest risks with brief mitigation each"]
+  "pitfalls": [
+    {{
+      "pitfall": "Common mistake",
+      "why_it_happens": "Psychological or situational reason someone in their position falls into this",
+      "how_to_avoid": "Concrete prevention strategy with daily/weekly tactic",
+      "recovery": "What to do if they already fell into it — step-by-step recovery"
+    }}
+  ],
+  "risks": [
+    {{
+      "risk": "Honest risk",
+      "likelihood": "high/medium/low",
+      "impact": "high/medium/low",
+      "mitigation": "How to reduce the chance",
+      "contingency_plan": "What to pivot to if this risk becomes reality"
+    }}
+  ],
+  "motivation_system": {{
+    "weekly_review ritual": "Exact ritual to do every Sunday to stay motivated",
+    "accountability_method": "How to hold themselves accountable with no coach",
+    "reward_system": "Small rewards to attach to milestones"
+  }}
 }}
 
 Rules:
-- Pitfalls should be specific to their situation (education level, budget, location)
-- Risks should be realistic and include mitigation strategies
+- Pitfalls should be specific to their situation (education level, budget, location, time constraints)
+- Each pitfall must have a recovery plan, not just prevention
+- Risks must have a real contingency_plan (a Plan B they can actually execute)
 - Do not repeat content from phases or skills"""
 
-    risks_data = call_ai_for_section(risks_prompt, "risks", {
-        "pitfalls": suggestion.get("risks", ["Requires consistency"]),
-        "risks": suggestion.get("risks", [])
-    })
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future_networking = executor.submit(call_ai_for_section, networking_prompt, "networking", {
+            "networking_strategy": {
+                "where_to_meet_people": ["LinkedIn", "Twitter/X", "Local meetups"],
+                "who_to_connect_with": ["People 1-2 years ahead"],
+                "outreach_templates": [],
+                "content_strategy": "Share learnings publicly",
+                "frequency": "2 connections per week"
+            },
+            "application_strategy": {
+                "when_to_start_applying": "Month 4",
+                "resume_tips": ["Highlight projects"],
+                "where_to_apply": ["LinkedIn Jobs", "Indeed"],
+                "interview_prep": "Practice common questions",
+                "pricing_strategy": "Research market rates"
+            }
+        })
+        future_risks = executor.submit(call_ai_for_section, risks_prompt, "risks", {
+            "pitfalls": [
+                {"pitfall": "Requires consistency", "why_it_happens": "Life gets busy", "how_to_avoid": "Calendar blocks", "recovery": "Resume next day, don't restart"}
+            ],
+            "risks": [
+                {"risk": "Competition", "likelihood": "medium", "impact": "medium", "mitigation": "Build unique projects", "contingency_plan": "Target niche companies"}
+            ],
+            "motivation_system": {
+                "weekly_review ritual": "Sunday 30-min review of wins and plan next week",
+                "accountability_method": "Public posting of weekly progress",
+                "reward_system": "Movie night after monthly deliverable"
+            }
+        })
+        networking_data = future_networking.result()
+        risks_data = future_risks.result()
 
-    # 7. Additional resources (name + platform only, no URLs)
-    links_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
-
-USER PROFILE:
-{profile}
-
-Generate ONLY additional resource recommendations. Do NOT repeat any previous content or courses.
-
-Respond ONLY with valid JSON (no markdown):
-{{
-  "links": [{{"name": "Resource name", "platform": "YouTube/Reddit/Medium/Podcast/etc", "description": "What it covers and why useful", "when": "When in their journey to use it"}}]
-}}
-
-Rules:
-- Provide 3-5 resources (blogs, communities, YouTube channels, podcasts, tools)
-- No URLs — just resource name and platform
-- Consider their budget (prefer free)
-- Each resource must be different from previous sections"""
-
-    links_data = call_ai_for_section(links_prompt, "links", {
-        "links": []
-    })
-
+    # ------------------------------------------------------------------
     # Combine all sections into one plan dict
+    # ------------------------------------------------------------------
     extended = {
         **basic_data,
         **habits_data,
         **skills_data,
         **courses_data,
+        **projects_data,
         **phases_data,
+        **networking_data,
+        **budget_data,
         **risks_data,
         **links_data
     }
 
     session["pending_extended_plan"] = extended
     return jsonify({"plan": extended})
-#wa
+
+
 @app.route("/plan/lock", methods=["POST"])
 @login_required
 @csrf_required
