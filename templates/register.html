@@ -5,10 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Register - Upward</title>
 
-<link rel="stylesheet" href="/static/style.css">
+<style>
+
+:root{
+    --accent:#3ec3d5;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+    --sidebar:#23273c;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--bg);
+    font-family:Inter,Segoe UI,sans-serif;
+    color:var(--text);
+}
+
+.container{
+    width:min(420px,90%);
+    margin:auto;
+    padding-top:12vh;
+}
+
+.brand{
+    font-size:2rem;
+    font-weight:900;
+    letter-spacing:-1px;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.subtitle{
+    color:var(--text-secondary);
+    margin-top:8px;
+    margin-bottom:40px;
+}
+
+.form-group{
+    margin-bottom:18px;
+}
+
+input:not([type="file"]){
+    width:100%;
+    padding:14px 16px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:white;
+    font-size:.95rem;
+}
+
+input:not([type="file"]):focus{
+    outline:none;
+    border-color:var(--accent);
+}
+
+.file-input{display:none;}
+.file-upload-btn{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:8px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;cursor:pointer;text-align:center;font-weight:600;transition:.15s;}
+.file-upload-btn:hover{border-color:var(--accent);}
+.file-name{font-size:.85rem;color:var(--accent);font-weight:600;margin-top:8px;}
+
+.btn{
+    width:100%;
+    border:none;
+    padding:14px;
+    border-radius:12px;
+    background:var(--sidebar);
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.btn:hover{
+    opacity:.95;
+}
+
+.error{
+    color:#d33;
+    margin-bottom:14px;
+    font-size:.9rem;
+}
+
+.footer{
+    margin-top:24px;
+    text-align:center;
+    color:var(--text-secondary);
+}
+
+.footer a{
+    color:var(--accent);
+    text-decoration:none;
+}
+
+</style>
 </head>
 
-<body class="page-register page-auth">
+<body>
 
 <div class="container">
 

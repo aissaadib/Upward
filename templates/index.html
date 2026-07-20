@@ -6,10 +6,319 @@
 <meta name="csrf-token" content="{{ csrf_token }}">
 <title>Upward</title>
 
-<link rel="stylesheet" href="/static/style.css">
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+a:hover{
+    text-decoration:none;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+}
+
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:0 32px;
+
+    border-bottom:1px solid var(--border);
+
+    background:white;
+
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.brand{
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.nav-left{display:flex;align-items:center;gap:20px;}
+.nav-link{
+    margin-top:3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+.nav-link:hover{color:var(--accent);}
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+    text-decoration:none;
+    color:inherit;
+}
+
+.username:hover{
+    color:var(--accent);
+}
+
+.logout{
+    text-decoration:none;
+    color:var(--text-secondary);
+    font-size:.9rem;
+}
+
+.logout:hover{
+    color:var(--accent);
+}
+
+.container{
+    width:min(1100px,90%);
+    margin:auto;
+}
+
+/* HERO */
+
+.hero{
+    padding:120px 0 100px;
+}
+
+.hero h1{
+    font-size:clamp(3rem,8vw,5rem);
+    line-height:1;
+    letter-spacing:-3px;
+    max-width:800px;
+}
+
+.hero p{
+    margin-top:24px;
+    max-width:650px;
+    color:var(--text-secondary);
+    font-size:1.1rem;
+}
+
+.cta{
+    margin-top:40px;
+}
+
+.btn{
+    display:inline-flex;
+    align-items:center;
+
+    background:var(--sidebar);
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:14px 24px;
+
+    border-radius:12px;
+
+    font-weight:700;
+
+    transition:.2s;
+}
+
+.btn:hover{
+    background:var(--sidebar-deep);
+}
+
+.section{
+    padding:80px 0;
+    border-top:1px solid var(--border);
+}
+
+.section-label{
+    font-size:.75rem;
+    font-weight:800;
+    letter-spacing:.15em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:12px;
+}
+
+.section h2{
+    font-size:2rem;
+    margin-bottom:18px;
+}
+
+.section p{
+    color:var(--text-secondary);
+}
+
+.feature-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:40px;
+    margin-top:40px;
+}
+
+.feature h3{
+    margin-bottom:10px;
+}
+
+.feature p{
+    color:var(--text-secondary);
+}
+
+.outcomes{
+    display:grid;
+    gap:24px;
+    margin-top:30px;
+}
+
+.outcome{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--border);
+}
+
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--accent);
+}
+
+.footer-cta{
+    text-align:center;
+    padding:120px 0;
+}
+
+.footer-cta h2{
+    font-size:2.5rem;
+    margin-bottom:16px;
+}
+
+.footer-cta p{
+    color:var(--text-secondary);
+    margin-bottom:32px;
+}
+
+.pinned-plan{
+    margin-top:60px;
+    padding-top:40px;
+    border-top:1px solid var(--border);
+}
+
+.pinned-label{
+    font-size:.75rem;
+    font-weight:800;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:12px;
+}
+
+.pinned-plan h2{
+    font-size:2rem;
+    margin-bottom:18px;
+}
+
+.pinned-meta{
+    color:var(--text-secondary);
+    max-width:700px;
+    margin-bottom:28px;
+}
+
+.pinned-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.btn-outline{
+    background:white;
+    color:var(--text);
+    border:1.5px solid var(--border);
+}
+
+.btn-outline:hover{
+    background:var(--bg);
+}
+
+.btn-leave{
+    background:#fff3f3;
+    color:var(--danger);
+    border:1.5px solid #ffcdd2;
+}
+
+.btn-leave:hover{
+    background:#ffe0e0;
+}
+
+.leave-plan-wrap{
+    margin-top:20px;
+}
+
+.leave-warning{
+    font-size:.9rem;
+    color:var(--text-secondary);
+    max-width:650px;
+    margin-bottom:12px;
+    line-height:1.6;
+}
+
+@media(max-width:768px){
+
+    .navbar{
+        padding:0 18px;
+    }
+
+    .hero{
+        padding:80px 0;
+    }
+
+    .hero h1{
+        font-size:3rem;
+    }
+
+    .feature-grid{
+        gap:30px;
+    }
+}
+
+</style>
 </head>
 
-<body class="page-home">
+<body>
 
 <nav class="navbar">
     <div class="nav-left">

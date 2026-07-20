@@ -6,11 +6,315 @@
 <meta name="csrf-token" content="{{ csrf_token }}">
 <title>{{ course.title }} - Lessons</title>
 
-<link rel="stylesheet" href="/static/style.css">
-    
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+}
+
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.brand{
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.nav-link{
+    margin-top:3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.nav-link:hover{
+    color: var(--accent);
+}
+
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+    text-decoration:none;
+    color:inherit;
+}
+
+.username:hover{
+    color:var(--accent);
+}
+
+.logout{
+    text-decoration:none;
+    color:var(--text-secondary);
+    font-size:.9rem;
+}
+
+.logout:hover{
+    color:var(--accent);
+}
+
+.container{
+    width:min(1100px,90%);
+    margin:auto;
+}
+
+.hero{
+    padding:60px 0 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.hero h1{
+    font-size:clamp(2.2rem,6vw,3rem);
+    letter-spacing:-1.5px;
+}
+
+.hero p{
+    margin-top:8px;
+    max-width:650px;
+    color:var(--text-secondary);
+    font-size:1.05rem;
+}
+
+.section{
+    padding:20px 0 80px;
+}
+
+.btn-primary{
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    transition:.2s;
+    display:inline-block;
+}
+
+.btn-primary:hover{
+    background:#2eb3c5;
+}
+
+.btn-secondary{
+    background:white;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-secondary:hover{
+    border-color:var(--accent);
+}
+
+.btn-danger{
+    background:white;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    padding:6px 14px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.8rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-danger:hover{
+    background:var(--danger);
+    color:white;
+}
+
+.btn-edit{
+    background:white;
+    border:1.5px solid var(--accent);
+    color:var(--accent);
+    padding:6px 14px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.8rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-edit:hover{
+    background:var(--accent);
+    color:white;
+}
+
+.lesson-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+    margin-top:30px;
+}
+
+.lesson-card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    transition:.2s;
+}
+
+.lesson-card:hover{
+    border-color:var(--accent);
+    box-shadow:0 6px 20px rgba(30,34,64,.06);
+}
+
+.lesson-actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    justify-content:flex-end;
+}
+
+.lesson-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.lesson-title{
+    font-size:1.15rem;
+    font-weight:800;
+}
+
+.lesson-number{
+    font-size:.75rem;
+    font-weight:700;
+    color:var(--accent);
+    background:#eafcff;
+    padding:4px 12px;
+    border-radius:999px;
+}
+
+.lesson-content{
+    color:var(--text-secondary);
+    font-size:.92rem;
+    line-height:1.6;
+    max-height:80px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+}
+
+.empty-state{
+    margin-top:40px;
+    padding:60px 20px;
+    text-align:center;
+    background:white;
+    border:1px dashed var(--border);
+    border-radius:16px;
+    color:var(--text-secondary);
+}
+
+.breadcrumb{
+    font-size:.85rem;
+    color:var(--text-secondary);
+    margin-bottom:8px;
+}
+
+.breadcrumb a{
+    color:var(--accent);
+    text-decoration:none;
+    font-weight:700;
+}
+
+.breadcrumb a:hover{
+    text-decoration:underline;
+}
+
+@media(max-width:768px){
+    .navbar{
+        padding:0 18px;
+    }
+    .nav-left{
+        gap:14px;
+    }
+    .hero{
+        padding:40px 0 20px;
+    }
+}
+
+</style>
 </head>
 
-<body class="page-lessons">
+<body>
 
 <nav class="navbar">
     <div class="nav-left">

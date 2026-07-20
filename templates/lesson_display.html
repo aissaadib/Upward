@@ -5,12 +5,343 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ lesson.title }} - Lesson</title>
 
-<link rel="stylesheet" href="/static/style.css">
+<style>
+:root{
+    --sidebar:#23273c;
+    --sidebar-deep:#1e2240;
+    --accent:#3ec3d5;
+    --success:#41dc65;
+    --danger:#ff5460;
+    --bg:#f7f7fa;
+    --text:#1e2240;
+    --text-secondary:#6b7280;
+    --border:#e1e0e6;
+}
 
+@media print { body { display: none !important; } }
 
+.lesson-body { user-select: none; -webkit-user-select: none; }
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+}
+
+.navbar{
+    height:70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 32px;
+    border-bottom:1px solid var(--border);
+    background:white;
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.brand{
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.brand span{
+    color:var(--accent);
+}
+
+.nav-link{
+    margin-top:3px;
+    font-size:1.5rem;
+    font-weight:900;
+    letter-spacing:-1px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.nav-link:hover{
+    color: var(--accent);
+}
+
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.username{
+    font-size:.9rem;
+    font-weight:700;
+    text-decoration:none;
+    color:inherit;
+}
+
+.username:hover{
+    color:var(--accent);
+}
+
+.logout{
+    text-decoration:none;
+    color:var(--text-secondary);
+    font-size:.9rem;
+}
+
+.logout:hover{
+    color:var(--accent);
+}
+
+.container{
+    width:min(1100px,90%);
+    margin:auto;
+}
+
+.hero{
+    padding:60px 0 20px;
+}
+
+.hero h1{
+    font-size:clamp(2.2rem,6vw,3rem);
+    letter-spacing:-1.5px;
+    margin-bottom:8px;
+}
+
+.breadcrumb{
+    font-size:.85rem;
+    color:var(--text-secondary);
+    margin-bottom:16px;
+}
+
+.breadcrumb a{
+    color:var(--accent);
+    text-decoration:none;
+    font-weight:700;
+}
+
+.breadcrumb a:hover{
+    text-decoration:underline;
+}
+
+.section{
+    padding:20px 0 80px;
+}
+
+.btn-secondary{
+    background:white;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:.2s;
+}
+
+.btn-secondary:hover{
+    border-color:var(--accent);
+}
+
+.lesson-content{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+}
+
+.lesson-title{
+    font-size:clamp(3rem,6vw,5rem);
+    line-height:.95;
+    letter-spacing:-4px;
+    margin-bottom:18px;
+    font-weight:900;
+    color:var(--text);
+}
+
+.section-title{
+    font-size:.78rem;
+    font-weight:900;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    margin-bottom:18px;
+}
+
+.lesson-body{
+    color:var(--text);
+    line-height:1.8;
+    font-size:1.05rem;
+    font-family:Inter,Segoe UI,sans-serif;
+    transition:font-size .2s;
+}
+
+.lesson-body p{
+    margin:0 0 12px;
+}
+
+.lesson-body div{
+    margin:0 0 8px;
+}
+
+.lesson-body h1,
+.lesson-body h2,
+.lesson-body h3,
+.lesson-body h4{
+    color:var(--text);
+    margin:24px 0 10px;
+    font-weight:700;
+    line-height:1.3;
+}
+
+.lesson-body h1{ font-size:1.6rem; }
+.lesson-body h2{ font-size:1.3rem; }
+.lesson-body h3{ font-size:1.1rem; }
+.lesson-body h4{ font-size:1rem; }
+
+.lesson-body ul,
+.lesson-body ol{
+    padding-left:28px;
+    margin:8px 0 14px;
+}
+
+.lesson-body ul li,
+.lesson-body ol li{
+    margin-bottom:4px;
+}
+
+.lesson-body blockquote{
+    border-left:4px solid var(--accent);
+    padding:10px 18px;
+    margin:14px 0;
+    color:var(--text);
+    font-style:italic;
+    background:#f8fbfc;
+    border-radius:0 8px 8px 0;
+}
+
+.lesson-body hr{
+    border:none;
+    border-top:1px solid var(--border);
+    margin:20px 0;
+}
+
+.lesson-body font[size="1"]{ font-size:.75rem; }
+.lesson-body font[size="2"]{ font-size:.85rem; }
+.lesson-body font[size="3"]{ font-size:1rem; }
+.lesson-body font[size="4"]{ font-size:1.15rem; }
+.lesson-body font[size="5"]{ font-size:1.35rem; }
+.lesson-body font[size="6"]{ font-size:1.6rem; }
+.lesson-body font[size="7"]{ font-size:2rem; }
+
+.lesson-body u{ text-decoration:underline; }
+.lesson-body s,
+.lesson-body strike{ text-decoration:line-through; }
+
+.card{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+}
+
+.font-control{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:30px;
+    padding:12px 0;
+    border-top:1px solid var(--border);
+}
+
+.font-control label{
+    font-size:.8rem;
+    font-weight:700;
+    color:var(--text-secondary);
+}
+
+.font-control input[type="range"]{
+    width:140px;
+    accent-color:var(--accent);
+    cursor:pointer;
+}
+
+.font-control .size-label{
+    font-size:.8rem;
+    color:var(--text-secondary);
+    min-width:36px;
+}
+
+.fallback-content{
+    color:var(--text-secondary);
+    line-height:1.8;
+    white-space:pre-wrap;
+    transition:font-size .2s;
+}
+
+.fallback-content h3{
+    font-size:1.1rem;
+    color:var(--text);
+    margin:20px 0 8px;
+}
+
+.fallback-content ul,
+.fallback-content ol{
+    padding-left:24px;
+    margin:8px 0;
+}
+
+.fallback-content blockquote{
+    border-left:3px solid var(--accent);
+    padding-left:14px;
+    margin:12px 0;
+    color:var(--text);
+    font-style:italic;
+}
+
+.loading{
+    text-align:center;
+    padding:40px;
+    color:var(--text-secondary);
+}
+
+@media(max-width:768px){
+    .navbar{
+        padding:0 18px;
+    }
+    .nav-left{
+        gap:14px;
+    }
+    .hero{
+        padding:40px 0 20px;
+    }
+    .lesson-content{
+        padding:24px;
+    }
+}
+
+</style>
 </head>
 
-<body class="page-lesson-display">
+<body>
 
 <nav class="navbar">
     <div class="nav-left">
