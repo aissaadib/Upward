@@ -8,6 +8,11 @@ A career guidance platform that helps students and young professionals identify 
 
 - **AI Career Advisor** — generates personalized career paths based on user profile and resume
 - **Onboarding Questionnaire** — multi-step form that builds a detailed career profile
+- **Extended AI Plan** — 10-section detailed plan (skills, courses, portfolio projects, weekly phases, networking strategy, budget, pitfalls, resources) with parallelized AI generation
+- **Plan Locking** — users can pin a career plan, view it, or leave it
+- **Plan Purchase** — Stripe checkout for extended plan access
+- **Online Course Recommendations** — AI generates 20+ curated online courses (Coursera, Udemy, edX, etc.) based on the user's locked plan, shown in a separate tab
+- **Tabbed Courses UI** — In-App and Online courses in browser-style tabs
 - **Course System** — browse, subscribe, and purchase courses with Stripe subscriptions
 - **AI Chat Agent** — persistent chat with career context, streaming responses via Groq
 - **Teaching Assessment** — AI evaluates resume across 9 dimensions and computes weighted readiness score
@@ -18,6 +23,7 @@ A career guidance platform that helps students and young professionals identify 
 - **Authentication** — session-based with Flask-Session, password hashing via Werkzeug
 - **Stripe Subscriptions** — monthly recurring payments with webhook lifecycle management
 - **PayPal Legacy** — one-time payments (kept for backward compatibility)
+- **Anti-Copy Protection** — lesson display blocks F12, Ctrl+U/S/P, right-click, and print
 - **Security** — CSRF protection, rate limiting, input validation, security headers
 
 ---
@@ -92,12 +98,12 @@ Upward/
 │   ├── auth.py             # Login, register, verify, logout
 │   ├── home.py             # Landing page
 │   ├── onboarding.py       # Career profile questionnaire
-│   ├── advice.py           # AI career suggestion generation
-│   ├── plans.py            # Career plan select, extend, lock, view
+│   ├── advice.py           # AI career suggestion generation with loading overlay
+│   ├── plans.py            # Career plan select, extend (parallel AI gen), lock, view, leave
 │   ├── agent.py            # AI chat agent with streaming
-│   ├── courses.py          # Course listing, subscribe, PayPal payments
-│   ├── purchases.py        # Stripe checkout, webhooks, access control
-│   ├── lessons.py          # Lesson CRUD, file extraction, WYSIWYG editor
+│   ├── courses.py          # Course listing with tabbed In-App/Online sections, outside courses API
+│   ├── purchases.py        # Stripe checkout, webhooks, access control (courses + plan)
+│   ├── lessons.py          # Lesson CRUD, file extraction, WYSIWYG editor, anti-copy display
 │   ├── test.py             # Teaching readiness test, resume rating
 │   ├── admin.py            # Admin dashboard, course/purchase management
 │   └── profile.py          # Profile update, resume upload, password change
@@ -120,6 +126,7 @@ Upward/
     ├── admin_courses.html
     ├── admin_purchases.html
     ├── advice.html
+    ├── plan.html
     ├── plan_extend.html
     ├── agent.html
     ├── test.html
