@@ -4,56 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Onboarding - Upward</title>
-<style>
-:root{
-    --accent:#3ec3d5;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
-    --sidebar:#23273c;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{min-height:100vh;background:var(--bg);font-family:Inter,Segoe UI,sans-serif;color:var(--text);}
-.page{padding:32px 20px 80px;}
-.wrap{width:min(920px,90%);margin:auto;}
-.top-row{display:flex;justify-content:space-between;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:40px;}
-.back-link{text-decoration:none;color:var(--text-secondary);}
-.back-link:hover{color:var(--accent);}
-.step-pill{background:#eef8fa;color:var(--accent);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.8rem;}
-.progress-track{height:6px;background:#e9edf1;border-radius:999px;overflow:hidden;margin-bottom:40px;}
-.progress-fill{height:100%;width:0%;background:var(--accent);transition:.25s;}
-.title{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;line-height:1.1;margin-bottom:10px;}
-.sub{color:var(--text-secondary);margin-bottom:28px;max-width:700px;line-height:1.7;font-size:.95rem;}
-.options-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
-.option-btn{padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;cursor:pointer;text-align:left;font-size:.9rem;transition:.15s;color:var(--text);}
-.option-btn:hover{border-color:var(--accent);}
-.option-btn.selected{border-color:var(--accent);background:#eef8fa;font-weight:700;}
-.multi-hint{font-size:.78rem;color:var(--text-secondary);margin-bottom:12px;}
-.text-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:white;font-size:.95rem;color:var(--text);outline:none;margin-top:4px;}
-.text-input:focus{border-color:var(--accent);}
-.country-select{cursor:pointer;appearance:auto;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;}
-/* Custom country dropdown with flag emoji support */
-.custom-dropdown{position:relative;width:100%}
-.dropdown-trigger{display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:12px;background:white;font-size:1rem;cursor:pointer;box-sizing:border-box;color:var(--text)}
-.dropdown-trigger .placeholder{color:#999}
-.dropdown-arrow{margin-left:auto;font-size:10px;color:#999;transition:transform .2s}
-.dropdown-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:280px;overflow-y:auto;background:white;border:2px solid var(--border);border-radius:12px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.dropdown-panel.open{display:block}
-.dropdown-option{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
-.dropdown-option:hover{background:#f3f4f6}
-.dropdown-option.selected{background:#e0e7ff;font-weight:600}
-.skip-hint{font-size:.78rem;color:var(--text-secondary);margin-top:8px;}
-.nav-row{display:flex;gap:12px;margin-top:32px;}
-.btn-next{flex:1;padding:14px;border:none;border-radius:12px;background:var(--sidebar);color:white;opacity:.35;pointer-events:none;font-weight:700;font-size:.95rem;cursor:pointer;}
-.btn-next.active{opacity:1;pointer-events:auto;}
-.btn-next.active:hover{background:#1e2240;}
-.btn-back{width:56px;border:1.5px solid var(--border);background:white;border-radius:12px;cursor:pointer;font-size:1rem;transition:.15s;}
-.btn-back:hover{border-color:var(--accent);}
-
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body class="page-onboarding">
 <div class="page">
 <div class="wrap">
     <div class="top-row">

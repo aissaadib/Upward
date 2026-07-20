@@ -4,43 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Purchases - Admin - Upward</title>
-<style>
-:root{
-    --sidebar:#23273c;
-    --accent:#3ec3d5;
-    --success:#41dc65;
-    --danger:#ff5460;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Inter,Segoe UI,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
-.navbar{height:70px;display:flex;justify-content:space-between;align-items:center;padding:0 32px;border-bottom:1px solid var(--border);background:white;position:sticky;top:0;z-index:100;}
-.nav-left{display:flex;align-items:center;gap:20px;}
-.brand{font-size:1.8rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
-.brand span{color:var(--accent);}
-.nav-link{margin-top:3px;font-size:1.5rem;font-weight:900;letter-spacing:-1px;text-decoration:none;color:inherit;}
-.nav-link:hover{color:var(--accent);}
-.nav-right{display:flex;align-items:center;gap:14px;}
-.username{font-size:.9rem;font-weight:700;}
-.logout{text-decoration:none;color:var(--text-secondary);font-size:.9rem;}
-.logout:hover{color:var(--accent);}
-.container{width:min(1100px,90%);margin:auto;}
-.hero{padding:60px 0 20px;}
-.hero h1{font-size:clamp(2.2rem,6vw,3rem);letter-spacing:-1.5px;}
-.hero p{margin-top:12px;color:var(--text-secondary);font-size:1.05rem;}
-table{width:100%;border-collapse:collapse;margin-top:30px;background:white;border-radius:16px;overflow:hidden;}
-th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:.9rem;}
-th{background:var(--bg);font-weight:700;color:var(--text-secondary);text-transform:uppercase;font-size:.75rem;letter-spacing:.05em;}
-.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-weight:600;font-size:.8rem;cursor:pointer;text-decoration:none;display:inline-block;margin-top:20px;}
-.btn-secondary:hover{background:#e8e8ee;}
-.empty{padding:60px 20px;text-align:center;color:var(--text-secondary);}
-@media(max-width:768px){.navbar{padding:0 18px;}.nav-left{gap:14px;}}
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body class="page-admin-purchases">
 <nav class="navbar">
     <div class="nav-left">
         <a href="/" class="brand">Up<span>ward</span></a>
