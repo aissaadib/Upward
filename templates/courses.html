@@ -238,23 +238,24 @@ body{
 
 .course-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:24px;
-    margin-top:30px;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:12px;
+    margin-top:24px;
 }
 
 .course-card{
     background:white;
     border:1px solid var(--border);
-    border-radius:16px;
-    padding:24px;
+    border-radius:8px;
+    padding:20px;
     display:flex;
     flex-direction:column;
-    transition:.2s;
+    transition:border-color .15s;
+    position:relative;
 }
 
 .course-card:hover{
-    border-color:var(--accent);
+    border-color:#c8c8d0;
 }
 
 .course-card.hidden{
@@ -262,42 +263,42 @@ body{
 }
 
 .course-card.locked{
-    opacity:.7;
-    border-color:var(--border);
-}
-
-.course-card.locked:hover{
-    border-color:var(--border);
+    opacity:.55;
 }
 
 .course-card.clickable{
     cursor:pointer;
 }
 
+.course-card.clickable:hover{
+    border-color:var(--accent);
+}
+
 .course-title{
-    font-size:1.15rem;
-    font-weight:800;
-    margin-bottom:10px;
+    font-size:.95rem;
+    font-weight:700;
+    line-height:1.4;
+    margin-bottom:6px;
 }
 
 .course-tags{
     display:flex;
     flex-wrap:wrap;
-    gap:6px;
+    gap:4px;
     margin-bottom:10px;
 }
 
 .tag{
-    font-size:.7rem;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
+    font-size:.65rem;
+    font-weight:600;
     background:#eafcff;
     color:var(--accent);
-    padding:4px 10px;
-    border-radius:999px;
+    padding:2px 8px;
+    border-radius:4px;
     cursor:pointer;
-    transition:.15s;
+    transition:.1s;
+    letter-spacing:0;
+    text-transform:none;
 }
 
 .tag:hover{
@@ -307,9 +308,10 @@ body{
 
 .course-content{
     color:var(--text-secondary);
-    font-size:.92rem;
+    font-size:.82rem;
+    line-height:1.55;
     flex-grow:1;
-    margin-bottom:16px;
+    margin-bottom:14px;
 }
 
 .course-content a{
@@ -319,38 +321,41 @@ body{
 
 .course-footer{
     display:flex;
-    justify-content:space-between;
     align-items:center;
-    padding-top:14px;
+    justify-content:space-between;
+    padding-top:12px;
     border-top:1px solid var(--border);
+    font-size:.8rem;
 }
 
 .course-price{
-    font-weight:800;
-    font-size:1.05rem;
-    color:var(--sidebar);
+    font-weight:700;
+    color:var(--text);
+}
+
+.course-rating{
+    color:var(--text-secondary);
+    font-size:.75rem;
 }
 
 .course-id{
-    font-size:.75rem;
-    color:var(--text-secondary);
+    font-size:.7rem;
+    color:#bbb;
+    font-weight:500;
 }
 
 .course-actions{
     display:flex;
     gap:6px;
-    margin-top:10px;
-    justify-content:flex-end;
+    margin-top:12px;
 }
 
 .badge{
     display:inline-block;
-    padding:3px 10px;
-    border-radius:999px;
-    font-size:.7rem;
-    font-weight:700;
-    letter-spacing:.03em;
-    text-transform:uppercase;
+    padding:2px 8px;
+    border-radius:4px;
+    font-size:.68rem;
+    font-weight:600;
 }
 
 .badge-owner{
@@ -363,21 +368,15 @@ body{
     color:#1a8a3a;
 }
 
-.lock-icon{
-    display:inline-block;
-    margin-right:4px;
-}
-
 .btn-danger-sm{
     background:white;
-    border:1.5px solid var(--danger);
+    border:1px solid var(--danger);
     color:var(--danger);
-    padding:4px 12px;
-    border-radius:6px;
-    font-weight:700;
-    font-size:.75rem;
+    padding:4px 10px;
+    border-radius:4px;
+    font-weight:600;
+    font-size:.72rem;
     cursor:pointer;
-    transition:.2s;
 }
 
 .btn-danger-sm:hover{
@@ -387,14 +386,13 @@ body{
 
 .btn-subscribe{
     background:white;
-    border:1.5px solid var(--accent);
+    border:1px solid var(--accent);
     color:var(--accent);
-    padding:4px 12px;
-    border-radius:6px;
-    font-weight:700;
-    font-size:.75rem;
+    padding:4px 10px;
+    border-radius:4px;
+    font-weight:600;
+    font-size:.72rem;
     cursor:pointer;
-    transition:.2s;
 }
 
 .btn-subscribe:hover{
@@ -406,34 +404,27 @@ body{
     background:var(--sidebar);
     color:white;
     border:none;
-    padding:8px 18px;
-    border-radius:8px;
-    font-weight:700;
-    font-size:.8rem;
+    padding:6px 14px;
+    border-radius:4px;
+    font-weight:600;
+    font-size:.72rem;
     cursor:pointer;
-    transition:.2s;
 }
 
 .btn-buy:hover{
     background:var(--sidebar-deep);
 }
 
-.btn-buy:disabled{
-    opacity:.6;
-    cursor:not-allowed;
-}
-
 .btn-primary{
     background:var(--accent);
     color:white;
     border:none;
-    padding:10px 20px;
-    border-radius:10px;
-    font-weight:700;
-    font-size:.9rem;
+    padding:8px 18px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:.85rem;
     cursor:pointer;
     text-decoration:none;
-    transition:.2s;
 }
 
 .btn-primary:hover{
@@ -600,86 +591,80 @@ body{
 
 .online-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-    gap:16px;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:12px;
     margin-top:4px;
 }
 
 .online-card{
     background:white;
     border:1px solid var(--border);
-    border-radius:12px;
-    padding:20px;
+    border-radius:8px;
+    padding:18px;
     display:flex;
     flex-direction:column;
     transition:border-color .15s;
 }
 
 .online-card:hover{
-    border-color:var(--accent);
+    border-color:#c8c8d0;
 }
 
 .online-card-top{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    margin-bottom:8px;
+    margin-bottom:6px;
     gap:8px;
 }
 
 .online-card-title{
-    font-size:1rem;
-    font-weight:800;
-    line-height:1.3;
+    font-size:.9rem;
+    font-weight:700;
+    line-height:1.35;
 }
 
 .online-card-free{
-    font-size:.65rem;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
+    font-size:.62rem;
+    font-weight:600;
     background:#e1fae8;
     color:#1a8a3a;
-    padding:2px 8px;
-    border-radius:999px;
+    padding:1px 7px;
+    border-radius:3px;
     white-space:nowrap;
     flex-shrink:0;
 }
 
 .online-card-paid{
-    font-size:.65rem;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
+    font-size:.62rem;
+    font-weight:600;
     background:#fff3e0;
     color:#e65100;
-    padding:2px 8px;
-    border-radius:999px;
+    padding:1px 7px;
+    border-radius:3px;
     white-space:nowrap;
     flex-shrink:0;
 }
 
 .online-card-platform{
-    font-size:.75rem;
+    font-size:.72rem;
     color:var(--text-secondary);
-    font-weight:600;
-    margin-bottom:10px;
+    font-weight:500;
+    margin-bottom:8px;
 }
 
 .online-card-desc{
-    font-size:.85rem;
+    font-size:.8rem;
     color:var(--text-secondary);
     line-height:1.5;
     flex-grow:1;
-    margin-bottom:14px;
+    margin-bottom:12px;
 }
 
 .online-card-link{
     display:inline-flex;
-    align-items:center;
-    gap:6px;
-    font-size:.8rem;
-    font-weight:700;
+    font-size:.75rem;
+    font-weight:600;
     color:var(--accent);
     text-decoration:none;
     align-self:flex-start;
@@ -829,7 +814,7 @@ body{
                         {% endif %}
                     </span>
                     {% if has_access %}
-                    <a href="/lessons/{{ item.id }}" style="text-decoration:none;color:var(--accent);font-weight:700;font-size:.85rem;">View →</a>
+                    <a href="/lessons/{{ item.id }}" style="text-decoration:none;font-size:.75rem;font-weight:600;color:var(--accent);">View</a>
                     {% endif %}
                     <span class="course-id">#{{ item.id }}</span>
                 </div>
@@ -1080,7 +1065,7 @@ function loadOnlineCourses(){
                     <div class="online-card-platform">${c.platform.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
                     <div class="online-card-desc">${c.description.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
                     <a class="online-card-link" href="${c.url.replace(/</g,'&lt;').replace(/>/g,'&gt;')}" target="_blank" rel="noopener">
-                        Visit Course →
+                        Visit Course
                     </a>
                 </div>`;
             }).join("");
