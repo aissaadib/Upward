@@ -104,6 +104,17 @@ Upward/
 ├── services/
 │   ├── ai.py               # JSON parsing helpers for AI responses
 │   └── profile.py          # Profile summary builder for AI context
+├── static/                 # Extracted CSS per template (no framework)
+│   ├── admin.css
+│   ├── advice.css
+│   ├── agent.css
+│   ├── courses.css
+│   ├── customize_course.css
+│   ├── index.css
+│   ├── plan_extend.css
+│   ├── profile.css
+│   ├── test.css
+│   └── ... (one .css per template)
 └── templates/              # Jinja2 HTML templates
     ├── login.html
     ├── register.html
@@ -120,6 +131,7 @@ Upward/
     ├── admin_courses.html
     ├── admin_purchases.html
     ├── advice.html
+    ├── plan.html
     ├── plan_extend.html
     ├── agent.html
     ├── test.html
