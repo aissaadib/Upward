@@ -60,7 +60,21 @@
             <section class="pinned-plan">
                 <div class="pinned-label">📌 Your main plan</div>
                 <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
-                <p class="pinned-meta">{{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}</p>
+                <p class="pinned-meta">
+                    {% set ns = p.networking_strategy or {} %}
+                    {% set s = ns.where_to_meet_people or [] %}
+                    {% set pv = p.phases or [] %}
+                    {%- if pv -%}
+                        {% for phase in pv[:3] %}
+                            <span class="plan-hl">{{ phase.title }};</span>
+                        {% endfor %}
+                        <span class="plan-more">+ {{ pv|length - 3 }} more months</span>
+                    {%- elif s -%}
+                        <span class="plan-hl">{{ s[0] }}</span>
+                    {%- else -%}
+                        {{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}
+                    {%- endif -%}
+                </p>
                 <div class="pinned-actions">
                     <a href="/plan" class="btn">View full roadmap</a>
                     <div class="leave-plan-wrap">

@@ -27,7 +27,7 @@ A career guidance platform that helps students and young professionals identify 
 - **Backend:** Python, Flask, Flask-Session
 - **Database:** SQLite via CS50 SQL
 - **AI:** Groq Cloud (llama-3.1-8b-instant)
-- **Payments:** Stripe (subscriptions) + PayPal (legacy)
+- **Payments:** Stripe (subscriptions) + PayPal (legacy) — test mode only, no real accounts linked
 - **Frontend:** HTML, CSS, JavaScript (no framework)
 - **Auth:** Session-based with filesystem storage
 - **Email:** Gmail SMTP via smtplib
