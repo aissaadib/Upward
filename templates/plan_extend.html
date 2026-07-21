@@ -32,6 +32,19 @@ body{
     font-family:Inter,Segoe UI,sans-serif;
     background:var(--bg);
     color:var(--text);
+    font-size:1.2rem;
+    line-height:1.7;
+}
+#content{
+    padding:32px 32px 80px;
+}
+.highlight{
+    margin:20px 0;
+    padding:16px 0;
+    border-bottom:1px solid var(--border);
+}
+.highlight:last-child{
+    border-bottom:none;
 }
 
 .navbar{
@@ -138,14 +151,18 @@ body{
     padding-top:20px;
     border-top:1px solid var(--border);
 }
+.card + .card{
+    margin-top:24px;
+}
 
 
 .section-title{
-    font-size:.78rem;
+    font-size:.82rem;
     font-weight:900;
     color:var(--accent);
     text-transform:uppercase;
     letter-spacing:.12em;
+    margin-bottom:12px;
     margin-bottom:18px;
 }
 
@@ -470,6 +487,15 @@ function esc(s){
 function toStr(a){return typeof a==="string"?a:typeof a==="object"?JSON.stringify(a):String(a||"");}
 function toArr(a){return Array.isArray(a)?a:typeof a==="string"?[a]:[];}
 
+function setFontSize(size){
+    const sizes = {small:"1.05rem",medium:"1.2rem",large:"1.4rem"};
+    document.body.style.fontSize = sizes[size] || "1.2rem";
+    localStorage.setItem("planFontSize", size);
+}
+(function(){
+    const saved = localStorage.getItem("planFontSize") || "medium";
+    setFontSize(saved);
+})();
 function renderPlan(p){
     const phases = toArr(p.phases);
     const skills = toArr(p.skills_to_build);
@@ -486,19 +512,25 @@ function renderPlan(p){
     document.getElementById("plan-title").textContent = p.title || document.getElementById("plan-title").textContent;
 
     document.getElementById("content").innerHTML = `
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px;font-size:.82rem;">
+            <span style="color:var(--text-secondary);">Font size:</span>
+            <button onclick="setFontSize('small')" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 10px;cursor:pointer;">S</button>
+            <button onclick="setFontSize('medium')" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 10px;cursor:pointer;">M</button>
+            <button onclick="setFontSize('large')" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 10px;cursor:pointer;">L</button>
+        </div>
         <div class="section-title">Overview</div>
         <p>${esc(p.summary)}</p>
         ${p.next_action ? `
         <div class="highlight">
             <strong>Do this first (next 48h):</strong>
-            <p style="margin-top:8px;"><strong>What:</strong> ${esc(typeof p.next_action === 'object' ? p.next_action.what : p.next_action)}</p>
+            <div style="margin-top:8px;"><strong>What:</strong> ${esc(typeof p.next_action === 'object' ? p.next_action.what : p.next_action)}</div>
                 ${typeof p.next_action === 'object' && p.next_action.how ? `
                 <div style="margin-top:10px;"><strong>How:</strong></div>
-                <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:6px;font-size:.9rem;line-height:1.7;white-space:pre-wrap;">${esc(p.next_action.how)}</div>
+                <div style="margin-top:4px;font-size:.9rem;line-height:1.7;white-space:pre-wrap;color:var(--text-secondary);">${esc(p.next_action.how)}</div>
                 ` : ""}
-                ${p.next_action.time_needed ? `<p style="margin-top:8px;color:var(--text-secondary);"><strong>Time needed:</strong> ${esc(p.next_action.time_needed)}</p>` : ""}
-                ${p.next_action.free_tools ? `<p style="margin-top:4px;color:var(--text-secondary);"><strong>Free tools:</strong> ${p.next_action.free_tools.map(t=>esc(toStr(t))).join(', ')}</p>` : ""}
-                ${p.next_action.example_output ? `<div style="margin-top:10px;padding:12px;background:#f8f9fb;border-radius:8px;border-left:3px solid var(--accent);"><strong>Example output:</strong><br>${esc(p.next_action.example_output)}</div>` : ""}
+                ${p.next_action.time_needed ? `<div style="margin-top:8px;color:var(--text-secondary);"><strong>Time needed:</strong> ${esc(p.next_action.time_needed)}</div>` : ""}
+                ${p.next_action.free_tools ? `<div style="margin-top:4px;color:var(--text-secondary);"><strong>Free tools:</strong> ${p.next_action.free_tools.map(t=>esc(toStr(t))).join(', ')}</div>` : ""}
+                ${p.next_action.example_output ? `<div style="margin-top:10px;"><strong>Example output:</strong><br><span style="color:var(--text-secondary);">${esc(p.next_action.example_output)}</span></div>` : ""}
             </div>` : ""}
 
         ${habits.length ? `
@@ -519,8 +551,8 @@ function renderPlan(p){
         </div>` : ""}
 
         ${p.daily_schedule_template ? `
-        <div class="section-title">Daily Schedule</div>
-        <div style="padding:12px;background:#f8f9fb;border-radius:8px;margin-bottom:24px;">
+        <div class="card">
+            <div class="section-title">Daily Schedule</div>
             ${p.daily_schedule_template.morning_block ? `<div style="margin-bottom:8px;"><strong>Morning:</strong> ${esc(p.daily_schedule_template.morning_block)}</div>` : ""}
             ${p.daily_schedule_template.afternoon_block ? `<div style="margin-bottom:8px;"><strong>Afternoon:</strong> ${esc(p.daily_schedule_template.afternoon_block)}</div>` : ""}
             ${p.daily_schedule_template.evening_block ? `<div style="margin-bottom:8px;"><strong>Evening:</strong> ${esc(p.daily_schedule_template.evening_block)}</div>` : ""}
@@ -529,8 +561,8 @@ function renderPlan(p){
         </div>` : ""}
 
         ${p.motivation_system ? `
-        <div class="section-title">Motivation System</div>
-        <div style="padding:12px;background:#f8f9fb;border-radius:8px;margin-bottom:24px;">
+        <div class="card">
+            <div class="section-title">Motivation System</div>
             ${p.motivation_system['weekly_review ritual'] ? `<div style="margin-bottom:8px;"><strong>Weekly review:</strong> ${esc(p.motivation_system['weekly_review ritual'])}</div>` : ""}
             ${p.motivation_system.accountability_method ? `<div style="margin-bottom:8px;"><strong>Accountability:</strong> ${esc(p.motivation_system.accountability_method)}</div>` : ""}
             ${p.motivation_system.reward_system ? `<div><strong>Rewards:</strong> ${esc(p.motivation_system.reward_system)}</div>` : ""}
@@ -547,22 +579,19 @@ function renderPlan(p){
                     ${ph.focus ? `<p style="color:var(--text-secondary);margin-bottom:10px;">${esc(ph.focus)}</p>` : ""}
 
                     ${(ph.weekly_breakdown||[]).map(w => `
-                        <div style="margin:14px 0 0;padding:14px;background:#f8f9fb;border-radius:8px;">
-                            <strong style="display:block;margin-bottom:6px;">Week ${esc(w.week)} — ${esc(w.theme)}</strong>
-                            ${w.mini_lecture ? `<div style="padding:8px 10px;background:white;border-radius:6px;margin-bottom:8px;font-size:.85rem;border-left:3px solid var(--accent);"><em>${esc(w.mini_lecture)}</em></div>` : ""}
-                            ${(w.actions||[]).map(a => `
-                                <div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid var(--border);">
-                                    <strong>${esc(a.what)}</strong>
-                                    ${a.how ? `<div style="margin-top:6px;font-size:.85rem;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;">${esc(a.how)}</div>` : ""}
-                                    ${a.example_output ? `<div style="margin-top:6px;padding:6px 10px;background:#eefcff;border-radius:4px;font-size:.82rem;"><strong>Example:</strong> ${esc(a.example_output)}</div>` : ""}
-                                    <div style="margin-top:6px;display:flex;gap:10px;font-size:.78rem;color:var(--text-secondary);">
-                                        ${a.time_estimate ? `<span>${esc(a.time_estimate)}</span>` : ""}
-                                        ${a.tool ? `<span>${esc(a.tool)}</span>` : ""}
-                                    </div>
+                        <div style="margin:24px 0 0;padding-left:12px;border-left:2px solid var(--border);">
+                            <strong style="font-size:1.05rem;">Week ${esc(w.week)} — ${esc(w.theme)}</strong>
+                            ${w.mini_lecture ? `<div style="margin-top:6px;font-size:.85rem;color:var(--text-secondary);line-height:1.6;"><em>${esc(w.mini_lecture)}</em></div>` : ""}
+                            ${(w.actions||[]).map((a, ai) => `
+                                <div style="margin-top:${ai===0?'12px':'16px'};">
+                                    <strong>Task ${ai+1}:</strong> ${esc(a.what)}
+                                    ${a.how ? `<div style="margin-top:4px;font-size:.88rem;color:var(--text-secondary);line-height:1.7;"><strong>How:</strong> ${esc(a.how)}</div>` : ""}
+                                    ${a.example_output ? `<div style="margin-top:4px;font-size:.84rem;"><strong>Example:</strong> ${esc(a.example_output)}</div>` : ""}
+                                    ${a.time_estimate || a.tool ? `<div style="margin-top:2px;font-size:.82rem;color:var(--text-secondary);">${a.time_estimate ? esc(a.time_estimate) : ""}${a.time_estimate && a.tool ? " — " : ""}${a.tool ? esc(a.tool) : ""}</div>` : ""}
+                                    ${a.common_mistake ? `<div style="margin-top:6px;font-size:.84rem;color:var(--danger);line-height:1.5;"><strong>Common mistake:</strong> ${esc(a.common_mistake)}</div>` : ""}
                                 </div>
                             `).join("")}
-                            ${w.common_mistake ? `<div style="margin-top:8px;padding:8px 10px;background:#fff8f8;border-radius:4px;font-size:.82rem;border-left:3px solid var(--danger);"><strong>Common mistake:</strong> ${esc(w.common_mistake)}</div>` : ""}
-                            ${w.checkpoint ? `<div style="margin-top:8px;font-size:.82rem;color:var(--text-secondary);"><strong>Checkpoint:</strong> ${esc(w.checkpoint)}</div>` : ""}
+                            ${w.checkpoint ? `<div style="margin-top:6px;font-size:.84rem;color:var(--text-secondary);"><strong>Checkpoint:</strong> ${esc(w.checkpoint)}</div>` : ""}
                         </div>
                     `).join("")}
 

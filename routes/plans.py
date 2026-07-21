@@ -482,123 +482,54 @@ Rules:
     # ------------------------------------------------------------------
     # 6. PHASES (6 months)  —  the core roadmap
     # ------------------------------------------------------------------
-    phases_prompt = f"""You are a practical career strategist. User is pursuing: "{path_title}"
+    roadmap_steps = suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6]
+    phases_list = []
+    for i, step in enumerate(roadmap_steps):
+        month_num = i + 1
+        month_title = step[:60] if isinstance(step, str) else f"Month {month_num}"
+        prev_context = ""
+        if phases_list:
+            prev = phases_list[-1]
+            prev_context = f"Previous month: {prev.get('title','')} - {prev.get('focus','')}"
+        month_prompt = f"""Generate month {month_num} of 6 ("{month_title}") for someone pursuing: "{path_title}".
 
-USER PROFILE:
-{profile}
+User background: {basic_context[:400]}
+Key skills to build: {skills_context}
+Notable courses: {courses_context}
+{prev_context}
 
-CONTEXT:
-{basic_context}
-{skills_context}
-{courses_context}
-{projects_context}
-
-Generate ONLY the 6-month phase breakdown. Do NOT repeat any previous content.
-
-Respond ONLY with valid JSON (no markdown):
-{{
-  "phases": [
-    {{
-      "month": 1,
-      "title": "Phase name",
-      "focus": "What this month is about in one sentence",
-      "weekly_breakdown": [
-        {{
-          "week": 1,
-          "theme": "What this week focuses on",
-          "actions": [
-            {{
-              "what": "Exact action to take",
-              "how": "Step-by-step method with specific websites, tools, and commands — e.g. 'Go to freeCodeCamp.org, click 'Get Started', create account, begin Responsive Web Design module 1. Complete exercises 1-10.'",
-              "why_this_order": "Why this action comes before the next one",
-              "time_estimate": "Hours needed",
-              "tool": "Specific free tool with exact website or app name",
-              "example_output": "Describe what the finished task looks like — e.g. 'A screenshot showing 10 completed exercises on freeCodeCamp with green checkmarks'",
-              "output": "What they should produce by end (specific file, screenshot, code, notes)"
-            }}
-          ],
-          "mini_lecture": "A 2-3 sentence explanation of the key concept this week, written as if a mentor is explaining it simply with a real-world analogy",
-          "common_mistake": "The #1 mistake beginners make this week and exactly how to avoid it",
-          "checkpoint": "Mini-milestone with specific criteria to validate progress (e.g. 'Can explain concept X to a friend in 2 sentences')"
-        }}
-      ],
-      "skills_this_month": ["specific skills being built"],
-      "project_milestone": "Exact portfolio project milestone with what to build by end of month",
-      "deliverable": "Concrete output with acceptance criteria — e.g. 'A GitHub repo with 3 HTML pages that pass W3C validation'",
-      "deliverable_example": "A brief description or mock text of what the deliverable should resemble",
-      "resources": [
-        {{"label": "Resource name", "url": "Use generic reputable site like coursera.org or freecodecamp.org — NOT a specific page", "why": "Why use this now — tie to this month's focus", "how_to_use": "Exact way to get value: 'Watch sections 1-3, take notes in Cornell format, then build the practice project'", "time_needed": "Hours"}}
-      ],
-      "reflection_questions": ["2 specific questions to ask themselves at month end — not generic, tied to their actual progress"],
-      "if_ahead": "What to add if they are ahead of schedule",
-      "if_behind": "What to cut or simplify — give permission to reduce scope with exact instructions on what's least important to skip"
-    }}
-  ]
-}}
+Return ONLY valid JSON (no markdown, no extra text):
+{{"month":{month_num},"title":"{month_title}","focus":"one sentence focus","weekly_breakdown":[{{"week":1,"theme":"week theme","actions":[{{"what":"specific task","how":"step by step with websites/tools","time_estimate":"Xh","tool":"free tool name","output":"what they produce","common_mistake":"specific mistake for THIS task"}}],"mini_lecture":"2-3 sentence mentor explanation","common_mistake":"overall week mistake","checkpoint":"how to verify progress"}}],"skills_this_month":["skill1"],"deliverable":"concrete output","resources":[{{"label":"name","url":"site url","why":"why this","how_to_use":"how to use","time_needed":"Xh"}}],"reflection_questions":["q1","q2"]}}
 
 Rules:
-- Exactly 6 phases (months 1-6)
-- Each month must have exactly 4 weekly_breakdown objects (weeks 1-4)
-- Each week must have 2-3 actions with example_output showing what 'done' looks like
-- Every week must include mini_lecture and common_mistake fields
-- Use free tools only
-- Each phase builds on the previous one
-- if_ahead gives enrichment, if_behind gives permission to cut"""
-    phases_data = call_ai_for_section(phases_prompt, "phases", {
-        "phases": [
-            {
-                "month": i + 1,
-                "title": step[:60] if isinstance(step, str) else f"Month {i+1}",
-                "focus": step if isinstance(step, str) else "",
-                "weekly_breakdown": [
-                    {
-                        "week": w,
-                        "theme": f"Week {w} focus",
-                        "actions": [{"what": "Continue learning", "how": "Follow course material", "why_this_order": "Builds on previous week", "time_estimate": "5h", "tool": "Laptop", "example_output": "Completed exercises with notes", "output": "Notes"}],
-                        "mini_lecture": "Keep practicing consistently — each week builds on the last.",
-                        "common_mistake": "Trying to learn too many things at once. Stick to one topic per week.",
-                        "checkpoint": "Review notes"
-                    }
-                    for w in range(1, 5)
-                ],
-                "skills_this_month": [],
-                "project_milestone": "",
-                "deliverable": f"Finish month {i+1} goals",
-                "deliverable_example": "A completed set of notes and exercises for this month's focus area.",
-                "resources": suggestion.get("links", [])[:1],
-                "reflection_questions": ["What did I learn this month?", "What was the hardest part and how did I overcome it?"],
-                "if_ahead": "Start previewing next month's topic.",
-                "if_behind": "Focus on the single most important action and skip optional readings."
-            }
-            for i, step in enumerate(suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6])
-        ]
-    })
+- 4 weeks, 2-3 specific actions each
+- Free tools only, be specific (exact websites, commands, exercises)
+- Each week must have UNIQUE actions — no repeating the same task across weeks
+- Each action must have its OWN unique common_mistake specific to that task"""
+        month_data = call_ai_for_section(month_prompt, f"month {month_num}", {
+            "month": month_num,
+            "title": month_title,
+            "focus": step if isinstance(step, str) else "",
+            "weekly_breakdown": [
+                {
+                    "week": w,
+                    "theme": f"Week {w} focus",
+                    "actions": [{"what": "Continue learning", "how": "Follow course material", "why_this_order": "Builds on previous week", "time_estimate": "5h", "tool": "Laptop", "example_output": "Completed exercises with notes", "output": "Notes"}],
+                    "mini_lecture": "Keep practicing consistently — each week builds on the last.",
+                    "common_mistake": "Trying to learn too many things at once. Stick to one topic per week.",
+                    "checkpoint": "Review notes"
+                }
+                for w in range(1, 5)
+            ],
+            "skills_this_month": [],
+            "deliverable": f"Finish month {month_num} goals",
+            "resources": suggestion.get("links", [])[:1],
+            "reflection_questions": ["What did I learn?", "What was hard?"],
+            "if_behind": "Focus on the single most important action."
+        })
+        phases_list.append(month_data)
 
-    phases_data = call_ai_for_section(phases_prompt, "phases", {
-        "phases": [
-            {
-                "month": i + 1,
-                "title": step[:60] if isinstance(step, str) else f"Month {i+1}",
-                "focus": step if isinstance(step, str) else "",
-                "weekly_breakdown": [
-                    {
-                        "week": w,
-                        "theme": f"Week {w} focus",
-                        "actions": [{"what": "Continue learning", "how": "Follow course material", "time_estimate": "5h", "tool": "Laptop", "output": "Notes"}],
-                        "checkpoint": "Review notes"
-                    }
-                    for w in range(1, 5)
-                ],
-                "skills_this_month": [],
-                "project_milestone": "",
-                "deliverable": f"Finish month {i+1} goals",
-                "resources": suggestion.get("links", [])[:1],
-                "reflection_questions": ["What did I learn?", "What was hard?"],
-                "if_behind": "Focus on the single most important action."
-            }
-            for i, step in enumerate(suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6])
-        ]
-    })
+    phases_data = {"phases": phases_list}
 
     phases_context = "Phase flow: " + " -> ".join([f"Month {p.get('month')}: {p.get('title', '')}" for p in phases_data.get("phases", [])])
 
