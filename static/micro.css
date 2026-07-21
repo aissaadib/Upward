@@ -1,0 +1,106 @@
+/* ── Micro-interactions ───────────────────────────────
+
+   Duration: 150-200ms, easing: ease-out
+   No spring, no elastic, no decorative motion.
+   ─────────────────────────────────────────────────── */
+
+/* --- Buttons: press feedback + hover ─────────────── */
+.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-main,
+.btn-outline, .btn-leave, .btn-next, .btn-back, .btn-buy, .btn-subscribe,
+.btn-link, .btn-lock, .file-btn, button, [type="submit"], [type="button"] {
+    transition: background .15s ease-out, border-color .15s ease-out, color .15s ease-out, transform .12s ease-out, opacity .15s ease-out;
+    cursor: pointer;
+}
+.btn:active, .btn-primary:active, .btn-secondary:active, .btn-danger:active,
+.btn-ghost:active, .btn-main:active, button:active, [type="submit"]:active {
+    transform: scale(.97);
+}
+
+/* --- Navbar links: subtle color transition ────────── */
+.nav-link, .username, .logout, .brand {
+    transition: color .15s ease-out;
+}
+
+/* --- Inputs: smooth focus transition ──────────────── */
+input, textarea, select, .form-control, .form-group input, .text-input,
+.tag-search, .tag-input-field {
+    transition: border-color .18s ease-out, box-shadow .18s ease-out;
+}
+input:focus, textarea:focus, select:focus, .form-control:focus,
+.form-group input:focus, .text-input:focus, .tag-search:focus,
+.tag-input-field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(62, 195, 213, .12);
+}
+
+/* --- Cards: subtle border highlight ───────────────── */
+.card, .course-card, .phase, .highlight, .resource, .online-card {
+    transition: border-color .18s ease-out, box-shadow .18s ease-out;
+}
+.card:hover, .course-card:hover {
+    border-color: var(--accent);
+}
+
+/* --- Resource links ───────────────────────────────── */
+.resource {
+    transition: border-color .15s ease-out, background .15s ease-out;
+}
+.resource:hover {
+    border-color: var(--accent);
+    background: rgba(62, 195, 213, .04);
+}
+
+/* --- Phase / timeline blocks ──────────────────────── */
+.phase {
+    transition: border-color .18s ease-out, background .18s ease-out;
+}
+
+/* --- Tab underline transitions (courses.html) ────── */
+.tab {
+    transition: color .15s ease-out;
+}
+.tab::after {
+    transition: opacity .18s ease-out, transform .18s ease-out;
+}
+
+/* --- Loading spinner ──────────────────────────────── */
+.spinner {
+    animation: spin .6s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- Content fade on plan render ──────────────────── */
+#content {
+    transition: opacity .2s ease-out;
+}
+
+/* --- Dropdown / expand (onboarding) ───────────────── */
+.dropdown-content {
+    transition: opacity .15s ease-out, transform .12s ease-out;
+    transform-origin: top center;
+}
+
+/* --- Smooth scrolling ─────────────────────────────── */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ── Reduced motion ────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+    .btn:active, .btn-primary:active, button:active, [type="submit"]:active {
+        transform: none !important;
+    }
+    .spinner {
+        animation: none !important;
+    }
+}
