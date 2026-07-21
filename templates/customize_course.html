@@ -499,7 +499,7 @@ textarea.form-control{
             This rating will be displayed publicly on your profile. Create your course below to start teaching.
         </div>
 
-        <form method="POST" action="/create_course">
+        <form method="POST" action="/create_course" id="course-form">
             {{ csrf_input|safe }}
             <div class="form-group">
                 <label class="form-label">Course Title</label>
@@ -529,7 +529,7 @@ textarea.form-control{
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Create Course</button>
+                <button type="submit" class="btn btn-primary" id="create-btn">Create Course</button>
                 <a href="/courses" class="btn btn-secondary">Cancel</a>
             </div>
 
@@ -538,6 +538,31 @@ textarea.form-control{
 
 </main>
 
+<div id="bank-notification" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;padding:32px;border-radius:16px;max-width:420px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.15);">
+        <div style="font-size:3rem;margin-bottom:12px;">⚠️</div>
+        <h3 style="margin-bottom:8px;">Bank account required</h3>
+        <p style="color:var(--text-secondary);margin-bottom:20px;font-size:.95rem;">You need to add a RIB/IBAN in your profile before you can sell courses. Add one and try again.</p>
+        <a href="/profile" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Go to Profile</a>
+        <button onclick="closeNotif()" style="display:block;margin:12px auto 0;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:.85rem;">Cancel</button>
+    </div>
+</div>
+
+<script>
+var hasBank = {{ 'true' if has_bank else 'false' }};
+
+document.getElementById("course-form").addEventListener("submit", function(e){
+    var price = parseFloat(document.querySelector("[name=price]").value) || 0;
+    if (price > 0 && !hasBank) {
+        e.preventDefault();
+        document.getElementById("bank-notification").style.display = "flex";
+    }
+});
+
+function closeNotif(){
+    document.getElementById("bank-notification").style.display = "none";
+}
+</script>
 <script>
 const SUGGESTED_TAGS = ["python","javascript","react","frontend","backend","web","mobile","data-science","machine-learning","design","ui-ux","figma","devops","docker","kubernetes","database","sql","security","game-dev","unity","css","html","node","api","flutter","dart","go","rust","java","csharp","php","ruby","swift","kotlin","aws","git","testing","agile","blockchain","ai","beginner","advanced","tutorial","project"];
 

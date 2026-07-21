@@ -28,17 +28,24 @@ def extract_text_from_pdf(file_path):
 @login_required
 def profile():
     """Show the profile page with current user info."""
-    user = db.execute("SELECT name, email, resume, locked, admin FROM users WHERE id = ?",
+    user = db.execute("SELECT name, email, resume, locked, admin, bank_account FROM users WHERE id = ?",
                       session["user_id"])
     if not user:
         return redirect("/login")
     user = user[0]
+    earnings = db.execute(
+        "SELECT COALESCE(SUM(amount), 0) AS total FROM creator_earnings WHERE user_id = ? AND paid = 0",
+        session["user_id"]
+    )
+    total_earnings = earnings[0]["total"] if earnings else 0
     return render_template("profile.html",
                            username=user["name"],
                            email=user["email"],
                            has_resume=bool(user.get("resume")),
                            locked=user.get("locked", 0),
-                           is_admin=bool(user.get("admin")))
+                           is_admin=bool(user.get("admin")),
+                           bank_account=user.get("bank_account", ""),
+                           total_earnings=total_earnings)
 
 
 @app.route("/profile/update", methods=["POST"])
@@ -139,3 +146,20 @@ def profile_change_password():
                generate_password_hash(new_pass), session["user_id"])
 
     return redirect("/profile?msg=Password changed successfully")
+
+
+@app.route("/profile/bank-account", methods=["POST"])
+@login_required
+@csrf_required
+def profile_bank_account():
+    """Save or update the user's bank account / RIB."""
+    rib = request.form.get("bank_account", "").strip()
+    clean = "".join(rib.split())
+    if not clean:
+        return redirect("/profile?error=Bank account number is required")
+    if not all(c.isalnum() for c in clean):
+        return redirect("/profile?error=Bank account must contain only letters and numbers")
+    if len(clean) < 10 or len(clean) > 34:
+        return redirect("/profile?error=Bank account must be between 10 and 34 characters")
+    db.execute("UPDATE users SET bank_account = ? WHERE id = ?", clean, session["user_id"])
+    return redirect("/profile?msg=Bank account saved")

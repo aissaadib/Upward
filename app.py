@@ -186,6 +186,23 @@ try:
 except Exception:
     pass
 
+# Add bank_account column for creator payouts
+try:
+    db.execute("ALTER TABLE users ADD COLUMN bank_account TEXT DEFAULT ''")
+except Exception:
+    pass
+
+# Create creator_earnings table
+db.execute("""CREATE TABLE IF NOT EXISTS creator_earnings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    purchase_id INTEGER,
+    amount INTEGER NOT NULL,
+    paid INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+)""")
+
 # Create locked_plans table if missing
 db.execute("""CREATE TABLE IF NOT EXISTS locked_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

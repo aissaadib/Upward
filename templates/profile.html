@@ -95,6 +95,34 @@ body{font-family:Inter,Segoe UI,sans-serif;background:var(--bg);color:var(--text
                 <span class="info-label">Resume</span>
                 <span class="info-value">{% if has_resume %}Uploaded{% else %}Not uploaded{% endif %}</span>
             </div>
+            <div class="info-line">
+                <span class="info-label">Pending earnings</span>
+                <span class="info-value">{{ total_earnings }} MAD</span>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <h2>Bank Account (for course sales)</h2>
+            <form method="POST" action="/profile/bank-account" onsubmit="return validateRib()">
+                {{ csrf_input|safe }}
+                <div class="form-group">
+                    <label>RIB / IBAN</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Enter your RIB or IBAN" id="rib-input">
+                    <div id="rib-error" style="color:var(--danger);font-size:.82rem;margin-top:4px;display:none;"></div>
+                </div>
+                <button class="btn" type="submit">Save Bank Account</button>
+            </form>
+            <script>
+            function validateRib(){
+                var val = document.getElementById("rib-input").value.replace(/\\s/g, "");
+                var err = document.getElementById("rib-error");
+                if(!val){ err.textContent="Bank account number is required"; err.style.display="block"; return false; }
+                if(!/^[a-zA-Z0-9]+$/.test(val)){ err.textContent="Only letters and numbers allowed"; err.style.display="block"; return false; }
+                if(val.length<10 || val.length>34){ err.textContent="Must be between 10 and 34 characters"; err.style.display="block"; return false; }
+                err.style.display="none";
+                return true;
+            }
+            </script>
         </div>
 
         <div class="section-block">

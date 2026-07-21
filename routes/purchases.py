@@ -393,6 +393,17 @@ def stripe_webhook():
                     period_end,
                 )
 
+                # Record 30% creator earnings
+                amount_total = checkout_session.get("amount_total")
+                if amount_total and course_id:
+                    owner = db.execute("SELECT owner_id FROM courses WHERE id = ?", int(course_id))
+                    if owner and owner[0].get("owner_id"):
+                        creator_share = int(amount_total * 0.3)
+                        db.execute(
+                            "INSERT INTO creator_earnings (user_id, course_id, amount) VALUES (?, ?, ?)",
+                            owner[0]["owner_id"], int(course_id), creator_share
+                        )
+
     # Monthly renewal — extend access by another month
     elif event_type == "invoice.payment_succeeded":
         invoice = event["data"]["object"]

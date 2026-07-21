@@ -59,6 +59,11 @@ def admin_add_course():
     except ValueError:
         price = 0
 
+    if price > 0:
+        bank = db.execute("SELECT bank_account FROM users WHERE id = ?", session["user_id"])
+        if not bank or not bank[0].get("bank_account", "").strip():
+            return redirect("/admin/courses?error=You must add a bank account (RIB) in your profile before selling a course")
+
     db.execute(
         "INSERT INTO courses (owner_id, title, description, price, tags, rating, stripe_price_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
         session["user_id"], title, description, max(price, 0), tags, None, stripe_price_id

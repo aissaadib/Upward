@@ -248,12 +248,16 @@ def customize_course():
     
     rating = session.get("teaching_rating", {}).get("rating", 2.5)
     
+    bank = db.execute("SELECT bank_account FROM users WHERE id = ?", session["user_id"])
+    has_bank = bool(bank and bank[0].get("bank_account", "").strip())
+    
     return render_template(
         "customize_course.html",
         username=session.get("username", "User"),
         rating=rating,
         major=major,
-        rating_data=rating_data
+        rating_data=rating_data,
+        has_bank=has_bank
     )
 
 
@@ -268,17 +272,30 @@ def create_course():
     tags = request.form.get("tags", "").strip()
 
     if not title or not description:
+        bank = db.execute("SELECT bank_account FROM users WHERE id = ?", session["user_id"])
         return render_template("customize_course.html", 
             username=session.get("username", "User"),
             error="Title and description are required",
             rating=session.get("teaching_rating", {}).get("rating", 2.5),
             major=session.get("teaching_major", "Unknown"),
-            rating_data=session.get("teaching_rating", {}))
+            rating_data=session.get("teaching_rating", {}),
+            has_bank=bool(bank and bank[0].get("bank_account", "").strip()))
 
     try:
         price = float(price)
     except ValueError:
         price = 0.0
+
+    if price > 0:
+        bank = db.execute("SELECT bank_account FROM users WHERE id = ?", session["user_id"])
+        if not bank or not bank[0].get("bank_account", "").strip():
+            return render_template("customize_course.html",
+                username=session.get("username", "User"),
+                error="You must add a bank account (RIB) in your profile before selling a course",
+                rating=session.get("teaching_rating", {}).get("rating", 2.5),
+                major=session.get("teaching_major", "Unknown"),
+                rating_data=session.get("teaching_rating", {}),
+                has_bank=False)
 
     owner_id = session["user_id"]
     
