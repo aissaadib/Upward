@@ -13,6 +13,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/advice.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 
 <body>
@@ -95,6 +97,13 @@ function renderPaths(){
 
         box.appendChild(div);
     });
+
+    // Stagger path items in after render
+    if(typeof fadeRise === "function"){
+        const items = box.querySelectorAll(".path");
+        items.forEach(el => { el.dataset._animDone = ""; });
+        fadeRise(items, {duration: 200, delay: 30, distance: 8});
+    }
 }
 
 function render(){
@@ -183,6 +192,9 @@ function render(){
             </div>
         </div>
     `;
+
+    // Stagger-reveal detail panel content after injection
+    if(typeof revealDetail === "function") revealDetail(container);
 }
 
 async function choosePlan(index){
@@ -235,7 +247,9 @@ async function buyPlan(index){
 
 async function generate(){
     const overlay = document.getElementById("advice-overlay");
-    overlay.classList.add("open");
+    // Use premium overlay animation instead of raw class toggle
+    if(typeof showAdviceOverlay === "function") showAdviceOverlay(overlay);
+    else overlay.classList.add("open");
 
     try {
         const res = await fetch("/generate_advice", {
@@ -246,7 +260,8 @@ async function generate(){
         });
 
         const json = await res.json();
-        overlay.classList.remove("open");
+        if(typeof hideAdviceOverlay === "function") hideAdviceOverlay(overlay);
+        else overlay.classList.remove("open");
 
         if(json.error){
             document.getElementById("paths").innerHTML = 
@@ -258,7 +273,8 @@ async function generate(){
         active = 0;
         render();
     } catch(e) {
-        overlay.classList.remove("open");
+        if(typeof hideAdviceOverlay === "function") hideAdviceOverlay(overlay);
+        else overlay.classList.remove("open");
         document.getElementById("paths").innerHTML = 
             `<p style="color:#ff5460;font-size:.9rem;">Failed to load. Try again.</p>`;
     }

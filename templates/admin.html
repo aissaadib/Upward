@@ -8,6 +8,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/admin.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 <body>
 <nav class="navbar">
@@ -27,15 +29,26 @@
         <p>Manage courses, view purchases, and monitor platform activity.</p>
     </section>
     <div class="grid">
-        <div class="card"><h2>{{ course_count }}</h2><p>Courses</p></div>
-        <div class="card"><h2>{{ user_count }}</h2><p>Users</p></div>
-        <div class="card"><h2>{{ purchase_count }}</h2><p>Purchases</p></div>
-        <div class="card"><h2>{{ "%.0f"|format(total_revenue / 100) }} MAD</h2><p>Revenue</p></div>
+        <div class="card"><h2 data-count-to="{{ course_count }}">{{ course_count }}</h2><p>Courses</p></div>
+        <div class="card"><h2 data-count-to="{{ user_count }}">{{ user_count }}</h2><p>Users</p></div>
+        <div class="card"><h2 data-count-to="{{ purchase_count }}">{{ purchase_count }}</h2><p>Purchases</p></div>
+        <div class="card"><h2 data-count-to="{{ "%.0f"|format(total_revenue / 100) }}">{{ "%.0f"|format(total_revenue / 100) }} MAD</h2><p>Revenue</p></div>
     </div>
     <div class="nav-links">
         <a href="/admin/courses">Manage Courses</a>
         <a href="/admin/purchases">View Purchases</a>
     </div>
 </main>
+<script>
+// After countUp completes on revenue card, restore the MAD suffix
+document.addEventListener("DOMContentLoaded", function(){
+    var revenueEl = document.querySelectorAll("[data-count-to]")[3];
+    if(!revenueEl) return;
+    var to = parseFloat(revenueEl.getAttribute("data-count-to")) || 0;
+    setTimeout(function(){
+        revenueEl.textContent = Math.round(to) + " MAD";
+    }, 950); // slightly after the 900ms countUp duration
+});
+</script>
 </body>
 </html>

@@ -28,7 +28,7 @@ body{
     line-height:1.7;
 }
 #content{
-    padding:32px 32px 80px;
+    padding:32px 32px 100px;
 }
 .highlight{
     margin:20px 0;
@@ -142,6 +142,10 @@ body{
     margin-top:60px;
     padding-top:20px;
     border-top:1px solid var(--border);
+}
+.card:hover{
+    transform:none;
+    box-shadow:none;
 }
 .card + .card{
     margin-top:24px;
@@ -410,7 +414,7 @@ ul li::before{
     .phase{border-left:3px solid var(--accent);padding-left:20px;padding-bottom:30px;margin-bottom:0;}
     .phase::before,.phase::after{display:none;}
     .highlight{padding:16px;border-radius:12px;font-size:.9rem;}
-    .actions{position:fixed;left:0;bottom:0;width:100%;flex-direction:column;gap:8px;padding:12px;}
+    .actions{position:fixed;left:0;bottom:0;width:100%;flex-direction:column;gap:8px;padding:12px;z-index:999;}
     .btn{width:100%;padding:12px 16px;font-size:.9rem;}
     .card{margin-top:30px;padding-top:16px;}
     ul li{padding-left:18px;font-size:.9rem;}

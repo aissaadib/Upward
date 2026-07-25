@@ -9,6 +9,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/agent.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 <body>
 
@@ -73,6 +75,8 @@ function addBubble(text, type){
     b.className = "bubble " + type;
     b.textContent = text;
     chatBox.appendChild(b);
+    // Animate bubble entrance — slide up + fade, direction based on role
+    if(typeof animateBubble === "function") animateBubble(b);
     chatBox.scrollTop = chatBox.scrollHeight;
     return b;
 }
@@ -106,6 +110,8 @@ async function sendMessage(){
     wrapper.innerHTML = "";
     const cursor = showCursor(wrapper);
     chatBox.appendChild(wrapper);
+    // Animate the assistant bubble entrance before streaming begins
+    if(typeof animateBubble === "function") animateBubble(wrapper);
     chatBox.scrollTop = chatBox.scrollHeight;
 
     let fullText = "";

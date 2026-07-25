@@ -10,6 +10,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/courses.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 
 <body>
@@ -198,6 +200,10 @@ function filterCourses(q){
 
     document.getElementById("empty-filter").style.display = visible === 0 && q ? "block" : "none";
     clearBtn.classList.toggle("show", q.length > 0);
+
+    // Animate visible cards back in after filter
+    const grid = document.getElementById("course-grid");
+    if(grid && typeof animateCardFilter === "function") animateCardFilter(grid);
 }
 
 function showSuggestions(q){
@@ -370,17 +376,37 @@ function loadOnlineCourses(){
 
 document.addEventListener("DOMContentLoaded", function(){
     const tabs = document.querySelectorAll(".tab");
+    const tabsContainer = document.getElementById("course-tabs");
+
+    // Inject sliding tab indicator
+    const indicator = document.createElement("div");
+    indicator.className = "tab-indicator";
+    if(tabsContainer) tabsContainer.appendChild(indicator);
+
+    function positionIndicator(activeTab){
+        if(!indicator || !activeTab) return;
+        indicator.style.left = activeTab.offsetLeft + "px";
+        indicator.style.width = activeTab.offsetWidth + "px";
+    }
+
+    // Position on load without animation
+    const initialActive = tabsContainer ? tabsContainer.querySelector(".tab.active") : null;
+    if(initialActive) positionIndicator(initialActive);
+
     tabs.forEach(tab => {
         tab.addEventListener("click", function(){
             const target = this.getAttribute("data-tab");
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            tabs.forEach(t => t.classList.remove("active"));
             this.classList.add("active");
             document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
             const panel = document.getElementById("panel-" + target);
             if(panel) panel.classList.add("active");
-            if(target === "online"){
-                loadOnlineCourses();
-            }
+
+            // Animate indicator to new tab position
+            if(typeof updateTabIndicator === "function") updateTabIndicator(indicator, this);
+            else positionIndicator(this);
+
+            if(target === "online") loadOnlineCourses();
         });
     });
     const onlineTab = document.querySelector('.tab[data-tab="online"]');

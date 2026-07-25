@@ -9,6 +9,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/plan_extend.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 <body>
 <nav class="navbar">
@@ -36,6 +38,15 @@
     <div id="content" style="display:none;"></div>
     <div id="error" class="error" style="display:none;"></div>
 </div>
+
+{% if locked == 0 %}
+<div class="actions">    
+    <form action="/plan/lock" method="POST" style="display:inline;">
+        {{ csrf_input|safe }}
+        <button type="submit" class="btn btn-primary">Pin as my main plan</button>
+    </form>       
+</div>
+{% endif %}
 
 {% if plan_data %}
 <script>
@@ -360,14 +371,6 @@ function renderPlan(p){
                 </div>
             `).join("")}
         </div>` : ""}
-        {% if locked == 0 %}
-            <div class="actions">    
-                <form action="/plan/lock" method="POST" style="display:inline;">
-                    {{ csrf_input|safe }}
-                    <button type="submit" class="btn btn-primary">Pin as my main plan</button>
-                </form>       
-            </div>
-        {% endif %}
     `;
 }
 
@@ -376,8 +379,11 @@ async function load(){
     if(window.planData){
         // Plan data was embedded in the page by the server
         document.getElementById("loading").style.display = "none";
-        document.getElementById("content").style.display = "block";
+        const contentEl = document.getElementById("content");
+        contentEl.style.display = "block";
         renderPlan(window.planData);
+        // Stagger-reveal all plan sections after injection
+        if(typeof revealPlan === "function") revealPlan(contentEl);
     }else{
         // Generate a new extended plan via the API
         try{
@@ -385,8 +391,11 @@ async function load(){
             const json = await res.json();
             if(!res.ok) throw new Error(json.error || "Failed to generate plan");
             document.getElementById("loading").style.display = "none";
-            document.getElementById("content").style.display = "block";
+            const contentEl = document.getElementById("content");
+            contentEl.style.display = "block";
             renderPlan(json.plan);
+            // Stagger-reveal all plan sections after injection
+            if(typeof revealPlan === "function") revealPlan(contentEl);
         }catch(e){
             document.getElementById("loading").style.display = "none";
             document.getElementById("error").style.display = "block";

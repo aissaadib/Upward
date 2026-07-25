@@ -8,6 +8,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/payment_success.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 <body>
 <div class="card">
@@ -21,5 +23,32 @@
     {% if is_plan %}Go to My Plan{% else %}Go to Courses{% endif %}
 </a>
 </div>
+<script>
+// Stagger card text elements in after the check icon animates (400ms spring)
+document.addEventListener("DOMContentLoaded", function(){
+    var els = document.querySelectorAll(".card h1, .card p, .card .btn");
+    els.forEach(function(el){
+        el.style.opacity = "0";
+        el.style.transform = "translateY(10px)";
+    });
+    setTimeout(function(){
+        if(typeof anime !== "undefined"){
+            anime({
+                targets: Array.prototype.slice.call(els),
+                opacity: [0, 1],
+                translateY: [10, 0],
+                duration: 240,
+                delay: anime.stagger(60, {easing: "easeOutQuad"}),
+                easing: "easeOutCubic"
+            });
+        } else {
+            els.forEach(function(el){
+                el.style.opacity = "1";
+                el.style.transform = "";
+            });
+        }
+    }, 350); // after check spring completes
+});
+</script>
 </body>
 </html>

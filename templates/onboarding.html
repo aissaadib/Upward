@@ -8,6 +8,8 @@
 
 <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/onboarding.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
+    <script src="/static/animations.js" defer></script>
 </head>
 <body>
 <div class="page">
@@ -347,7 +349,11 @@ function render(){
     if(i >= qs.length) i = Math.max(0, qs.length - 1);
     const q = qs[i];
     document.getElementById("step-pill").textContent = `Question ${i+1} / ${qs.length}`;
-    document.getElementById("progress").style.width = `${(i/qs.length)*100}%`;
+    // Animate progress bar smoothly instead of instant width jump
+    const progressEl = document.getElementById("progress");
+    const pct = (i / qs.length) * 100;
+    if(typeof animateProgress === "function") animateProgress(progressEl, pct, 300);
+    else progressEl.style.width = pct + "%";
 
     let html = `<h1 class="title">${q.q}</h1><p class="sub">${q.sub}</p>`;
 
@@ -394,22 +400,28 @@ function render(){
             }).join("");
         })();
     } else if(q.type === "country"){
-        // Custom country dropdown with flag emojis
+        // Modern searchable country input with flags
         const val = answers[q.key] || "";
         const flag = COUNTRY_FLAGS[val] || "";
-        html += `<div class="custom-dropdown" id="country-dropdown">
-            <div class="dropdown-trigger" onclick="toggleCountryDropdown()">
-                <span id="country-selected" class="${val ? '' : 'placeholder'}">${val ? flag + ' ' + val : 'Select your country...'}</span>
-                <span class="dropdown-arrow">▼</span>
+        html += `<div class="country-combo" id="country-wrapper">
+            <div class="country-input-wrap">
+                <input class="country-input" id="country-input" type="text"
+                    placeholder="Search your country..."
+                    value="${val ? flag + '  ' + val : ''}"
+                    autocomplete="off"
+                    oninput="filterCountries(this.value)"
+                    onfocus="openCountryList()"
+                    onkeydown="countryKeydown(event)">
+                <button type="button" class="country-clear" id="country-clear" onclick="selectCountry('')"${val ? '' : ' style="display:none"'}>×</button>
             </div>
-            <div class="dropdown-panel" id="country-panel">
-                <div class="dropdown-option${!val ? ' selected' : ''}" onclick="selectCountry('')">Select your country...</div>`;
-        COUNTRIES.forEach(c => {
-            const f = COUNTRY_FLAGS[c] || "";
-            const sel = c === val ? ' selected' : '';
-            html += `<div class="dropdown-option${sel}" onclick="selectCountry('${c.replace(/'/g,"\\'")}')">${f} ${c}</div>`;
-        });
-        html += `</div></div>`;
+            <div class="country-list" id="country-list">
+                ${COUNTRIES.map(c => {
+                    const f = COUNTRY_FLAGS[c] || "";
+                    const sel = c === val ? ' selected' : '';
+                    return `<div class="country-opt${sel}" data-value="${c.replace(/'/g,"\\'")}" onclick="selectCountry('${c.replace(/'/g,"\\'")}')">${f} <span>${c}</span></div>`;
+                }).join("")}
+            </div>
+        </div>`;
     } else if(q.type === "dynamic_suggest"){
         // AI-suggested skill options + text input
         const val = answers[q.key] || "";
@@ -548,33 +560,93 @@ function useSkillOther(){
     if(nb) nb.classList.add("active");
 }
 
-// Toggle the custom country dropdown open/close
-function toggleCountryDropdown(){
-    document.getElementById("country-panel")?.classList.toggle("open");
+// Modern searchable country input
+var countryFocusIdx = -1;
+
+function openCountryList(){
+    var list = document.getElementById("country-list");
+    if(list) list.classList.add("open");
 }
 
-// Select a country from the custom dropdown
+function closeCountryList(){
+    var list = document.getElementById("country-list");
+    if(list) list.classList.remove("open");
+    countryFocusIdx = -1;
+}
+
+function filterCountries(query){
+    var list = document.getElementById("country-list");
+    if(!list) return;
+    var q = query.replace(/[^a-zA-Z\s]/g, "").toLowerCase().trim();
+    var opts = list.querySelectorAll(".country-opt");
+    var visible = 0;
+    opts.forEach(function(o){
+        var label = o.querySelector("span").textContent.toLowerCase();
+        var match = !q || label.indexOf(q) !== -1;
+        o.style.display = match ? "" : "none";
+        if(match) visible++;
+    });
+    list.classList.add("open");
+    countryFocusIdx = -1;
+    updateCountryHighlight();
+}
+
+function updateCountryHighlight(){
+    var list = document.getElementById("country-list");
+    if(!list) return;
+    var opts = list.querySelectorAll(".country-opt:not([style*='display: none'])");
+    opts.forEach(function(o, idx){
+        o.classList.toggle("highlight", idx === countryFocusIdx);
+    });
+}
+
+function countryKeydown(e){
+    var list = document.getElementById("country-list");
+    var opts = list ? list.querySelectorAll(".country-opt:not([style*='display: none'])") : [];
+    if(e.key === "ArrowDown"){
+        e.preventDefault();
+        countryFocusIdx = Math.min(countryFocusIdx + 1, opts.length - 1);
+        updateCountryHighlight();
+        if(opts[countryFocusIdx]) opts[countryFocusIdx].scrollIntoView({block:"nearest"});
+    } else if(e.key === "ArrowUp"){
+        e.preventDefault();
+        countryFocusIdx = Math.max(countryFocusIdx - 1, 0);
+        updateCountryHighlight();
+        if(opts[countryFocusIdx]) opts[countryFocusIdx].scrollIntoView({block:"nearest"});
+    } else if(e.key === "Enter"){
+        e.preventDefault();
+        if(opts[countryFocusIdx]) opts[countryFocusIdx].click();
+    } else if(e.key === "Escape"){
+        closeCountryList();
+        document.getElementById("country-input")?.blur();
+    }
+}
+
 function selectCountry(val){
-    document.getElementById("country-panel")?.classList.remove("open");
-    const display = document.getElementById("country-selected");
-    if(display){
-        if(val){
-            const flag = COUNTRY_FLAGS[val] || "";
-            display.textContent = flag + " " + val;
-            display.className = "";
-        } else {
-            display.textContent = "Select your country...";
-            display.className = "placeholder";
-        }
+    closeCountryList();
+    var input = document.getElementById("country-input");
+    var clear = document.getElementById("country-clear");
+    if(val){
+        var flag = COUNTRY_FLAGS[val] || "";
+        input.value = flag + "  " + val;
+        clear.style.display = "";
+    } else {
+        input.value = "";
+        clear.style.display = "none";
     }
     updateText(val);
+    // Mark selected in list
+    var list = document.getElementById("country-list");
+    if(list){
+        list.querySelectorAll(".country-opt").forEach(function(o){
+            o.classList.toggle("selected", o.dataset.value === val);
+        });
+    }
 }
 
-// Close country dropdown on outside click
+// Close on outside click
 document.addEventListener("click", function(e){
-    if(!e.target.closest("#country-dropdown")){
-        document.getElementById("country-panel")?.classList.remove("open");
-    }
+    if(!e.target.closest("#country-wrapper")) closeCountryList();
 });
 
 // Advance to the next question or finish if on the last one
@@ -582,14 +654,35 @@ function next(){
     const qs = getActiveQuestions();
     const q = qs[i];
     if(!isValid(q)) return;
-    i++;
-    if(i >= qs.length){ finish(); return; }
-    render();
+    const screen = document.getElementById("screen");
+    if(typeof transitionOut === "function"){
+        transitionOut(screen, function(){
+            i++;
+            if(i >= qs.length){ finish(); return; }
+            render();
+            if(typeof transitionIn === "function") transitionIn(screen);
+        });
+    } else {
+        i++;
+        if(i >= qs.length){ finish(); return; }
+        render();
+    }
 }
 
 // Go back to the previous question
 function back(){
-    if(i > 0){ i--; render(); }
+    if(i <= 0) return;
+    const screen = document.getElementById("screen");
+    if(typeof transitionOut === "function"){
+        transitionOut(screen, function(){
+            i--;
+            render();
+            if(typeof transitionIn === "function") transitionIn(screen);
+        });
+    } else {
+        i--;
+        render();
+    }
 }
 
 // Submit all answers as JSON and trigger form submission

@@ -1,122 +1,549 @@
-/* ── Micro-interactions ───────────────────────────────
+/* ─────────────────────────────────────────────────────────────
+   UPWARD — Global Micro-Interaction Layer
+   Loaded on every page via <link rel="stylesheet" href="/static/micro.css">
 
-   Duration: 150-200ms, easing: ease-out
-   No spring, no elastic, no decorative motion.
-   ─────────────────────────────────────────────────── */
+   Rules:
+   • Only animate: opacity, transform, filter, color, background-color,
+     border-color, box-shadow (kept minimal)
+   • Never animate: width, height, top, left, layout properties
+   • All durations ≤ 500ms
+   • Every rule has a prefers-reduced-motion counterpart at the bottom
+   • GPU hints (will-change) applied sparingly — only where justified
+───────────────────────────────────────────────────────────── */
 
-/* --- Page fade-in ─────────────────────────────────── */
+/* ── 1. Page entrance ─────────────────────────────────────────
+   Handled by animations.js (JS-driven for blur+translateY+opacity).
+   The CSS body fade-in is a graceful fallback for when anime.js
+   hasn't loaded yet.
+─────────────────────────────────────────────────────────────── */
+@keyframes _upw-page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 body {
-    animation: fadeIn .25s ease-out;
-}
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  animation: _upw-page-in 0.22s ease-out both;
 }
 
-/* --- Buttons: press feedback + hover ─────────────── */
-.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-main,
-.btn-outline, .btn-leave, .btn-next, .btn-back, .btn-buy, .btn-subscribe,
-.btn-link, .btn-lock, .file-btn, button, [type="submit"], [type="button"] {
-    transition: background .15s ease-out, border-color .15s ease-out, color .15s ease-out, transform .12s ease-out, opacity .15s ease-out, box-shadow .15s ease-out;
-    cursor: pointer;
-}
-.btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover,
-.btn-ghost:hover, .btn-main:hover, button:hover, [type="submit"]:hover,
-[type="button"]:hover {
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-}
-.btn:active, .btn-primary:active, .btn-secondary:active, .btn-danger:active,
-.btn-ghost:active, .btn-main:active, button:active, [type="submit"]:active,
-[type="button"]:active {
-    transform: scale(.97);
-    box-shadow: none;
+/* ── 2. Navbar ────────────────────────────────────────────────
+   Links respond immediately (< 100ms) — users feel zero lag.
+   Active underline uses a pseudo-element that scales in.
+─────────────────────────────────────────────────────────────── */
+.navbar {
+  /* Backdrop blur on scroll is added via JS scroll listener if needed */
+  transition: background-color 0.18s ease-out, border-color 0.18s ease-out;
 }
 
-/* --- Navbar links: subtle color transition ────────── */
-.nav-link, .username, .logout, .brand {
-    transition: color .15s ease-out;
+.nav-link,
+.brand,
+.username,
+.logout,
+.back-link {
+  transition: color 0.12s ease-out, opacity 0.12s ease-out;
 }
 
-/* --- Inputs: smooth focus transition ──────────────── */
-input, textarea, select, .form-control, .form-group input, .text-input,
-.tag-search, .tag-input-field {
-    transition: border-color .18s ease-out, box-shadow .18s ease-out;
+/* Active / hover underline indicator */
+.nav-link {
+  position: relative;
 }
-input:focus, textarea:focus, select:focus, .form-control:focus,
-.form-group input:focus, .text-input:focus, .tag-search:focus,
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent, #3ec3d5);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.18s cubic-bezier(0.25, 0, 0, 1);
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* ── 3. Buttons ───────────────────────────────────────────────
+   Hover: translateY -1px + very slight brightening.
+   Press: handled in animations.js (scale 0.97).
+   Transition on transform covers the JS scale too.
+─────────────────────────────────────────────────────────────── */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-danger-sm,
+.btn-ghost,
+.btn-main,
+.btn-outline,
+.btn-leave,
+.btn-next,
+.btn-back,
+.btn-buy,
+.btn-subscribe,
+.btn-link,
+.btn-lock,
+.btn-edit,
+.btn-accent,
+.btn-next.active,
+.file-btn,
+.send-btn,
+.clear-btn,
+.option-btn,
+button,
+[type="submit"],
+[type="button"] {
+  cursor: pointer;
+  will-change: transform;
+  transition:
+    background-color 0.15s ease-out,
+    border-color     0.15s ease-out,
+    color            0.15s ease-out,
+    opacity          0.15s ease-out,
+    transform        0.12s cubic-bezier(0.25, 0, 0, 1),
+    box-shadow       0.15s ease-out;
+}
+
+/* Hover lift — subtle, not bouncy */
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-accent:hover,
+.send-btn:hover,
+.btn-next.active:hover {
+  transform: translateY(-1px);
+}
+
+/* Remove lift from danger/ghost to keep them restrained */
+.btn-danger:hover,
+.btn-danger-sm:hover,
+.btn-leave:hover,
+.clear-btn:hover {
+  transform: none;
+}
+
+/* Tab buttons — no lift, just color */
+.tab {
+  cursor: pointer;
+  transition: color 0.15s ease-out, opacity 0.12s ease-out;
+}
+
+/* ── 4. Inputs & Textareas ────────────────────────────────────
+   Focus ring animates in with a keyframe (not just transition)
+   to give it a "bloom" feel — like it grows out from the border.
+─────────────────────────────────────────────────────────────── */
+@keyframes _upw-focus-ring {
+  from { box-shadow: 0 0 0 0   rgba(62, 195, 213, 0); }
+  to   { box-shadow: 0 0 0 3px rgba(62, 195, 213, 0.15); }
+}
+
+input,
+textarea,
+select,
+.form-control,
+.text-input,
+.tag-search,
+.tag-input-field,
+.dropdown-trigger {
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow   0.15s ease-out,
+    background-color 0.15s ease-out;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.text-input:focus,
+.tag-search:focus,
 .tag-input-field:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(62, 195, 213, .12);
+  outline: none;
+  border-color: var(--accent, #3ec3d5);
+  animation: _upw-focus-ring 0.18s ease-out forwards;
 }
 
-/* --- Cards: subtle border highlight ───────────────── */
-.card, .course-card, .phase, .highlight, .resource, .online-card {
-    transition: border-color .18s ease-out, box-shadow .18s ease-out;
+/* Error states: shake feedback (horizontal micro-shake) */
+@keyframes _upw-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
 }
-.card:hover, .course-card:hover {
-    border-color: var(--accent);
+.input-error,
+.field-error {
+  animation: _upw-shake 0.3s ease-out;
 }
 
-/* --- Resource links ───────────────────────────────── */
+/* Error message: fade + slide up */
+@keyframes _upw-error-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.error,
+.msg-error,
+.field-hint-error {
+  animation: _upw-error-in 0.18s ease-out both;
+}
+
+/* Success message */
+@keyframes _upw-msg-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-success,
+.field-hint-success {
+  animation: _upw-msg-in 0.2s ease-out both;
+}
+
+/* ── 5. Cards ─────────────────────────────────────────────────
+   Cards never "pop". They lift 2px max.
+   Border-color transition communicates hover state.
+   will-change: transform ONLY on .course-card (many on screen).
+─────────────────────────────────────────────────────────────── */
+.card,
+.lesson-card,
+.section-block {
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow   0.15s ease-out,
+    transform    0.18s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.course-card {
+  will-change: transform;
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow   0.15s ease-out,
+    transform    0.18s cubic-bezier(0.25, 0, 0, 1),
+    opacity      0.15s ease-out;
+}
+
+/* Lift on hover — 2px, tiny shadow increase */
+.lesson-card:hover,
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(30, 34, 64, 0.07);
+}
+
+.course-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(30, 34, 64, 0.07);
+}
+
+/* ── 6. Resource / link rows ──────────────────────────────────
+   Arrow hint nudges right on hover to confirm interactivity.
+─────────────────────────────────────────────────────────────── */
 .resource {
-    transition: border-color .15s ease-out, background .15s ease-out;
+  transition:
+    border-color     0.15s ease-out,
+    background-color 0.15s ease-out,
+    transform        0.15s cubic-bezier(0.25, 0, 0, 1);
 }
 .resource:hover {
-    border-color: var(--accent);
-    background: rgba(62, 195, 213, .04);
+  border-color: var(--accent, #3ec3d5);
+  background: rgba(62, 195, 213, 0.03);
+}
+.resource .resource-arrow {
+  display: inline-block;
+  transition: transform 0.15s cubic-bezier(0.25, 0, 0, 1);
+}
+.resource:hover .resource-arrow {
+  transform: translateX(3px);
 }
 
-/* --- Phase / timeline blocks ──────────────────────── */
-.phase {
-    transition: border-color .18s ease-out, background .18s ease-out;
+/* ── 7. Navigation links in admin / nav ──────────────────────
+   Same arrow-nudge for generic anchor rows.
+─────────────────────────────────────────────────────────────── */
+.nav-links a {
+  transition:
+    border-color 0.15s ease-out,
+    color        0.15s ease-out,
+    background   0.15s ease-out;
 }
 
-/* --- Tab underline transitions (courses.html) ────── */
+/* ── 8. Tags (course tags) ────────────────────────────────────
+   Background swap is smooth, not instant.
+─────────────────────────────────────────────────────────────── */
+.tag {
+  transition:
+    background-color 0.12s ease-out,
+    color            0.12s ease-out,
+    transform        0.12s ease-out;
+}
+.tag:hover {
+  transform: scale(1.04);
+}
+
+/* ── 9. Tab active indicator ──────────────────────────────────
+   The underline bar slides between tabs.
+   JS (updateTabIndicator) drives the left/width via anime.js.
+   CSS provides the shape and transition fallback.
+─────────────────────────────────────────────────────────────── */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent, #3ec3d5);
+  border-radius: 2px 2px 0 0;
+  transition: left 0.2s cubic-bezier(0.25, 0, 0, 1), width 0.2s cubic-bezier(0.25, 0, 0, 1);
+  pointer-events: none;
+}
+
+/* Tab text color */
 .tab {
-    transition: color .15s ease-out;
-}
-.tab::after {
-    transition: opacity .18s ease-out, transform .18s ease-out;
+  transition: color 0.15s ease-out;
+  position: relative;
 }
 
-/* --- Loading spinner ──────────────────────────────── */
-.spinner {
-    animation: spin .6s linear infinite;
+/* ── 10. Loading spinner ──────────────────────────────────────
+   Consistent across all pages. Smooth rotation.
+─────────────────────────────────────────────────────────────── */
+@keyframes _upw-spin {
+  to { transform: rotate(360deg); }
 }
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* --- Content fade on plan render ──────────────────── */
-#content {
-    transition: opacity .2s ease-out;
+.spinner,
+.advice-spinner {
+  animation: _upw-spin 0.7s linear infinite;
 }
 
-/* --- Dropdown / expand (onboarding) ───────────────── */
-.dropdown-content {
-    transition: opacity .15s ease-out, transform .12s ease-out;
-    transform-origin: top center;
+/* ── 11. Skeleton shimmer ─────────────────────────────────────
+   Used for loading states. Triggered by .skeleton class.
+   The shimmer travels left → right once every 1.6s.
+─────────────────────────────────────────────────────────────── */
+@keyframes _upw-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #ebebeb 25%,
+    #f5f5f5 50%,
+    #ebebeb 75%
+  );
+  background-size: 800px 100%;
+  animation: _upw-shimmer 1.6s linear infinite;
+  border-radius: 6px;
+  color: transparent !important;
+  pointer-events: none;
+}
+.skeleton * { visibility: hidden; }
+
+/* ── 12. Advice overlay ──────────────────────────────────────
+   Backdrop blur overlay for generation loading.
+─────────────────────────────────────────────────────────────── */
+.advice-overlay {
+  transition: opacity 0.25s ease-out;
 }
 
-/* --- Smooth scrolling ─────────────────────────────── */
+/* Advice spinner: slightly more refined */
+.advice-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(62, 195, 213, 0.2);
+  border-top-color: var(--accent, #3ec3d5);
+  border-radius: 50%;
+}
+
+/* ── 13. Onboarding progress bar fill ────────────────────────
+   Smooth interpolation — no jumps.
+─────────────────────────────────────────────────────────────── */
+.progress-fill {
+  transition: width 0.3s cubic-bezier(0.25, 0, 0, 1);
+  will-change: width;
+}
+
+/* Option buttons: selected state transition */
+.option-btn {
+  transition:
+    border-color     0.12s ease-out,
+    background-color 0.12s ease-out,
+    color            0.12s ease-out,
+    transform        0.12s cubic-bezier(0.25, 0, 0, 1);
+}
+.option-btn.selected {
+  transform: none; /* Selected — no lift, just color feedback */
+}
+
+/* ── 14. Breadcrumb links ────────────────────────────────────
+   Subtle color transition.
+─────────────────────────────────────────────────────────────── */
+.breadcrumb a {
+  transition: color 0.12s ease-out;
+}
+
+/* ── 15. Plan phase timeline dots ────────────────────────────
+   Phase after-pseudo dots scale in on reveal.
+   The JS MutationObserver handles the parent; we let CSS
+   do a micro-scale for the dot itself.
+─────────────────────────────────────────────────────────────── */
+.phase::after {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.phase:hover::after {
+  transform: scale(1.2);
+}
+
+/* ── 16. Profile info lines ──────────────────────────────────
+   Hover gently highlights the row.
+─────────────────────────────────────────────────────────────── */
+.info-line {
+  transition: background-color 0.12s ease-out;
+  border-radius: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.info-line:hover {
+  background-color: rgba(62, 195, 213, 0.04);
+}
+
+/* ── 17. File upload button ──────────────────────────────────
+   Consistent with other buttons.
+─────────────────────────────────────────────────────────────── */
+.file-btn,
+.file-upload-btn {
+  transition:
+    background-color 0.15s ease-out,
+    border-color     0.15s ease-out,
+    transform        0.12s cubic-bezier(0.25, 0, 0, 1);
+}
+
+/* ── 18. Cursor feel ─────────────────────────────────────────
+   Everything interactive must feel responsive < 100ms.
+   Pointer cursor is set globally for interactive elements.
+─────────────────────────────────────────────────────────────── */
+a,
+button,
+[role="button"],
+.option-btn,
+.course-card.clickable,
+.lesson-card,
+.path,
+.tab,
+.tag,
+.resource,
+.file-btn,
+.file-upload-btn,
+.btn,
+[type="submit"],
+[type="button"],
+.send-btn,
+.clear-btn {
+  cursor: pointer;
+}
+
+/* ── 19. Smooth HTML scroll ──────────────────────────────────*/
 html {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 
-/* ── Reduced motion ────────────────────────────────── */
+/* ── 20. Content fade (plan render, detail panel swap) ───────
+   When #content or .detail-panel gets new innerHTML,
+   the element itself fades in (opacity transition).
+   JS sets opacity:0 → triggers this transition to opacity:1.
+─────────────────────────────────────────────────────────────── */
+#content,
+.detail-panel {
+  transition: opacity 0.2s ease-out;
+}
+
+/* ── 21. Chat send button disabled state ─────────────────────
+   Smooth opacity transition when disabled.
+─────────────────────────────────────────────────────────────── */
+.send-btn:disabled,
+.btn:disabled,
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ── 22. Payment success page ────────────────────────────────
+   The .check circle is animated by JS (animateCheck).
+   The card itself fades in via page entrance.
+─────────────────────────────────────────────────────────────── */
+.check {
+  will-change: transform, opacity;
+}
+
+/* ── 23. Step number dots (advice detail panel) ──────────────
+   Subtle fill transition on hover.
+─────────────────────────────────────────────────────────────── */
+.num {
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.step:hover .num {
+  background-color: var(--accent, #3ec3d5);
+  border-color: var(--accent, #3ec3d5);
+  color: #fff;
+}
+
+/* ── 24. Path selector items (advice page) ───────────────────
+   Active indicator dot scales in. Row transitions smoothly.
+─────────────────────────────────────────────────────────────── */
+.path {
+  transition: background-color 0.15s ease-out;
+}
+.path-indicator {
+  transition: background-color 0.15s ease-out, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.path.active .path-indicator,
+.path:hover .path-indicator {
+  transform: scale(1.4);
+}
+
+/* ── 25. Dropdown / autocomplete panel ───────────────────────
+   transform-origin set for scale-from-top feel.
+─────────────────────────────────────────────────────────────── */
+.tag-autocomplete,
+.dropdown-panel,
+.dropdown-menu,
+.dropdown-content {
+  transform-origin: top center;
+  transition: opacity 0.15s ease-out, transform 0.15s cubic-bezier(0.25, 0, 0, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PREFERS-REDUCED-MOTION
+   Disable ALL transitions, animations, and transforms
+   for users who have requested reduced motion.
+   This single block overrides every rule above.
+───────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        transition-duration: 0s !important;
-        transition-delay: 0s !important;
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-    }
-    .btn:active, .btn-primary:active, button:active, [type="submit"]:active {
-        transform: none !important;
-    }
-    .spinner {
-        animation: none !important;
-    }
+  *,
+  *::before,
+  *::after {
+    animation-duration:      0.01ms !important;
+    animation-iteration-count: 1    !important;
+    transition-duration:     0.01ms !important;
+    transition-delay:        0s     !important;
+    scroll-behavior:         auto   !important;
+  }
+  body {
+    animation: none !important;
+  }
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .send-btn:hover,
+  .lesson-card:hover,
+  .card:hover,
+  .course-card.clickable:hover {
+    transform: none !important;
+  }
+  .nav-link::after {
+    transition: none !important;
+  }
+  .progress-fill {
+    transition: none !important;
+  }
+  .skeleton {
+    animation: none !important;
+    background: #ebebeb !important;
+  }
+  .spinner,
+  .advice-spinner {
+    animation: none !important;
+  }
 }
