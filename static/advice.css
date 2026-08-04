@@ -1,14 +1,14 @@
 :root {
-  --bg: #f7f7fa;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --text: #1e2240;
-  --text-secondary: #6b7280;
-  --text-tertiary: #959ba6;
-  --accent: #3ec3d5;
-  --sidebar: #23273c;
-  --success: #41dc65;
-  --danger: #ff5460;
-  --border: #e1e0e6;
+  --text: #0a0a0a;
+  --text-secondary: #707070;
+  --text-tertiary: #707070;
+  --accent: #0a0a0a;
+  --sidebar: #0a0a0a;
+  --success: #161616;
+  --danger: #b3261e;
+  --border: #e8e8e8;
   --radius: 6px;
 }
 
@@ -128,7 +128,7 @@ body {
   color: #fff;
   border-color: var(--sidebar);
 }
-.btn-primary:hover { background: #1e2240; border-color: #1e2240; color: #fff; }
+.btn-primary:hover { background: #0a0a0a; border-color: #0a0a0a; color: #fff; }
 
 /* MAIN GRID */
 .grid {
@@ -369,13 +369,13 @@ body {
   background: var(--accent);
   color: #fff;
 }
-.btn-lock.btn-accent:hover { background: #2eb3c5; }
+.btn-lock.btn-accent:hover { background: #0a0a0a; }
 
 .btn-lock.btn-primary {
   background: var(--sidebar);
   color: #fff;
 }
-.btn-lock.btn-primary:hover { background: #1e2240; }
+.btn-lock.btn-primary:hover { background: #0a0a0a; }
 
 /* RESPONSIVE */
 @media (max-width: 860px) {

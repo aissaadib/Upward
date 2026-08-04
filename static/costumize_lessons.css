@@ -1,11 +1,11 @@
 :root{
-    --accent:#3ec3d5;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
-    --sidebar:#23273c;
-    --danger:#ff5460;
+    --accent:#0a0a0a;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
+    --sidebar:#0a0a0a;
+    --danger:#b3261e;
 }
 
 *{
@@ -110,9 +110,9 @@ body{
 }
 
 .notice{
-    background:#f8fbfc;
+    background:#ffffff;
     border:1px solid var(--border);
-    border-radius:16px;
+    border-radius:2px;
     padding:16px;
     margin-bottom:24px;
     text-align:center;
@@ -136,7 +136,7 @@ body{
     width:100%;
     padding:14px 16px;
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:2px;
     background:white;
     font-size:.95rem;
     font-family:Inter,Segoe UI,sans-serif;
@@ -156,8 +156,8 @@ textarea.form-control{
     width:100%;
     padding:24px;
     border:2px dashed var(--border);
-    border-radius:12px;
-    background:#f8fbfc;
+    border-radius:2px;
+    background:#ffffff;
     text-align:center;
     cursor:pointer;
     transition:.2s;
@@ -169,7 +169,7 @@ textarea.form-control{
 
 .file-upload:hover{
     border-color:var(--accent);
-    background:#eefcff;
+    background:#f5f5f5;
 }
 
 .file-upload input{
@@ -191,8 +191,8 @@ textarea.form-control{
     padding:8px 10px;
     border:1px solid var(--border);
     border-bottom:none;
-    border-radius:12px 12px 0 0;
-    background:#f8fbfc;
+    border-radius:2px 12px 0 0;
+    background:#ffffff;
     flex-wrap:wrap;
 }
 
@@ -313,7 +313,7 @@ textarea.form-control{
     border:none;
     padding:14px;
     margin-top:16px;
-    border-radius:12px;
+    border-radius:2px;
     background:var(--sidebar);
     color:white;
     font-weight:700;
@@ -329,7 +329,7 @@ textarea.form-control{
 .btn-secondary{
     display:inline-block;
     padding:10px 20px;
-    border-radius:10px;
+    border-radius:2px;
     font-weight:700;
     text-decoration:none;
     cursor:pointer;
@@ -345,10 +345,10 @@ textarea.form-control{
 }
 
 .error-box{
-    background:#fff5f5;
-    color:#dc2626;
-    border:1px solid #fecaca;
-    border-radius:12px;
+    background:#ffffff;
+    color:#b3261e;
+    border:1px solid #e8e8e8;
+    border-radius:2px;
     padding:12px;
     margin-bottom:20px;
     text-align:center;

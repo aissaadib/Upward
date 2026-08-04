@@ -15,20 +15,12 @@
     <link rel="stylesheet" href="/static/advice.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 
 <body>
 
-<nav class="navbar">
-  <div class="nav-left">
-    <a href="/" class="brand">Up<span>ward</span></a>
-    <a href="/courses" class="nav-link">Courses</a>
-  </div>
-  <div class="nav-right">
-    <span class="username">{{ username }}</span>
-    <a class="logout" href="/logout">Logout</a>
-  </div>
-</nav>
+{% include '_navbar.html' %}
 
 <div class="advice-overlay" id="advice-overlay">
     <div class="advice-spinner"></div>
@@ -265,7 +257,7 @@ async function generate(){
 
         if(json.error){
             document.getElementById("paths").innerHTML = 
-                `<p style="color:#ff5460;font-size:.9rem;">${json.error}</p>`;
+                `<p style="color:#b3261e;font-size:.9rem;">${json.error}</p>`;
             return;
         }
 
@@ -276,12 +268,15 @@ async function generate(){
         if(typeof hideAdviceOverlay === "function") hideAdviceOverlay(overlay);
         else overlay.classList.remove("open");
         document.getElementById("paths").innerHTML = 
-            `<p style="color:#ff5460;font-size:.9rem;">Failed to load. Try again.</p>`;
+            `<p style="color:#b3261e;font-size:.9rem;">Failed to load. Try again.</p>`;
     }
 }
 
 generate();
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

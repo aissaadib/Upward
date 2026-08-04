@@ -10,125 +10,122 @@
     <link rel="stylesheet" href="/static/plan.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 <body>
-<div class="navbar">
-    <a href="/" class="brand">Up<span>ward</span></a>
-    <div>
-        <span>{{ username }}</span>
-        <a class="logout" href="/logout">Logout</a>
-    </div>
-</div>
+{% include '_navbar.html' %}
 
 <div class="container">
     {% set p = plan.extended or {} %}
     {% set basic = plan.basic or {} %}
 
-    <div class="hero">
-        <div class="badge">{{ basic.category or "Main plan" }}</div>
+    <header class="hero" data-reveal>
+        <div class="hero-kicker">{{ basic.category or "Main plan" }}</div>
         <h1>{{ p.title or basic.title or "Your plan" }}</h1>
         <p>{{ p.summary or basic.fit or "Your pinned career roadmap." }}</p>
-        <div class="pinned-note">📌 Pinned as your main plan</div>
-    </div>
+        <div class="pinned-note">Pinned as your main plan</div>
+    </header>
 
     {% if p.next_action %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Do this first</div>
         <div class="highlight"><strong>Next 48 hours:</strong><br>{{ p.next_action }}</div>
-    </div>
+    </section>
     {% endif %}
 
     {% if p.weekly_habits %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Weekly habits</div>
-        <ul>{% for h in p.weekly_habits %}<li>{{ h }}</li>{% endfor %}</ul>
-    </div>
+        <ul class="plain-list">{% for h in p.weekly_habits %}<li>{{ h }}</li>{% endfor %}</ul>
+    </section>
     {% endif %}
 
     {% if p.phases %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">{{ p.timeline_months or p.phases|length }}-month roadmap</div>
         {% for ph in p.phases %}
         <div class="phase">
             <div class="phase-head">
-                <h3>{{ ph.title }}</h3>
                 <span class="phase-month">Month {{ ph.month }}</span>
+                <h3>{{ ph.title }}</h3>
             </div>
-            {% if ph.focus %}<p style="color:var(--text-secondary);margin-bottom:10px;">{{ ph.focus }}</p>{% endif %}
+            {% if ph.focus %}<p class="phase-focus">{{ ph.focus }}</p>{% endif %}
             {% if ph.actions %}
-            <strong>Actions</strong>
-            <ul>{% for a in ph.actions %}<li>{{ a }}</li>{% endfor %}</ul>
+            <ul class="plain-list">{% for a in ph.actions %}<li>{{ a }}</li>{% endfor %}</ul>
             {% endif %}
             {% if ph.skills %}
             <div class="pill-row">{% for s in ph.skills %}<span class="pill">{{ s }}</span>{% endfor %}</div>
             {% endif %}
             {% if ph.deliverable %}
-            <div class="highlight" style="margin-top:12px;"><strong>Deliverable:</strong> {{ ph.deliverable }}</div>
+            <div class="highlight"><strong>Deliverable:</strong> {{ ph.deliverable }}</div>
             {% endif %}
             {% for r in ph.resources or [] %}
-            <a class="resource" href="{{ r.url }}" target="_blank">{{ r.label }}{% if r.why %} — {{ r.why }}{% endif %}</a>
+            <a class="resource" href="{{ r.url }}" target="_blank">{{ r.label }}{% if r.why %} — {{ r.why }}{% endif %}<span class="arrow">→</span></a>
             {% endfor %}
         </div>
         {% endfor %}
-    </div>
+    </section>
     {% elif basic.roadmap %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Roadmap</div>
         {% for step in basic.roadmap %}
         <div class="phase"><p>{{ step }}</p></div>
         {% endfor %}
-    </div>
+    </section>
     {% endif %}
 
     {% if p.skills_to_build %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Skills to build</div>
         {% for s in p.skills_to_build %}
-        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+        <div class="skill-row">
             <strong>{{ s.skill }}</strong>
             {% if s.priority %}<span class="pill">{{ s.priority }} priority</span>{% endif %}
-            {% if s.how %}<p style="color:var(--text-secondary);margin-top:6px;">{{ s.how }}</p>{% endif %}
+            {% if s.how %}<p>{{ s.how }}</p>{% endif %}
         </div>
         {% endfor %}
-    </div>
+    </section>
     {% endif %}
 
     {% if p.success_metrics %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Success metrics</div>
-        <ul>{% for m in p.success_metrics %}<li>{{ m }}</li>{% endfor %}</ul>
-    </div>
+        <ul class="plain-list">{% for m in p.success_metrics %}<li>{{ m }}</li>{% endfor %}</ul>
+    </section>
     {% endif %}
 
     {% if p.pitfalls %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Avoid these pitfalls</div>
         {% for x in p.pitfalls %}<div class="risk">{{ x }}</div>{% endfor %}
-    </div>
+    </section>
     {% endif %}
 
     {% if p.risks or basic.risks %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Risks & reality check</div>
         {% for r in p.risks or basic.risks %}<div class="risk">{{ r }}</div>{% endfor %}
-    </div>
+    </section>
     {% endif %}
 
     {% if p.links or basic.links %}
-    <div class="card">
+    <section class="sec" data-reveal>
         <div class="section-title">Resources</div>
         {% for r in p.links or basic.links %}
-        <a class="resource" href="{{ r.url }}" target="_blank">{{ r.label }}{% if r.when %} ({{ r.when }}){% endif %}</a>
+        <a class="resource" href="{{ r.url }}" target="_blank">{{ r.label }}{% if r.when %} ({{ r.when }}){% endif %}<span class="arrow">→</span></a>
         {% endfor %}
-    </div>
+    </section>
     {% endif %}
 
-    <div class="actions">
+    <div class="actions" data-reveal>
         <a href="/" class="btn btn-ghost">Back to home</a>
         <button type="button" class="btn btn-danger" onclick="if(confirm('Leave this plan? This will permanently remove your current roadmap and progress.')){document.getElementById('leaveForm').submit();}">Leave this plan</button>
     </div>
 </div>
 
 <form action="/plan/leave" method="POST" id="leaveForm" style="display:none;">{{ csrf_input|safe }}</form>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

@@ -8,12 +8,12 @@
 <style>
 
 :root{
-    --accent:#3ec3d5;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
-    --sidebar:#23273c;
+    --accent:#0a0a0a;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
+    --sidebar:#0a0a0a;
 }
 
 *{
@@ -110,6 +110,7 @@ input:focus{
 }
 
 </style>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 
 <body>
@@ -117,7 +118,7 @@ input:focus{
 <div class="container">
 
     <h1 class="brand">
-        Up<span>ward</span>
+        UPWARD<span>®</span>
     </h1>
 
     <p class="subtitle">
@@ -171,5 +172,8 @@ input:focus{
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

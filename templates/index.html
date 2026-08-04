@@ -1,239 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="{{ csrf_token }}">
-<title>Upward</title>
-
-
-
-<link rel="stylesheet" href="/static/micro.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upward — Career Intelligence</title>
+    <link rel="stylesheet" href="/static/micro.css">
     <link rel="stylesheet" href="/static/index.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <script src="/static/brand.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
-
 <body>
+    {% include '_navbar.html' %}
 
-<nav class="navbar">
-    <div class="nav-left">
-        <a href="/" class="brand">Up<span>ward</span></a>
-        <a href="/courses" class="nav-link">Courses</a>
-        {% if locked_plan %}
-        <a href="/agent" class="nav-link">Agent</a>
-        {% endif %}
-        {% if is_admin %}
-        <a href="/admin" class="nav-link">Admin</a>
-        {% endif %}
-    </div>    
-    <div class="nav-right">
-        {% if username %}
-        <a href="/profile" class="username">{{ username }}</a>
-        <a href="/logout" class="logout">Logout</a>
-        {% else %}
-        <a href="/login" class="btn" style="padding:8px 18px;font-size:.85rem;">Log in</a>
-        {% endif %}
-    </div>
+    <!-- HERO -->
+    <header class="hero">
+        <div class="hero-inner">
+            <div class="hero-kicker" data-reveal data-delay="0.05">Career intelligence, engineered</div>
+            <h1 class="hero-title" data-reveal-lines>
+                <span>Build a stronger</span>
+                <span>career using</span>
+                <span><em>real data.</em></span>
+            </h1>
+            <p class="hero-sub" data-reveal data-delay="0.2">
+                Upward turns your skills, time and ambition into a precise, month-by-month
+                roadmap — then holds you accountable to it.
+            </p>
+            <div class="cta" data-reveal data-delay="0.3">
+                <a class="btn" href="/onboarding">Start your roadmap</a>
+                <a class="btn btn-outline" href="#toolkit">See how it works</a>
+            </div>
+        </div>
+    </header>
 
-</nav>
+    <!-- PROCESS STRIP -->
+    <section class="process" data-reveal-stagger>
+        <div class="proc-item">
+            <span class="proc-num">01</span>
+            <h3>Profile</h3>
+            <p>Your skills, goals and available time — in one clean dossier.</p>
+        </div>
+        <div class="proc-item">
+            <span class="proc-num">02</span>
+            <h3>Plan</h3>
+            <p>A structured, month-by-month roadmap built for your reality.</p>
+        </div>
+        <div class="proc-item">
+            <span class="proc-num">03</span>
+            <h3>Execute</h3>
+            <p>Weekly actions, real tools, checkpoints — momentum you can measure.</p>
+        </div>
+    </section>
 
-<main class="container">
-
-    
-
-    <section class="hero">
-
-        <h1>
-            Build a stronger career using real data.
-        </h1>
-
-        <p>
-            Personalized roadmaps, salary forecasting,
-            skill gap analysis, opportunity discovery,
-            career planning, and an AI career coach
-            built around your goals.
-        </p>
-
-        <div class="cta">
-            {% if locked_plan %}
-            {% set p = locked_plan.extended or {} %}
-            {% set basic = locked_plan.basic or {} %}
-            <section class="pinned-plan">
-                <div class="pinned-label">📌 Your main plan</div>
-                <h2>{{ p.title or basic.title or "Your career plan" }}</h2>
-                <p class="pinned-meta">
-                    {% set ns = p.networking_strategy or {} %}
-                    {% set s = ns.where_to_meet_people or [] %}
-                    {% set pv = p.phases or [] %}
-                    {%- if pv -%}
-                        {% for phase in pv[:3] %}
-                            <span class="plan-hl">{{ phase.title }};</span>
-                        {% endfor %}
-                        <span class="plan-more">+ {{ pv|length - 3 }} more months</span>
-                    {%- elif s -%}
-                        <span class="plan-hl">{{ s[0] }}</span>
-                    {%- else -%}
-                        {{ p.summary or basic.fit or basic.outcome or "Your pinned roadmap is ready." }}
-                    {%- endif -%}
-                </p>
-                <div class="pinned-actions">
-                    <a href="/plan" class="btn">View full roadmap</a>
-                    <div class="leave-plan-wrap">
-                        <p class="leave-warning">Leaving your plan will permanently remove your current roadmap and progress. You can generate a new plan at any time, but this one will be lost.</p>
-                        <form id="leave-form" action="/plan/leave" method="POST">
-                            {{ csrf_input|safe }}
-                            <button type="button" class="btn btn-leave" onclick="if(confirm('Leave this plan and permanently delete your current roadmap?')){document.getElementById('leave-form').submit();}">Leave this plan</button>
-                        </form>
-                    </div>
+    <!-- TOOLKIT -->
+    <section class="section" id="toolkit">
+        <div class="section-head" data-reveal>
+            <div class="section-label">The toolkit</div>
+            <h2 class="section-title">What Upward does</h2>
+        </div>
+        <div class="feature-list" data-reveal-stagger data-stagger="0.18">
+            <div class="feature">
+                <span class="feature-idx">01</span>
+                <div class="feature-body">
+                    <h3>Personal Roadmaps</h3>
+                    <p>AI-crafted, month-by-month plans that adapt to your goals, skills and schedule.</p>
                 </div>
-            </section>
-            {% elif username %}
-            <a href="/onboarding" class="btn">Build My Profile</a>
-            {% else %}
-            <a href="/login" class="btn">Get Started</a>
-            {% endif %}
+            </div>
+            <div class="feature">
+                <span class="feature-idx">02</span>
+                <div class="feature-body">
+                    <h3>Real Accountability</h3>
+                    <p>Pin one plan as your focus, track progress weekly, and keep the momentum honest.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature-idx">03</span>
+                <div class="feature-body">
+                    <h3>Concrete Execution</h3>
+                    <p>Not generic advice — specific courses, projects, tools and checkpoints each week.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="feature-idx">04</span>
+                <div class="feature-body">
+                    <h3>Career Intelligence</h3>
+                    <p>Networking tactics, budget planning, risk awareness and portfolio building in one place.</p>
+                </div>
+            </div>
         </div>
-        
     </section>
 
+    <!-- OUTCOMES -->
     <section class="section">
-
-        <div class="section-label">
-            What Upward Does
+        <div class="section-head" data-reveal>
+            <div class="section-label">The outcome</div>
+            <h2 class="section-title">Where you'll land</h2>
         </div>
-
-        <div class="feature-grid">
-
-            <div class="feature">
-                <h3>Career Roadmap</h3>
-                <p>
-                    A realistic path based on your current
-                    skills, goals and available time.
-                </p>
+        <div class="outcomes" data-reveal-stagger data-stagger="0.1">
+            <div class="outcome">
+                <span class="dot"></span>
+                <p>A clear, sequenced path to your target role</p>
             </div>
-
-            <div class="feature">
-                <h3>Salary Forecast</h3>
-                <p>
-                    Understand future earning potential
-                    before investing years into a path.
-                </p>
+            <div class="outcome">
+                <span class="dot"></span>
+                <p>Weekly progress you can see and keep</p>
             </div>
-
-            <div class="feature">
-                <h3>Skill Gap Analysis</h3>
-                <p>
-                    Discover what is missing between
-                    where you are and where you want to be.
-                </p>
+            <div class="outcome">
+                <span class="dot"></span>
+                <p>A portfolio and network that open doors</p>
             </div>
-
-            <div class="feature">
-                <h3>AI Career Agent</h3>
-                <p>
-                    Chat with an AI coach that knows your profile, 
-                    plan, and progress. Get instant answers about 
-                    your roadmap, skill gaps, and next steps.
-                </p>
+            <div class="outcome">
+                <span class="dot"></span>
+                <p>Confidence backed by data, not luck</p>
             </div>
-
-            <div class="feature">
-                <h3>Smart Course Search</h3>
-                <p>
-                    Find courses by #tag with autocomplete suggestions. 
-                    Add tags to your own courses with a fast pill-style input.
-                </p>
-            </div>
-
-            <div class="feature">
-                <h3>Opportunity Discovery</h3>
-                <p>
-                    Find careers and opportunities that
-                    match your strengths.
-                </p>
-            </div>
-
         </div>
-
     </section>
 
-    <section class="section">
-
-        <div class="section-label">
-            Outcomes
+    {% if locked_plan %}
+    <!-- PINNED PLAN -->
+    <section class="section pinned-plan">
+        <div class="section-head" data-reveal>
+            <div class="pinned-label">Your main plan</div>
+            <h2 class="section-title">{{ locked_plan.title }}</h2>
         </div>
-
-        <h2>
-            What you'll receive
-        </h2>
-
-        <div class="outcomes">
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>Personalized roadmap</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>Skill gap analysis</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>Salary forecast</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>Career timeline</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>Progress tracking</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>AI career coach chat</span>
-            </div>
-
-            <div class="outcome">
-                <div class="dot"></div>
-                <span>#tag course discovery</span>
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="footer-cta">
-
-        <h2>
-            Ready to start?
-        </h2>
-
-        <p>
-            Complete your profile and generate your first career plan.
+        {% set pv = locked_plan.phases or [] %}
+        {% if pv %}
+        <p class="pinned-meta" data-reveal>
+            {% for phase in pv[:3] %}
+            {% if phase.get('title') %}<span class="plan-hl">{{ phase.title }}</span>{% if not loop.last %}, {% endif %}{% endif %}
+            {% endfor %}
+            {% if pv|length > 3 %}<span class="plan-more"> + {{ pv|length - 3 }} more months</span>{% endif %}
         </p>
-
-        {% if username %}
-        <a href="/onboarding" class="btn">Get Started</a>
-        {% else %}
-        <a href="/login" class="btn">Get Started</a>
         {% endif %}
-
+        <div class="pinned-actions" data-reveal>
+            <a class="btn" href="/plan">Open my plan</a>
+            <a class="btn btn-outline" href="/plan_extend">Extend it</a>
+        </div>
+        {% if is_admin %}
+        <div class="leave-plan-wrap">
+            <p class="leave-warning">You are currently admin-bound to this plan. Unlock it to leave the plan.</p>
+            <form method="POST" action="/leave_plan" onsubmit="return confirm('Unlock your plan?');">
+                <button type="submit" class="btn btn-leave">Unlock plan</button>
+            </form>
+        </div>
+        {% endif %}
     </section>
+    {% endif %}
 
-</main>
-
-
-
-
-<script>
-(function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
-</script>
+    <!-- FOOTER CTA -->
+    <section class="footer-cta">
+        <div data-reveal>
+            <div class="section-label">Begin</div>
+            <h2 class="cta-title">Your next move<br>is mapped.</h2>
+            <p>Three minutes in. A year of direction out.</p>
+            <a class="btn" href="/onboarding">Start your roadmap</a>
+        </div>
+    </section>
 </body>
 </html>

@@ -11,19 +11,11 @@
     <link rel="stylesheet" href="/static/agent.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 <body>
 
-<nav class="navbar">
-    <div class="nav-left">
-        <a href="/" class="brand">Up<span>ward</span></a>
-        <a href="/courses" class="nav-link">Courses</a>
-    </div>
-    <div class="nav-right">
-        <span class="username">{{ username }}</span>
-        <a href="/logout" class="logout">Logout</a>
-    </div>
-</nav>
+{% include '_navbar.html' %}
 
 {% if locked %}
 <div class="chat-container">
@@ -183,5 +175,8 @@ loadHistory();
 <script>
 (function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

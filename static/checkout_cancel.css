@@ -1,7 +1,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Inter,Segoe UI,sans-serif;background:#f7f7fa;color:#1e2240;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:40px 20px;}
-.icon{width:64px;height:64px;background:#fde8ea;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:1.8rem;color:#c81e2e;font-weight:700;}
+body{font-family:Inter,Segoe UI,sans-serif;background:#ffffff;color:#0a0a0a;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:40px 20px;}
+.icon{width:64px;height:64px;background:#ffffff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:1.8rem;color:#b3261e;font-weight:700;}
 h1{font-size:1.8rem;margin-bottom:8px;}
-p{color:#6b7280;margin-bottom:24px;line-height:1.6;max-width:400px;}
-.btn{display:inline-block;background:#3ec3d5;color:white;border:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:.9rem;cursor:pointer;text-decoration:none;transition:background .15s;}
-.btn:hover{background:#2eb3c5;}
+p{color:#707070;margin-bottom:24px;line-height:1.6;max-width:400px;}
+.btn{display:inline-block;background:#0a0a0a;color:white;border:none;padding:12px 28px;border-radius:6px;font-weight:600;font-size:.9rem;cursor:pointer;text-decoration:none;transition:background .15s;}
+.btn:hover{background:#0a0a0a;}

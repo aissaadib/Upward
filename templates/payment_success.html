@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/payment_success.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 <body>
 <div class="card">
@@ -17,7 +18,7 @@
 <h1>Payment Successful!</h1>
 <p>Your payment was processed and you now have full access{% if not is_plan %} to the course{% endif %}.</p>
 {% if not verified %}
-<p style="font-size:.85rem;color:#f59e0b;">Your access will be granted momentarily. If it doesn't appear, please refresh the page.</p>
+<p style="font-size:.85rem;color:#b3261e;">Your access will be granted momentarily. If it doesn't appear, please refresh the page.</p>
 {% endif %}
 <a href="{% if is_plan %}/plan/extend{% else %}/courses{% endif %}" class="btn">
     {% if is_plan %}Go to My Plan{% else %}Go to Courses{% endif %}
@@ -50,5 +51,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }, 350); // after check spring completes
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

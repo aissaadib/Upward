@@ -1,13 +1,13 @@
 :root{
-    --sidebar:#23273c;
-    --sidebar-deep:#1e2240;
-    --accent:#3ec3d5;
-    --success:#41dc65;
-    --danger:#ff5460;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
+    --sidebar:#0a0a0a;
+    --sidebar-deep:#0a0a0a;
+    --accent:#0a0a0a;
+    --success:#161616;
+    --danger:#b3261e;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
 }
 
 *{
@@ -131,7 +131,7 @@ body{
     width:100%;
     padding:14px 18px;
     border:2px solid var(--border);
-    border-radius:10px;
+    border-radius:2px;
     font-size:.95rem;
     background:white;
     outline:none;
@@ -180,7 +180,7 @@ body{
 
 .tag-autocomplete .ac-item:hover,
 .tag-autocomplete .ac-item.highlighted{
-    background:#f3f4f6;
+    background:#f5f5f5;
 }
 
 .tag-autocomplete .ac-item .ac-tag{
@@ -190,7 +190,7 @@ body{
 .tag-autocomplete .ac-item .ac-count{
     font-size:.75rem;
     color:var(--text-secondary);
-    background:#f3f4f6;
+    background:#f5f5f5;
     padding:2px 8px;
     border-radius:999px;
 }
@@ -237,7 +237,7 @@ body{
 .course-card{
     background:white;
     border:1px solid var(--border);
-    border-radius:8px;
+    border-radius:2px;
     padding:20px;
     display:flex;
     flex-direction:column;
@@ -246,7 +246,7 @@ body{
 }
 
 .course-card:hover{
-    border-color:#c8c8d0;
+    border-color:#d4d4d4;
 }
 
 .course-card.hidden{
@@ -282,7 +282,7 @@ body{
 .tag{
     font-size:.65rem;
     font-weight:600;
-    background:#eafcff;
+    background:#f5f5f5;
     color:var(--accent);
     padding:2px 8px;
     border-radius:4px;
@@ -350,13 +350,13 @@ body{
 }
 
 .badge-owner{
-    background:#eafcff;
+    background:#f5f5f5;
     color:var(--accent);
 }
 
 .badge-purchased{
-    background:#e1fae8;
-    color:#1a8a3a;
+    background:#f5f5f5;
+    color:#161616;
 }
 
 .btn-danger-sm{
@@ -419,7 +419,7 @@ body{
 }
 
 .btn-primary:hover{
-    background:#2eb3c5;
+    background:#0a0a0a;
 }
 
 .btn-primary:disabled{
@@ -432,14 +432,14 @@ body{
     color:var(--text);
     border:1px solid var(--border);
     padding:12px;
-    border-radius:10px;
+    border-radius:2px;
     font-weight:600;
     cursor:pointer;
     font-size:.9rem;
 }
 
 .btn-secondary:hover{
-    background:#e8e8ee;
+    background:#e8e8e8;
 }
 
 .tabs{
@@ -531,7 +531,7 @@ body{
     text-align:center;
     background:white;
     border:1px dashed var(--border);
-    border-radius:16px;
+    border-radius:2px;
     color:var(--text-secondary);
 }
 
@@ -577,7 +577,7 @@ body{
 }
 
 .btn-link:hover{
-    color:#2eb3c5;
+    color:#0a0a0a;
 }
 
 .online-grid{
@@ -590,7 +590,7 @@ body{
 .online-card{
     background:white;
     border:1px solid var(--border);
-    border-radius:8px;
+    border-radius:2px;
     padding:18px;
     display:flex;
     flex-direction:column;
@@ -598,7 +598,7 @@ body{
 }
 
 .online-card:hover{
-    border-color:#c8c8d0;
+    border-color:#d4d4d4;
 }
 
 .online-card-top{
@@ -618,8 +618,8 @@ body{
 .online-card-free{
     font-size:.62rem;
     font-weight:600;
-    background:#e1fae8;
-    color:#1a8a3a;
+    background:#f5f5f5;
+    color:#161616;
     padding:1px 7px;
     border-radius:3px;
     white-space:nowrap;
@@ -629,8 +629,8 @@ body{
 .online-card-paid{
     font-size:.62rem;
     font-weight:600;
-    background:#fff3e0;
-    color:#e65100;
+    background:#ffffff;
+    color:#b3261e;
     padding:1px 7px;
     border-radius:3px;
     white-space:nowrap;

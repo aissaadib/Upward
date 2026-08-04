@@ -131,6 +131,13 @@ def generate_extended_plan():
 
     suggestion_text = json.dumps(suggestion, indent=2)
     path_title = suggestion.get("title", "Career Path")
+    roadmap_steps = suggestion.get("roadmap", [])
+    import re as _re
+    _year_m = _re.search(r'(\d+)\s*(year|yr)', path_title, _re.IGNORECASE)
+    if _year_m:
+        num_months = min(int(_year_m.group(1)) * 12, 12)
+    else:
+        num_months = min(max(len(roadmap_steps), 3), 6)
 
     # ------------------------------------------------------------------
     # 1. BASIC PLAN  (title, summary, timeline, next 48h action)
@@ -149,7 +156,7 @@ Respond ONLY with valid JSON (no markdown):
 {{
   "title": "{path_title}",
   "summary": "3-4 sentences on why this path works for them specifically. Reference their actual country, budget, time, education, and current skills. Include a concrete example of someone similar who succeeded.",
-  "timeline_months": 6,
+  "timeline_months": {num_months},
   "next_action": {{
     "what": "The single most important thing to do in the next 48 hours",
     "how": "Step-by-step instructions (5-8 concrete steps) on exactly how to do it — include specific websites to visit, exact search queries to use, what to click, what to write",
@@ -166,7 +173,7 @@ Rules:
     basic_data = call_ai_for_section(basic_prompt, "basic info", {
         "title": path_title,
         "summary": suggestion.get("fit", "A structured path based on your profile."),
-        "timeline_months": 6,
+        "timeline_months": num_months,
         "next_action": {
             "what": suggestion.get("roadmap", ["Start today"])[0] if suggestion.get("roadmap") else "Review your first step.",
             "how": "1. Open your browser and go to example.com\n2. Click 'Get Started'\n3. Create a free account using your email\n4. Complete the introductory tutorial\n5. Save your progress and share it with a friend for accountability",
@@ -395,47 +402,88 @@ Rules:
     projects_context = "Projects: " + ", ".join([p.get("name", "") for p in projects_data["portfolio_projects"]])
 
     # ------------------------------------------------------------------
-    # 6. PHASES (6 months)  —  generated in parallel
+    # 6. PHASES —  generated in parallel (2 batches to avoid rate limits)
     # ------------------------------------------------------------------
-    roadmap_steps = suggestion.get("roadmap", ["Start", "Learn", "Build", "Apply", "Polish", "Launch"])[:6]
+    month_titles = []
+    for i in range(num_months):
+        if i < len(roadmap_steps):
+            t = roadmap_steps[i][:60] if isinstance(roadmap_steps[i], str) else f"Month {i+1}"
+        else:
+            t = f"Phase {i+1}: continue advancing"
+        month_titles.append(t)
 
-    def gen_month(i, step):
-        month_num = i + 1
-        month_title = step[:60] if isinstance(step, str) else f"Month {month_num}"
-        prev_month_title = roadmap_steps[i-1][:60] if isinstance(roadmap_steps[i-1], str) else f"Month {i}" if i > 0 else ""
-        prev_context = f"Previous month: {prev_month_title}" if i > 0 else "This is the first month — start with beginner foundations."
-        prompt = f"""Generate month {month_num} of 6 ("{month_title}") for someone pursuing: "{path_title}".
+    all_themes = [
+        "build core foundations from scratch",
+        "start creating your first real work",
+        "deepen skills and tackle harder projects",
+        "optimize your workflow and fill gaps",
+        "prepare for real-world opportunities",
+        "execute your launch or application strategy",
+        "refine your approach and scale up",
+        "specialize and stand out",
+        "build authority and reputation",
+        "mentor others and give back",
+        "transition into full-time or advanced role",
+        "lead and innovate in your field"
+    ]
+    month_themes = all_themes[:num_months]
 
-User background: {basic_context[:400]}
-Key skills to build: {skills_context}
-Notable courses: {courses_context}
-{prev_context}
+    def gen_month(i, title):
+        theme = month_themes[i] if i < len(month_themes) else "continue advancing"
+        prev_title = month_titles[i-1] if i > 0 else "none (first month)"
+        prompt = f"""Generate month {i+1} of {num_months} ("{title}") for "{path_title}".
+
+User: {basic_context[:300]}
+Skills: {skills_context}
+Courses: {courses_context}
+Previous month: {prev_title}
+
+WEEK THEMES (differentiate each week clearly):
+Week 1 — "{title} basics": learn fundamental concepts through hands-on practice.
+Week 2 — "Build something real": apply week 1 knowledge to create a specific deliverable.
+Week 3 — "Refine & expand": improve the deliverable, add features, or tackle a harder variant.
+Week 4 — "Review & next steps": polish, test, document, and plan what comes next.
 
 Return ONLY valid JSON (no markdown):
-{{"month":{month_num},"title":"{month_title}","focus":"one sentence focus","weekly_breakdown":[{{"week":1,"theme":"week theme","actions":[{{"what":"specific task","how":"step by step with websites/tools","time_estimate":"Xh","tool":"free tool name","output":"what they produce","common_mistake":"specific mistake for THIS task"}}],"mini_lecture":"2-3 sentence mentor explanation","common_mistake":"overall week mistake","checkpoint":"how to verify progress"}}],"skills_this_month":["skill1"],"deliverable":"concrete output","resources":[{{"label":"name","url":"site url","why":"why this","how_to_use":"how to use","time_needed":"Xh"}}],"reflection_questions":["q1","q2"]}}
+{{"month":{i+1},"title":"{title}","focus":"{theme}","weekly_breakdown":[{{"week":1,"theme":"{title} basics","actions":[{{"what":"concrete task","how":"exact steps with specific free websites/tools","time_estimate":"Xh","tool":"free tool name","output":"what they produce","common_mistake":"mistake specific to THIS exact task"}}],"mini_lecture":"2-3 sentence mentor insight","common_mistake":"overall week pitfall","checkpoint":"measurable verification"}}],"skills_this_month":["skill1"],"deliverable":"specific output they produce this month","resources":[{{"label":"resource name","why":"why relevant","how_to_use":"how to consume it","time_needed":"Xh"}}],"reflection_questions":["question that makes them think about progress"]}}
 
-Rules:
-- 4 weeks, 2-3 specific actions each
-- Free tools only, be specific (exact websites, commands, exercises)
-- Each week must have UNIQUE actions
-- Each action must have its OWN unique common_mistake"""
-        return call_ai_for_section(prompt, f"month {month_num}", {
-            "month": month_num, "title": month_title, "focus": "",
-            "weekly_breakdown": [{"week": 1, "theme": "Start",
-              "actions": [{"what": "Begin learning", "how": "Open tutorial and follow along",
-                           "time_estimate": "5h", "tool": "Free online resources",
-                           "output": "Notes and first project attempt",
-                           "common_mistake": "Trying to learn everything at once"}],
-              "mini_lecture": "Consistency matters more than intensity.",
-              "common_mistake": "Overcommitting",
-              "checkpoint": "Completed week 1 tasks"}],
-            "skills_this_month": [], "deliverable": f"Complete month {month_num} goals",
-            "resources": [], "reflection_questions": ["What did I learn this month?"]
+CRITICAL RULES:
+- Week 1, 2, 3, 4 MUST have DIFFERENT themes and DIFFERENT actions
+- Each week's actions must build on the previous week
+- Every action.common_mistake must be specific to that exact task (not generic)
+- Free tools only — include exact website names, URLs, or app names
+- Be specific: instead of "learn", say "complete the first 3 modules on freecodecamp.org" """
+        return call_ai_for_section(prompt, f"month {i+1}", {
+            "month": i+1, "title": title,
+            "focus": f"{title}: {theme}",
+            "weekly_breakdown": [
+                {"week": 1, "theme": f"{title} basics",
+                 "actions": [{"what": f"Research {title} fundamentals", "how": "Watch introductory tutorials on YouTube and take notes on key concepts", "time_estimate": "4h", "tool": "YouTube", "output": "One-page summary of key concepts", "common_mistake": "Watching without taking notes — write down at least 5 key takeaways"}],
+                 "mini_lecture": "Start with the big picture. Understanding the 'why' before the 'how' will help you prioritize what to learn first.", "common_mistake": "Trying to learn everything at once instead of focusing on the most essential 20%", "checkpoint": "Can you explain the core concept in 2-3 sentences to someone else?"},
+                {"week": 2, "theme": f"Apply {title}",
+                 "actions": [{"what": f"Complete a hands-on tutorial or mini-project in {title}", "how": "Follow a step-by-step guide on freecodecamp.org or similar free platform, building a small working example", "time_estimate": "6h", "tool": "Free online tutorial platform", "output": "A working mini-project or completed exercise set", "common_mistake": "Copy-pasting code without understanding — type everything manually and experiment with changes"}],
+                 "mini_lecture": "Knowledge without practice fades quickly. Building something concrete, even if small, makes the concepts stick.", "common_mistake": "Getting stuck on perfection — done is better than perfect for learning", "checkpoint": "Does your mini-project run without errors and produce the expected output?"},
+                {"week": 3, "theme": f"Refine {title} skills",
+                 "actions": [{"what": f"Improve your {title} project or tackle a harder challenge", "how": "Add 2-3 new features to your project from week 2, or complete an intermediate-level exercise", "time_estimate": "5h", "tool": "Same tools from week 2 plus documentation sites", "output": "Enhanced project with new features or completed intermediate exercise", "common_mistake": "Adding too many features at once — pick ONE improvement and finish it completely"}],
+                 "mini_lecture": "Real skill comes from iteration. Taking something from 'it works' to 'it works well' teaches more than starting something new.", "common_mistake": "Not testing edge cases — make sure your project handles unexpected inputs gracefully", "checkpoint": "Does your project handle both normal and edge cases?"},
+                {"week": 4, "theme": f"Review {title} & plan ahead",
+                 "actions": [{"what": f"Document your {title} work and set next milestones", "how": "Write a short summary of what you built, what you learned, and what you would do next. Save it as a portfolio entry or GitHub README.", "time_estimate": "3h", "tool": "GitHub or Google Docs", "output": "A written summary + documented project files", "common_mistake": "Skipping documentation — writing forces you to clarify your understanding and creates a portfolio asset"}],
+                 "mini_lecture": "Reflection is where experience turns into expertise. Documenting your journey also builds your professional brand.", "common_mistake": "Moving on too quickly without consolidating what you learned — take 30 minutes to review everything from the month", "checkpoint": "Can you list 3 things you learned this month and 1 thing you would do differently?"}
+            ],
+            "skills_this_month": [title],
+            "deliverable": f"Completed {title} phase with working project and documentation",
+            "resources": [],
+            "reflection_questions": [f"What was the hardest part of learning {title}?", "What would I do differently if I started this month again?"]
         })
 
-    with ThreadPoolExecutor(max_workers=6) as executor:
-        futures = [executor.submit(gen_month, i, step) for i, step in enumerate(roadmap_steps)]
-        phases_list = [f.result() for f in futures]
+    phases_list = []
+    batch_size = 3
+    for start in range(0, len(month_titles), batch_size):
+        batch = month_titles[start:start+batch_size]
+        with ThreadPoolExecutor(max_workers=batch_size) as executor:
+            futures = [executor.submit(gen_month, start+i, t) for i, t in enumerate(batch)]
+            for f in futures:
+                phases_list.append(f.result())
 
     phases_data = {"phases": phases_list}
 

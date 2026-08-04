@@ -1,13 +1,13 @@
 :root{
-    --sidebar:#23273c;
-    --sidebar-deep:#1e2240;
-    --accent:#3ec3d5;
-    --success:#41dc65;
-    --danger:#ff5460;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
+    --sidebar:#0a0a0a;
+    --sidebar-deep:#0a0a0a;
+    --accent:#0a0a0a;
+    --success:#161616;
+    --danger:#b3261e;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
 }
 
 *{
@@ -108,7 +108,7 @@ body{
 
 .rating-stars{
     font-size:2.4rem;
-    color:#ffd700;
+    color:#0a0a0a;
     margin:10px 0;
     letter-spacing:6px;
 }
@@ -245,7 +245,7 @@ body{
     width:100%;
     padding:14px 16px;
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:2px;
     background:white;
     font-size:.95rem;
 }
@@ -274,7 +274,7 @@ textarea.form-control{
 .btn{
     display:inline-block;
     padding:14px 28px;
-    border-radius:12px;
+    border-radius:2px;
     font-weight:700;
     text-decoration:none;
     cursor:pointer;
@@ -289,7 +289,7 @@ textarea.form-control{
 }
 
 .btn-primary:hover{
-    background:#2eb3c5;
+    background:#0a0a0a;
 }
 
 .btn-secondary{
@@ -309,9 +309,9 @@ textarea.form-control{
 }
 
 .notice{
-    background:#eefcff;
-    border:1px solid #d6f3f8;
-    border-radius:12px;
+    background:#f5f5f5;
+    border:1px solid #e8e8e8;
+    border-radius:2px;
     padding:16px;
     margin-bottom:24px;
     color:var(--text-secondary);
@@ -320,16 +320,16 @@ textarea.form-control{
 
 /* ── Tag input (itch.io style) ── */
 .tag-input-wrap{position:relative;}
-.tag-input-inner{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;background:white;cursor:text;transition:border-color .2s;min-height:46px;align-items:center;}
+.tag-input-inner{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border:1.5px solid var(--border);border-radius:2px;background:white;cursor:text;transition:border-color .2s;min-height:46px;align-items:center;}
 .tag-input-inner:focus-within{border-color:var(--accent);}
-.tag-pill{display:inline-flex;align-items:center;gap:4px;background:#eafcff;color:var(--accent);padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;background:#f5f5f5;color:var(--accent);padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;}
 .tag-pill .tag-x{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.9rem;padding:0 2px;line-height:1;opacity:.6;}
 .tag-pill .tag-x:hover{opacity:1;}
 .tag-input-field{flex:1;min-width:120px;border:none;outline:none;font-size:.9rem;padding:4px 0;background:transparent;}
-.tag-suggestions{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--border);border-radius:8px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.06);}
+.tag-suggestions{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:2px solid var(--border);border-radius:2px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.06);}
 .tag-suggestions.open{display:block;}
 .tag-suggestion{padding:8px 14px;cursor:pointer;font-size:.85rem;font-weight:600;transition:background .1s;}
-.tag-suggestion:hover,.tag-suggestion.highlighted{background:#f3f4f6;}
+.tag-suggestion:hover,.tag-suggestion.highlighted{background:#f5f5f5;}
 .tag-suggestion .scount{font-weight:400;color:var(--text-secondary);font-size:.75rem;margin-left:6px;}
 
 @media(max-width:768px){

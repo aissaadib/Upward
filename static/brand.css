@@ -1,0 +1,207 @@
+/* ============================================================
+   UPWARD — Brand layer
+   Loaded last on every page. Overrides page themes with the
+   monochrome editorial look: black, white, hairlines.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+    --sidebar:#0a0a0a;
+    --sidebar-deep:#000000;
+    --accent:#0a0a0a;
+    --success:#161616;
+    --danger:#b3261e;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
+    --radius:2px;
+    --font-display:'Space Grotesk',Inter,sans-serif;
+    --font-body:'Inter',Segoe UI,sans-serif;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+}
+
+h1,h2,h3,h4,.brand,.nav-link,.section-title{
+    font-family:var(--font-display);
+    letter-spacing:-.02em;
+}
+
+::selection{
+    background:#0a0a0a;
+    color:#fff;
+}
+
+a{
+    color:inherit;
+}
+
+/* ---- Re-point the page-level focus ring to monochrome ---- */
+@keyframes _upw-focus-ring{
+    0%,100%{box-shadow:0 0 0 2px rgba(10,10,10,.9);}
+    50%{box-shadow:0 0 0 5px rgba(10,10,10,.25);}
+}
+
+/* ---- Navbar: white, hairline, quiet ---- */
+.navbar{
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    height:64px;
+    padding:0 32px;
+}
+
+.brand{
+    font-size:1.15rem;
+    font-weight:600;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color:var(--text);
+}
+
+.brand span{
+    color:var(--text);
+    font-weight:300;
+}
+
+.nav-link{
+    font-size:.8rem;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text);
+}
+
+.nav-link:hover{
+    color:#000;
+    opacity:.6;
+}
+
+.username{
+    font-size:.78rem;
+    font-weight:600;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+}
+
+.logout{
+    font-size:.78rem;
+    letter-spacing:.08em;
+}
+
+/* ---- Buttons: black slabs, uppercase micro-labels ---- */
+.btn{
+    background:#0a0a0a;
+    color:#fff;
+    border:1px solid #0a0a0a;
+    border-radius:var(--radius);
+    padding:15px 30px;
+    font-family:var(--font-body);
+    font-size:.78rem;
+    font-weight:600;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    transition:background .25s ease,color .25s ease,border-color .25s ease;
+}
+
+.btn:hover{
+    background:#2a2a2a;
+    border-color:#2a2a2a;
+}
+
+.btn-outline{
+    background:#fff;
+    color:var(--text);
+    border:1px solid #0a0a0a;
+}
+
+.btn-outline:hover{
+    background:#0a0a0a;
+    color:#fff;
+}
+
+.btn-leave{
+    background:#fff;
+    color:var(--danger);
+    border:1px solid #b3261e;
+}
+
+.btn-leave:hover{
+    background:var(--danger);
+    color:#fff;
+}
+
+/* ---- Cards: hairline frames, no shadows, no lift ---- */
+.card,.lesson-card,.course-card,.plan-card,.outcome-card,.module-card,.stat-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:none !important;
+}
+
+.card:hover,.lesson-card:hover,.course-card.clickable:hover,
+.plan-card:hover,.outcome-card:hover,.module-card:hover,.stat-card:hover{
+    transform:none !important;
+    box-shadow:none !important;
+}
+
+/* ---- Inputs: flat, black hairline focus ---- */
+input,select,textarea{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:#fff;
+    color:var(--text);
+    font-family:var(--font-body);
+}
+
+input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:#0a0a0a;
+    box-shadow:0 0 0 1px #0a0a0a;
+}
+
+/* ---- Micro labels: uppercase, tracked ---- */
+.section-label,.pinned-label,.label,.form-label,.tag{
+    font-size:.72rem;
+    font-weight:600;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--text-secondary);
+}
+
+/* ---- Sidebar-style surfaces become near-black ---- */
+.sidebar,.side-panel,[class*="sidebar"]{
+    background:#0a0a0a;
+    color:#fff;
+}
+
+/* ---- Tables: hairline rows ---- */
+table{
+    border-collapse:collapse;
+}
+
+th,td{
+    border-bottom:1px solid var(--border);
+}
+
+/* ---- Scrollbar: quiet ---- */
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:#fff;}
+::-webkit-scrollbar-thumb{background:#d4d4d4;border:2px solid #fff;border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:#a3a3a3;}
+
+/* ---- Reduced motion: kill smooth scroll ---- */
+@media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+}

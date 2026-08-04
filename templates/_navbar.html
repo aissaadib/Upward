@@ -1,0 +1,15 @@
+<nav class="navbar">
+    <div class="nav-left">
+        <a class="brand" href="/">UPWARD<span>®</span></a>
+        <a class="nav-link" href="/courses">Courses</a>
+        {% if locked_plan or locked or plan %}<a class="nav-link" href="/agent">Agent</a>{% endif %}
+        {% if is_admin or (request is defined and request.path.startswith('/admin')) %}<a class="nav-link" href="/admin">Admin</a>{% endif %}
+    </div>
+    <div class="nav-right">
+        {% if locked_plan %}
+        <a class="username" href="/plan_extend">{{ locked_plan.title }}</a>
+        {% endif %}
+        <a class="username" href="/profile">{{ username }}</a>
+        <a class="logout" href="/logout">Logout</a>
+    </div>
+</nav>

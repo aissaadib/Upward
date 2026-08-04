@@ -10,19 +10,10 @@
     <link rel="stylesheet" href="/static/admin_purchases.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 <body>
-<nav class="navbar">
-    <div class="nav-left">
-        <a href="/" class="brand">Up<span>ward</span></a>
-        <a href="/courses" class="nav-link">Courses</a>
-        <a href="/admin" class="nav-link" style="color:var(--accent);">Admin</a>
-    </div>
-    <div class="nav-right">
-        <span class="username">{{ username }}</span>
-        <a href="/logout" class="logout">Logout</a>
-    </div>
-</nav>
+{% include '_navbar.html' %}
 <main class="container">
     <section class="hero">
         <h1>Purchases</h1>
@@ -56,7 +47,7 @@
                     {% if p.status == 'completed' %}
                         <span style="color:var(--success);font-weight:700;">active</span>
                     {% elif p.status == 'past_due' %}
-                        <span style="color:#f59e0b;font-weight:700;">past due</span>
+                        <span style="color:#b3261e;font-weight:700;">past due</span>
                     {% elif p.status == 'expired' %}
                         <span style="color:var(--danger);font-weight:700;">expired</span>
                     {% else %}
@@ -76,5 +67,8 @@
 
     <p style="text-align:center;"><a href="/admin" class="btn-secondary">← Back to Dashboard</a></p>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

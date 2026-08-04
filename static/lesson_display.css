@@ -1,13 +1,13 @@
 :root{
-    --sidebar:#23273c;
-    --sidebar-deep:#1e2240;
-    --accent:#3ec3d5;
-    --success:#41dc65;
-    --danger:#ff5460;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
+    --sidebar:#0a0a0a;
+    --sidebar-deep:#0a0a0a;
+    --accent:#0a0a0a;
+    --success:#161616;
+    --danger:#b3261e;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
 }
 
 @media print { body { display: none !important; } }
@@ -142,7 +142,7 @@ body{
     border:1.5px solid var(--border);
     color:var(--text);
     padding:10px 20px;
-    border-radius:10px;
+    border-radius:2px;
     font-weight:700;
     font-size:.9rem;
     cursor:pointer;
@@ -227,7 +227,7 @@ body{
     margin:14px 0;
     color:var(--text);
     font-style:italic;
-    background:#f8fbfc;
+    background:#ffffff;
     border-radius:0 8px 8px 0;
 }
 

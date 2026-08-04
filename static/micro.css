@@ -52,7 +52,7 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--accent, #3ec3d5);
+  background: var(--accent, #0a0a0a);
   border-radius: 2px;
   transform: scaleX(0);
   transform-origin: left center;
@@ -133,8 +133,8 @@ button,
    to give it a "bloom" feel — like it grows out from the border.
 ─────────────────────────────────────────────────────────────── */
 @keyframes _upw-focus-ring {
-  from { box-shadow: 0 0 0 0   rgba(62, 195, 213, 0); }
-  to   { box-shadow: 0 0 0 3px rgba(62, 195, 213, 0.15); }
+  from { box-shadow: 0 0 0 0   rgba(10, 10, 10, 0); }
+  to   { box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.06); }
 }
 
 input,
@@ -158,7 +158,7 @@ select:focus,
 .tag-search:focus,
 .tag-input-field:focus {
   outline: none;
-  border-color: var(--accent, #3ec3d5);
+  border-color: var(--accent, #0a0a0a);
   animation: _upw-focus-ring 0.18s ease-out forwards;
 }
 
@@ -241,8 +241,8 @@ select:focus,
     transform        0.15s cubic-bezier(0.25, 0, 0, 1);
 }
 .resource:hover {
-  border-color: var(--accent, #3ec3d5);
-  background: rgba(62, 195, 213, 0.03);
+  border-color: var(--accent, #0a0a0a);
+  background: rgba(10, 10, 10, 0.03);
 }
 .resource .resource-arrow {
   display: inline-block;
@@ -284,7 +284,7 @@ select:focus,
   position: absolute;
   bottom: 0;
   height: 2px;
-  background: var(--accent, #3ec3d5);
+  background: var(--accent, #0a0a0a);
   border-radius: 2px 2px 0 0;
   transition: left 0.2s cubic-bezier(0.25, 0, 0, 1), width 0.2s cubic-bezier(0.25, 0, 0, 1);
   pointer-events: none;
@@ -342,7 +342,7 @@ select:focus,
   width: 36px;
   height: 36px;
   border: 3px solid rgba(62, 195, 213, 0.2);
-  border-top-color: var(--accent, #3ec3d5);
+  border-top-color: var(--accent, #0a0a0a);
   border-radius: 50%;
 }
 
@@ -474,8 +474,8 @@ button:disabled {
   transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
 }
 .step:hover .num {
-  background-color: var(--accent, #3ec3d5);
-  border-color: var(--accent, #3ec3d5);
+  background-color: var(--accent, #0a0a0a);
+  border-color: var(--accent, #0a0a0a);
   color: #fff;
 }
 

@@ -12,20 +12,12 @@
     <link rel="stylesheet" href="/static/costumize_lessons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 
 <body>
 
-<nav class="navbar">
-    <div class="nav-left">
-        <a href="/" class="brand">Up<span>ward</span></a>
-        <a href="/courses" class="nav-link">Courses</a>
-    </div>
-    <div class="nav-right">
-        <span class="username">{{ username }}</span>
-        <a href="/logout" class="logout">Logout</a>
-    </div>
-</nav>
+{% include '_navbar.html' %}
 
 <div class="container">
 
@@ -82,9 +74,9 @@
             <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
             <div class="separator"></div>
             <span class="label">Color</span>
-            <input type="color" id="textColor" value="#1e2240" title="Text Color">
+            <input type="color" id="textColor" value="#0a0a0a" title="Text Color">
             <span class="label">Bg</span>
-            <input type="color" id="bgColor" value="#ffff00" title="Background Color">
+            <input type="color" id="bgColor" value="#0a0a0a" title="Background Color">
             <div class="separator"></div>
             <button type="button" data-cmd="formatBlock" data-val="h1" title="Heading 1">H1</button>
             <button type="button" data-cmd="formatBlock" data-val="h2" title="Heading 2">H2</button>
@@ -194,7 +186,7 @@ fileInput.addEventListener('change', function(e) {
     if (file) {
         fileUploadText.innerHTML = '<strong>' + file.name + '</strong>';
         fileDropZone.style.borderColor = 'var(--accent)';
-        fileDropZone.style.background = '#eefcff';
+        fileDropZone.style.background = '#f5f5f5';
         extractBtn.disabled = false;
     } else {
         extractBtn.disabled = true;
@@ -233,19 +225,19 @@ extractBtn.addEventListener('click', function() {
 fileDropZone.addEventListener('dragover', function(e) {
     e.preventDefault();
     fileDropZone.style.borderColor = 'var(--accent)';
-    fileDropZone.style.background = '#eefcff';
+    fileDropZone.style.background = '#f5f5f5';
 });
 
 fileDropZone.addEventListener('dragleave', function(e) {
     e.preventDefault();
     fileDropZone.style.borderColor = 'var(--border)';
-    fileDropZone.style.background = '#f8fbfc';
+    fileDropZone.style.background = '#ffffff';
 });
 
 fileDropZone.addEventListener('drop', function(e) {
     e.preventDefault();
     fileDropZone.style.borderColor = 'var(--accent)';
-    fileDropZone.style.background = '#eefcff';
+    fileDropZone.style.background = '#f5f5f5';
     if (e.dataTransfer.files.length > 0) {
         fileInput.files = e.dataTransfer.files;
         fileUploadText.innerHTML = '<strong>' + e.dataTransfer.files[0].name + '</strong>';
@@ -254,5 +246,8 @@ fileDropZone.addEventListener('drop', function(e) {
 });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>

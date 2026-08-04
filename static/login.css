@@ -1,10 +1,10 @@
 :root{
-    --accent:#3ec3d5;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
-    --sidebar:#23273c;
+    --accent:#0a0a0a;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
+    --sidebar:#0a0a0a;
 }
 
 *{
@@ -50,7 +50,7 @@ input{
     padding:14px 16px;
 
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:2px;
 
     background:white;
 
@@ -68,7 +68,7 @@ input:focus{
 
     padding:14px;
 
-    border-radius:12px;
+    border-radius:2px;
 
     background:var(--sidebar);
     color:white;

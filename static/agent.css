@@ -1,13 +1,13 @@
 :root{
-    --sidebar:#23273c;
-    --sidebar-deep:#1e2240;
-    --accent:#3ec3d5;
-    --success:#41dc65;
-    --danger:#ff5460;
-    --bg:#f7f7fa;
-    --text:#1e2240;
-    --text-secondary:#6b7280;
-    --border:#e1e0e6;
+    --sidebar:#0a0a0a;
+    --sidebar-deep:#0a0a0a;
+    --accent:#0a0a0a;
+    --success:#161616;
+    --danger:#b3261e;
+    --bg:#ffffff;
+    --text:#0a0a0a;
+    --text-secondary:#707070;
+    --border:#e8e8e8;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
@@ -62,7 +62,7 @@ body{
 }
 .bubble{
     padding:14px 18px;
-    border-radius:14px;
+    border-radius:2px;
     max-width:75%;
     line-height:1.7;
     font-size:.95rem;
@@ -109,7 +109,7 @@ body{
     flex:1;
     padding:14px 16px;
     border:2px solid var(--border);
-    border-radius:12px;
+    border-radius:2px;
     font-size:.95rem;
     font-family:inherit;
     resize:none;
@@ -125,7 +125,7 @@ body{
     background:var(--sidebar);
     color:white;
     border:none;
-    border-radius:12px;
+    border-radius:2px;
     font-weight:700;
     cursor:pointer;
     font-size:.95rem;
@@ -149,7 +149,7 @@ body{
 .clear-btn{
     background:transparent;
     border:1px solid var(--border);
-    border-radius:8px;
+    border-radius:2px;
     padding:6px 14px;
     font-size:.8rem;
     color:var(--text-secondary);

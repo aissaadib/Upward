@@ -11,17 +11,10 @@
     <link rel="stylesheet" href="/static/plan_extend.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
+<link rel="stylesheet" href="/static/brand.css">
 </head>
 <body>
-<nav class="navbar">
-    <div class="nav-left">
-        <a href="/" class="brand">Up<span>ward</span></a>
-    </div>
-    <div class="nav-right">
-        <span class="username">{{ username }}</span>
-        <a class="logout" href="/logout">Logout</a>
-    </div>
-</nav>
+{% include '_navbar.html' %}
 
 <div class="container">
     <div class="hero">
@@ -115,12 +108,12 @@ function renderPlan(p){
                 <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
                     <strong>${esc(h.habit)}</strong>
                     ${h.why ? `<p style="color:var(--text-secondary);margin-top:4px;">${esc(h.why)}</p>` : ""}
-                    <div style="background:#f8f9fb;border-radius:8px;padding:10px;margin-top:8px;font-size:.9rem;">
+                    <div style="background:#ffffff;border-radius:8px;padding:10px;margin-top:8px;font-size:.9rem;">
                         <strong>How:</strong> ${esc(h.how)}
                     </div>
                     ${h.example_completion ? `<p style="margin-top:6px;color:var(--text-secondary);font-size:.88rem;"><strong>Done looks like:</strong> ${esc(h.example_completion)}</p>` : ""}
                     ${h.time_per_week ? `<p style="margin-top:4px;color:var(--text-secondary);font-size:.85rem;"><strong>${esc(h.time_per_week)}/week</strong></p>` : ""}
-                    ${h.if_miss ? `<p style="margin-top:6px;padding:8px;background:#fff8f8;border-radius:6px;font-size:.85rem;"><strong>If you miss a day:</strong> ${esc(h.if_miss)}</p>` : ""}
+                    ${h.if_miss ? `<p style="margin-top:6px;padding:8px;background:#ffffff;border-radius:6px;font-size:.85rem;"><strong>If you miss a day:</strong> ${esc(h.if_miss)}</p>` : ""}
                 </div>
             `).join("")}
         </div>` : ""}
@@ -154,7 +147,7 @@ function renderPlan(p){
                     ${ph.focus ? `<p style="color:var(--text-secondary);margin-bottom:10px;">${esc(ph.focus)}</p>` : ""}
 
                     ${(ph.weekly_breakdown||[]).map(w => `
-                        <div style="margin:24px 0 0;padding-left:12px;border-left:2px solid var(--border);">
+                        <div style="margin:24px 0 0;padding-left:0;border-left:none;">
                             <strong style="font-size:1.05rem;">Week ${esc(w.week)} — ${esc(w.theme)}</strong>
                             ${w.mini_lecture ? `<div style="margin-top:6px;font-size:.85rem;color:var(--text-secondary);line-height:1.6;"><em>${esc(w.mini_lecture)}</em></div>` : ""}
                             ${(w.actions||[]).map((a, ai) => `
@@ -177,9 +170,9 @@ function renderPlan(p){
                         ${ph.deliverable_example ? `<div style="margin-top:6px;font-size:.9rem;color:var(--text-secondary);"><em>Example: ${esc(ph.deliverable_example)}</em></div>` : ""}
                     </div>` : ""}
                     ${ph.resources?.length ? ph.resources.map(r=>`<a class="resource" href="${esc(r.url)}" target="_blank">${esc(r.label)}${r.why ? ` — ${esc(r.why)}` : ""}${r.how_to_use ? `<br><span style="font-size:.8rem;color:var(--text-secondary);">How: ${esc(r.how_to_use)}</span>` : ""}</a>`).join("") : ""}
-                    ${ph.reflection_questions?.length ? `<div style="margin-top:12px;padding:12px;background:#f8f9fb;border-radius:8px;"><strong>Reflection:</strong><ul style="margin-top:6px;">${ph.reflection_questions.map(q=>`<li style="font-size:.85rem;">${esc(q)}</li>`).join("")}</ul></div>` : ""}
-                    ${ph.if_ahead ? `<div style="margin-top:8px;padding:8px;background:#e1fae8;border-radius:6px;font-size:.85rem;"><strong>Ahead?</strong> ${esc(ph.if_ahead)}</div>` : ""}
-                    ${ph.if_behind ? `<div style="margin-top:8px;padding:8px;background:#fff8f8;border-radius:6px;font-size:.85rem;"><strong>Behind?</strong> ${esc(ph.if_behind)}</div>` : ""}
+                    ${ph.reflection_questions?.length ? `<div style="margin-top:12px;padding:12px;background:#ffffff;border-radius:8px;"><strong>Reflection:</strong><ul style="margin-top:6px;">${ph.reflection_questions.map(q=>`<li style="font-size:.85rem;">${esc(q)}</li>`).join("")}</ul></div>` : ""}
+                    ${ph.if_ahead ? `<div style="margin-top:8px;padding:8px;background:#f5f5f5;border-radius:6px;font-size:.85rem;"><strong>Ahead?</strong> ${esc(ph.if_ahead)}</div>` : ""}
+                    ${ph.if_behind ? `<div style="margin-top:8px;padding:8px;background:#ffffff;border-radius:6px;font-size:.85rem;"><strong>Behind?</strong> ${esc(ph.if_behind)}</div>` : ""}
                 </div>
             `).join("")}
         </div>
@@ -192,13 +185,13 @@ function renderPlan(p){
                     <strong>${esc(s.skill)}</strong>
                     ${s.priority ? ` <span class="pill">${esc(s.priority)} priority</span>` : ""}
                     ${s.why ? `<p style="color:var(--text-secondary);margin-top:4px;">${esc(s.why)}</p>` : ""}
-                    ${s.how ? `<div style="margin-top:8px;padding:10px;background:#f8f9fb;border-radius:8px;font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${esc(s.how)}</div>` : ""}
-                    ${s.example_output ? `<div style="margin-top:8px;padding:10px;background:#eefcff;border-radius:6px;border-left:3px solid var(--accent);font-size:.85rem;"><strong>What you'll create:</strong> ${esc(s.example_output)}</div>` : ""}
+                    ${s.how ? `<div style="margin-top:8px;padding:10px;background:#ffffff;border-radius:8px;font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${esc(s.how)}</div>` : ""}
+                    ${s.example_output ? `<div style="margin-top:8px;padding:10px;background:#f5f5f5;border-radius:6px;border-left:3px solid var(--accent);font-size:.85rem;"><strong>What you'll create:</strong> ${esc(s.example_output)}</div>` : ""}
                     ${s.free_resources?.length ? `
                     <div style="margin-top:10px;">
                         <strong style="font-size:.85rem;">Free resources:</strong>
                         ${s.free_resources.map(r => `
-                            <div style="margin-top:6px;padding:10px;background:white;border:1px solid var(--border);border-radius:6px;">
+                            <div style="margin-top:6px;padding:10px;background:white;border:none;border-bottom:1px solid var(--border);border-radius:0;">
                                 <strong>${esc(r.name)}</strong> <span class="pill">${esc(r.type)}</span>
                                 ${r.how_to_use ? `<p style="color:var(--text-secondary);font-size:.82rem;margin-top:4px;">${esc(r.how_to_use)}</p>` : ""}
                                 ${r.example_takeaway ? `<p style="font-size:.82rem;margin-top:2px;"><em>Takeaway: ${esc(r.example_takeaway)}</em></p>` : ""}
@@ -209,7 +202,7 @@ function renderPlan(p){
                     <div style="margin-top:10px;">
                         <strong style="font-size:.85rem;">Practice projects:</strong>
                         ${s.practice_projects.map(pr => `
-                            <div style="margin-top:6px;padding:10px;background:white;border:1px solid var(--border);border-radius:6px;">
+                            <div style="margin-top:6px;padding:10px;background:white;border:none;border-bottom:1px solid var(--border);border-radius:0;">
                                 <strong>${esc(pr.name||pr)}</strong>
                                 ${pr.steps ? `<div style="margin-top:6px;font-size:.82rem;"><strong>Steps:</strong><ul style="margin-top:4px;">${pr.steps.map(st=>`<li>${esc(st)}</li>`).join("")}</ul></div>` : ""}
                                 ${pr.completion_criteria ? `<p style="font-size:.82rem;color:var(--text-secondary);margin-top:4px;"><strong>Done when:</strong> ${esc(pr.completion_criteria)}</p>` : ""}
@@ -231,12 +224,12 @@ function renderPlan(p){
                     ${c.provider ? ` <span class="pill">${esc(c.provider)}</span>` : ""}
                     ${c.description ? `<p style="color:var(--text-secondary);margin-top:6px;">${esc(c.description)}</p>` : ""}
                     ${c.why ? `<p style="color:var(--text-secondary);font-size:.88rem;margin-top:4px;"><em>Why: ${esc(c.why)}</em></p>` : ""}
-                    ${c.study_schedule ? `<div style="margin-top:8px;padding:10px;background:#f8f9fb;border-radius:6px;font-size:.85rem;"><strong>Study schedule:</strong> ${esc(c.study_schedule)}</div>` : ""}
+                    ${c.study_schedule ? `<div style="margin-top:8px;padding:10px;background:#ffffff;border-radius:6px;font-size:.85rem;"><strong>Study schedule:</strong> ${esc(c.study_schedule)}</div>` : ""}
                     ${c.how_to_apply ? `<p style="margin-top:6px;font-size:.85rem;"><strong>Apply it:</strong> ${esc(c.how_to_apply)}</p>` : ""}
-                    ${c.example_output_after_course ? `<div style="margin-top:6px;padding:8px;background:#eefcff;border-radius:4px;font-size:.82rem;"><strong>You'll have:</strong> ${esc(c.example_output_after_course)}</div>` : ""}
+                    ${c.example_output_after_course ? `<div style="margin-top:6px;padding:8px;background:#f5f5f5;border-radius:4px;font-size:.82rem;"><strong>You'll have:</strong> ${esc(c.example_output_after_course)}</div>` : ""}
                     ${c.free_alternative ? `<p style="margin-top:6px;font-size:.82rem;color:var(--text-secondary);"><strong>Free alternative:</strong> ${esc(c.free_alternative)}</p>` : ""}
                     ${c.completion_criteria ? `<p style="margin-top:4px;font-size:.82rem;color:var(--text-secondary);"><strong>Done when:</strong> ${esc(c.completion_criteria)}</p>` : ""}
-                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent(c.name + " " + (c.provider||"course"))}" target="_blank" style="margin-top:8px;display:inline-flex;border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--text);font-weight:600;">
+                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent(c.name + " " + (c.provider||"course"))}" target="_blank" style="margin-top:8px;display:inline-flex;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;text-decoration:none;color:var(--text);font-weight:600;">
                         Find this course
                     </a>
                 </div>
@@ -248,23 +241,23 @@ function renderPlan(p){
             <div class="section-title">Networking Strategy</div>
             ${networking.where_to_meet_people?.length ? `<p><strong>Where:</strong> ${networking.where_to_meet_people.map(p=>esc(p)).join(', ')}</p>` : ""}
             ${networking.outreach_templates?.length ? networking.outreach_templates.map(t => `
-                <div style="margin-top:10px;padding:12px;background:#f8f9fb;border-radius:8px;">
+                <div style="margin-top:10px;padding:12px;background:#ffffff;border-radius:8px;">
                     <strong>${esc(t.scenario)}</strong>
-                    <div style="margin-top:6px;padding:10px;background:white;border:1px solid var(--border);border-radius:6px;font-size:.85rem;white-space:pre-wrap;">${esc(t.template)}</div>
-                    ${t.example_response ? `<div style="margin-top:6px;padding:8px;background:#e1fae8;border-radius:4px;font-size:.82rem;"><strong>Expected reply:</strong> ${esc(t.example_response)}</div>` : ""}
+                    <div style="margin-top:6px;padding:10px;background:white;border:none;border-bottom:1px solid var(--border);border-radius:0;font-size:.85rem;white-space:pre-wrap;">${esc(t.template)}</div>
+                    ${t.example_response ? `<div style="margin-top:6px;padding:8px;background:#f5f5f5;border-radius:4px;font-size:.82rem;"><strong>Expected reply:</strong> ${esc(t.example_response)}</div>` : ""}
                 </div>
             `).join("") : ""}
-            ${networking.content_strategy ? `<div style="margin-top:10px;padding:10px;background:#f8f9fb;border-radius:6px;"><strong>Content strategy:</strong> ${esc(networking.content_strategy)}</div>` : ""}
-            ${networking.example_post ? `<div style="margin-top:8px;padding:10px;background:white;border:1px solid var(--border);border-radius:6px;font-size:.85rem;white-space:pre-wrap;"><strong>Example post:</strong><br>${esc(networking.example_post)}</div>` : ""}
+            ${networking.content_strategy ? `<div style="margin-top:10px;padding:10px;background:#ffffff;border-radius:6px;"><strong>Content strategy:</strong> ${esc(networking.content_strategy)}</div>` : ""}
+            ${networking.example_post ? `<div style="margin-top:8px;padding:10px;background:white;border:none;border-bottom:1px solid var(--border);border-radius:0;font-size:.85rem;white-space:pre-wrap;"><strong>Example post:</strong><br>${esc(networking.example_post)}</div>` : ""}
         </div>
         <div class="card">
             <div class="section-title">Application Strategy</div>
             ${applications ? `
                 ${applications.when_to_start_applying ? `<p><strong>Start applying:</strong> ${esc(applications.when_to_start_applying)}</p>` : ""}
                 ${applications.resume_tips?.length ? `<div style="margin-top:8px;"><strong>Resume tips:</strong><ul>${applications.resume_tips.map(t=>`<li style="font-size:.85rem;">${esc(t)}</li>`).join("")}</ul></div>` : ""}
-                ${applications.resume_example_bullet ? `<div style="margin-top:6px;padding:8px;background:#f8f9fb;border-radius:4px;font-size:.82rem;white-space:pre-wrap;">${esc(applications.resume_example_bullet)}</div>` : ""}
+                ${applications.resume_example_bullet ? `<div style="margin-top:6px;padding:8px;background:#ffffff;border-radius:4px;font-size:.82rem;white-space:pre-wrap;">${esc(applications.resume_example_bullet)}</div>` : ""}
                 ${applications.where_to_apply?.length ? `<p style="margin-top:4px;"><strong>Where:</strong> ${applications.where_to_apply.map(p=>esc(p)).join(', ')}</p>` : ""}
-                ${applications.interview_prep ? `<div style="margin-top:8px;padding:10px;background:#f8f9fb;border-radius:6px;font-size:.85rem;"><strong>Interview prep:</strong> ${esc(applications.interview_prep)}</div>` : ""}
+                ${applications.interview_prep ? `<div style="margin-top:8px;padding:10px;background:#ffffff;border-radius:6px;font-size:.85rem;"><strong>Interview prep:</strong> ${esc(applications.interview_prep)}</div>` : ""}
                 ${applications.pricing_strategy ? `<div style="margin-top:6px;font-size:.85rem;"><strong>Pricing:</strong> ${esc(applications.pricing_strategy)}</div>` : ""}
             ` : ""}
         </div>` : ""}
@@ -278,19 +271,19 @@ function renderPlan(p){
                     ${pr.difficulty ? ` <span class="pill">${esc(pr.difficulty)}</span>` : ""}
                     ${pr.why ? `<p style="color:var(--text-secondary);margin-top:4px;">${esc(pr.why)}</p>` : ""}
                     ${pr.prerequisites ? `<p style="margin-top:6px;font-size:.85rem;"><strong>Prerequisites:</strong> ${esc(pr.prerequisites)}</p>` : ""}
-                    ${pr.planning ? `<div style="margin-top:8px;padding:10px;background:#f8f9fb;border-radius:6px;font-size:.85rem;"><strong>Plan first:</strong> ${esc(pr.planning)}</div>` : ""}
+                    ${pr.planning ? `<div style="margin-top:8px;padding:10px;background:#ffffff;border-radius:6px;font-size:.85rem;"><strong>Plan first:</strong> ${esc(pr.planning)}</div>` : ""}
                     ${pr.step_by_step?.length ? `
                     <div style="margin-top:10px;">
                         <strong style="font-size:.88rem;">Step-by-step:</strong>
                         <ol style="margin-top:6px;padding-left:20px;">${pr.step_by_step.map((s,i)=>`
                             <li style="margin-bottom:6px;font-size:.85rem;color:var(--text-secondary);">
                                 ${esc(s)}
-                                ${(pr.expected_output_per_step&&pr.expected_output_per_step[i]) ? `<div style="margin-top:2px;padding:4px 8px;background:#eefcff;border-radius:4px;font-size:.78rem;">${esc(pr.expected_output_per_step[i])}</div>` : ""}
+                                ${(pr.expected_output_per_step&&pr.expected_output_per_step[i]) ? `<div style="margin-top:2px;padding:4px 8px;background:#f5f5f5;border-radius:4px;font-size:.78rem;">${esc(pr.expected_output_per_step[i])}</div>` : ""}
                             </li>
                         `).join("")}</ol>
                     </div>` : ""}
-                    ${pr.testing_criteria ? `<div style="margin-top:8px;padding:8px;background:#f8f9fb;border-radius:6px;font-size:.82rem;"><strong>Test it:</strong> ${esc(pr.testing_criteria)}</div>` : ""}
-                    ${pr.success_criteria ? `<div style="margin-top:6px;padding:8px;background:#e1fae8;border-radius:6px;font-size:.82rem;"><strong>Done checklist:</strong> ${esc(pr.success_criteria)}</div>` : ""}
+                    ${pr.testing_criteria ? `<div style="margin-top:8px;padding:8px;background:#ffffff;border-radius:6px;font-size:.82rem;"><strong>Test it:</strong> ${esc(pr.testing_criteria)}</div>` : ""}
+                    ${pr.success_criteria ? `<div style="margin-top:6px;padding:8px;background:#f5f5f5;border-radius:6px;font-size:.82rem;"><strong>Done checklist:</strong> ${esc(pr.success_criteria)}</div>` : ""}
                     ${pr.how_to_showcase ? `<p style="margin-top:6px;font-size:.85rem;"><strong>Showcase:</strong> ${esc(pr.how_to_showcase)}</p>` : ""}
                     ${pr.free_tools?.length ? `<div style="margin-top:6px;font-size:.82rem;color:var(--text-secondary);"><strong>Free tools:</strong> ${pr.free_tools.join(', ')}</div>` : ""}
                 </div>
@@ -304,7 +297,7 @@ function renderPlan(p){
             ${p.budget_breakdown.essential_spend?.length ? `
                 <div style="margin-top:8px;"><strong>Worth paying for:</strong></div>
                 ${p.budget_breakdown.essential_spend.map(item => `
-                    <div style="margin-top:6px;padding:10px;background:#f8f9fb;border-radius:6px;">
+                    <div style="margin-top:6px;padding:10px;background:#ffffff;border-radius:6px;">
                         <strong>${esc(item.item)}</strong> — ${esc(item.cost)}
                         <p style="font-size:.82rem;color:var(--text-secondary);">${esc(item.why_essential)}</p>
                         ${item.free_alternative ? `<p style="font-size:.82rem;"><em>Free option: ${esc(item.free_alternative)}</em></p>` : ""}
@@ -314,7 +307,7 @@ function renderPlan(p){
             ${p.budget_breakdown.free_replacements?.length ? `
                 <div style="margin-top:8px;"><strong>Free replacements:</strong></div>
                 ${p.budget_breakdown.free_replacements.map(r => `
-                    <div style="margin-top:4px;padding:8px;background:white;border:1px solid var(--border);border-radius:6px;font-size:.85rem;">
+                    <div style="margin-top:4px;padding:8px;background:white;border:none;border-bottom:1px solid var(--border);border-radius:0;font-size:.85rem;">
                         <strong>${esc(r.paid_thing)}</strong> &mdash; ${esc(r.free_replacement)}
                         ${r.catch ? `<span style="color:var(--text-secondary);"> (${esc(r.catch)})</span>` : ""}
                     </div>
@@ -325,7 +318,7 @@ function renderPlan(p){
         ${metrics.length ? `
         <div class="section-title">Success metrics</div>
         ${metrics.map(m => `
-            <div style="margin-bottom:10px;padding:10px;background:#f8f9fb;border-radius:6px;">
+            <div style="margin-bottom:10px;padding:10px;background:#ffffff;border-radius:6px;">
                     ${typeof m === 'object' ? `
                         <strong>${esc(m.metric)}</strong>
                         ${m.how_to_measure ? `<p style="color:var(--text-secondary);font-size:.85rem;margin-top:4px;">Measure: ${esc(m.how_to_measure)}</p>` : ""}
@@ -342,7 +335,7 @@ function renderPlan(p){
                     <strong>${esc(pf.pitfall||pf.risk)}</strong>
                     ${pf.why_it_happens ? `<p style="margin-top:4px;font-size:.85rem;">${esc(pf.why_it_happens)}</p>` : ""}
                     ${pf.how_to_avoid ? `<div style="margin-top:6px;padding:8px;background:white;border-radius:4px;font-size:.85rem;"><strong>Prevent it:</strong> ${esc(pf.how_to_avoid)}</div>` : ""}
-                    ${pf.recovery ? `<div style="margin-top:4px;padding:8px;background:#fff8f8;border-radius:4px;font-size:.85rem;"><strong>Recovery:</strong> ${esc(pf.recovery)}</div>` : ""}
+                    ${pf.recovery ? `<div style="margin-top:4px;padding:8px;background:#ffffff;border-radius:4px;font-size:.85rem;"><strong>Recovery:</strong> ${esc(pf.recovery)}</div>` : ""}
                     ${pf.likelihood ? `<span class="pill">${esc(pf.likelihood)} risk</span>` : ""}
                     ${pf.mitigation ? `<p style="margin-top:4px;font-size:.85rem;">${esc(pf.mitigation)}</p>` : ""}
                     ${pf.contingency_plan ? `<p style="margin-top:4px;font-size:.85rem;"><strong>Plan B:</strong> ${esc(pf.contingency_plan)}</p>` : ""}
@@ -363,9 +356,9 @@ function renderPlan(p){
                     <strong>${esc(r.name||r.label)}</strong>
                     ${r.platform ? ` <span class="pill">${esc(r.platform)}</span>` : ""}
                     ${(r.description||r.label) ? `<p style="color:var(--text-secondary);margin-top:6px;">${esc(r.description||r.label)}</p>` : ""}
-                    ${r.how_to_use ? `<div style="margin-top:6px;padding:8px;background:#f8f9fb;border-radius:6px;font-size:.82rem;"><strong>How to use:</strong> ${esc(r.how_to_use)}</div>` : ""}
+                    ${r.how_to_use ? `<div style="margin-top:6px;padding:8px;background:#ffffff;border-radius:6px;font-size:.82rem;"><strong>How to use:</strong> ${esc(r.how_to_use)}</div>` : ""}
                     ${r.when ? `<p style="color:var(--text-secondary);font-size:.85rem;margin-top:4px;"><em>When: ${esc(r.when)}</em></p>` : ""}
-                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent((r.name||r.label) + " " + (r.platform||""))}" target="_blank" style="margin-top:8px;display:inline-flex;border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--text);font-weight:600;">
+                    <a class="resource" href="https://www.google.com/search?q=${encodeURIComponent((r.name||r.label) + " " + (r.platform||""))}" target="_blank" style="margin-top:8px;display:inline-flex;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:6px 0;text-decoration:none;color:var(--text);font-weight:600;">
                         Find this resource
                     </a>
                 </div>
@@ -410,5 +403,8 @@ load();
 <script>
 (function(){var t=document.querySelector('meta[name="csrf-token"]');if(!t)return;var c=t.getAttribute('content');if(!c)return;var o=window.fetch;window.fetch=function(u,i){i=i||{};if(!i.method||i.method.toUpperCase()==='GET')return o(u,i);i.headers=i.headers||{};i.headers['X-CSRF-Token']=c;return o(u,i);};})();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="/static/brand.js" defer></script>
 </body>
 </html>
