@@ -1,0 +1,143 @@
+/* ============================================================
+   UPWARD — React Bits components (vanilla ports)
+   Uses existing theme tokens — adds motion, changes nothing else.
+   Loaded on every page alongside brand.css.
+   ============================================================ */
+
+/* ---------- SpotlightCard ---------- */
+.rb-spotlight{
+    position:relative;
+    overflow:hidden;
+}
+
+.rb-spotlight::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),
+        rgba(10,10,10,.055), transparent 70%);
+    opacity:0;
+    transition:opacity .35s cubic-bezier(.22,1,.36,1);
+    pointer-events:none;
+}
+
+.rb-spotlight:hover::before{opacity:1;}
+
+/* light-mode ring variant */
+.rb-spotlight.rb-spotlight-border::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    box-shadow:inset 0 0 0 1px rgba(10,10,10,0);
+    transition:box-shadow .35s cubic-bezier(.22,1,.36,1);
+    pointer-events:none;
+}
+
+.rb-spotlight.rb-spotlight-border:hover::after{
+    box-shadow:inset 0 0 0 1px rgba(10,10,10,.65);
+}
+
+/* ---------- CountUp ---------- */
+.rb-count, [data-count]{
+    font-variant-numeric:tabular-nums;
+}
+
+/* ---------- TiltedCard ---------- */
+.rb-tilt-wrap{
+    perspective:900px;
+}
+
+.rb-tilt{
+    transform-style:preserve-3d;
+    transition:transform .25s cubic-bezier(.22,1,.36,1);
+    will-change:transform;
+}
+
+.rb-tilt.rb-tilt-active{
+    transition:transform .12s cubic-bezier(.22,1,.36,1);
+}
+
+/* ---------- MagneticButton ---------- */
+.rb-magnetic{
+    display:inline-flex;
+    transition:transform .35s cubic-bezier(.22,1,.36,1);
+    will-change:transform;
+}
+
+.rb-magnetic.rb-magnetic-fast{
+    transition:transform .18s cubic-bezier(.22,1,.36,1);
+}
+
+/* ---------- ProgressRing ---------- */
+.rb-ring{
+    --rp:0;
+    transform:rotate(-90deg);
+}
+
+.rb-ring circle{
+    fill:none;
+    stroke-width:4;
+}
+
+.rb-ring .rb-ring-track{
+    stroke:var(--border);
+}
+
+.rb-ring .rb-ring-fg{
+    stroke:var(--text);
+    stroke-linecap:round;
+    stroke-dasharray:var(--circ);
+    stroke-dashoffset:var(--circ);
+    transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1);
+}
+
+.rb-ring.rb-ring-in .rb-ring-fg{
+    stroke-dashoffset:calc(var(--circ) * (1 - var(--rp)));
+}
+
+.rb-ring .rb-ring-center{
+    transform:rotate(90deg);
+    transform-origin:50% 50%;
+    text-anchor:middle;
+    font-family:var(--font-display);
+    font-size:7.5px;
+    font-weight:600;
+    fill:var(--text);
+}
+
+/* ---------- ShineBorder ---------- */
+.rb-shine{
+    position:relative;
+    overflow:hidden;
+}
+
+.rb-shine::before{
+    content:"";
+    position:absolute;
+    top:0;bottom:0;
+    left:-80%;
+    width:50%;
+    background:linear-gradient(105deg,transparent,rgba(255,255,255,.75),transparent);
+    transform:skewX(-18deg);
+    transition:left .7s cubic-bezier(.22,1,.36,1);
+    pointer-events:none;
+}
+
+.rb-shine:hover::before{left:130%;}
+
+/* dark-mode-safe shine (for white cards on any bg) */
+.rb-shine-dark::before{
+    background:linear-gradient(105deg,transparent,rgba(10,10,10,.09),transparent);
+}
+
+@media (prefers-reduced-motion: reduce){
+    .rb-spotlight::before,.rb-spotlight-border::after,.rb-shine::before{
+        transition:none;
+        opacity:0;
+    }
+    .rb-tilt,.rb-magnetic,.rb-ring .rb-ring-fg{
+        transition:none !important;
+    }
+    .rb-shine:hover::before{left:-80%;}
+}

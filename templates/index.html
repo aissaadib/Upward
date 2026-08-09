@@ -11,7 +11,9 @@
         <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
     <script src="/static/brand.js" defer></script>
+<script src="/static/reactbits.js" defer></script>
 <link rel="stylesheet" href="/static/brand.css">
+<link rel="stylesheet" href="/static/reactbits.css">
 </head>
 <body>
     {% include '_navbar.html' %}
@@ -30,12 +32,54 @@
                 roadmap — then holds you accountable to it.
             </p>
             <div class="cta" data-reveal data-delay="0.3">
-                <a class="btn" href="/onboarding">Start your roadmap</a>
-                <a class="btn btn-outline" href="#toolkit">See how it works</a>
+                {% if locked_plan %}
+                <a class="btn rb-magnetic" href="/plan">Open my plan</a>
+                {% else %}
+                <a class="btn rb-magnetic" href="/onboarding">Start your roadmap</a>
+                {% endif %}
+                <a class="btn btn-outline rb-magnetic" href="#toolkit">See how it works</a>
             </div>
         </div>
     </header>
 
+    {% if locked_plan %}
+    {% set lp = locked_plan.extended or locked_plan.basic or {} %}
+    <!-- PINNED PLAN -->
+    <section class="section pinned-plan">
+        <div class="section-head" data-reveal>
+            <div class="pinned-label">Your main plan</div>
+            <h2 class="section-title">{{ lp.title }}</h2>
+        </div>
+        {% if lp.summary %}
+        <p class="pinned-sum" data-reveal>{{ lp.summary }}</p>
+        {% endif %}
+        {% set pv = lp.phases or [] %}
+        {% if pv %}
+        <p class="pinned-meta" data-reveal>
+            {% for phase in pv[:3] %}
+            {% if phase.get('title') %}<span class="plan-hl">{{ phase.title }}</span>{% if not loop.last %}, {% endif %}{% endif %}
+            {% endfor %}
+            {% if pv|length > 3 %}<span class="plan-more"> + <span data-count="{{ pv|length - 3 }}">0</span> more months</span>{% endif %}
+        </p>
+        {% endif %}
+        <div class="pinned-actions" data-reveal>
+            <a class="btn" href="/plan">Open my plan</a>
+            {% if not locked_plan.extended %}
+            <a class="btn btn-outline" href="/plan">Extend it</a>
+            {% endif %}
+        </div>
+        {% if is_admin %}
+        <div class="leave-plan-wrap">
+            <p class="leave-warning">You are currently admin-bound to this plan. Unlock it to leave the plan.</p>
+            <form method="POST" action="/leave_plan" onsubmit="return confirm('Unlock your plan?');">
+                <button type="submit" class="btn btn-leave">Unlock plan</button>
+            </form>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if not locked_plan %}
     <!-- PROCESS STRIP -->
     <section class="process" data-reveal-stagger>
         <div class="proc-item">
@@ -62,28 +106,28 @@
             <h2 class="section-title">What Upward does</h2>
         </div>
         <div class="feature-list" data-reveal-stagger data-stagger="0.18">
-            <div class="feature">
+            <div class="feature rb-spotlight">
                 <span class="feature-idx">01</span>
                 <div class="feature-body">
                     <h3>Personal Roadmaps</h3>
                     <p>AI-crafted, month-by-month plans that adapt to your goals, skills and schedule.</p>
                 </div>
             </div>
-            <div class="feature">
+            <div class="feature rb-spotlight">
                 <span class="feature-idx">02</span>
                 <div class="feature-body">
                     <h3>Real Accountability</h3>
                     <p>Pin one plan as your focus, track progress weekly, and keep the momentum honest.</p>
                 </div>
             </div>
-            <div class="feature">
+            <div class="feature rb-spotlight">
                 <span class="feature-idx">03</span>
                 <div class="feature-body">
                     <h3>Concrete Execution</h3>
                     <p>Not generic advice — specific courses, projects, tools and checkpoints each week.</p>
                 </div>
             </div>
-            <div class="feature">
+            <div class="feature rb-spotlight">
                 <span class="feature-idx">04</span>
                 <div class="feature-body">
                     <h3>Career Intelligence</h3>
@@ -118,36 +162,6 @@
             </div>
         </div>
     </section>
-
-    {% if locked_plan %}
-    <!-- PINNED PLAN -->
-    <section class="section pinned-plan">
-        <div class="section-head" data-reveal>
-            <div class="pinned-label">Your main plan</div>
-            <h2 class="section-title">{{ locked_plan.title }}</h2>
-        </div>
-        {% set pv = locked_plan.phases or [] %}
-        {% if pv %}
-        <p class="pinned-meta" data-reveal>
-            {% for phase in pv[:3] %}
-            {% if phase.get('title') %}<span class="plan-hl">{{ phase.title }}</span>{% if not loop.last %}, {% endif %}{% endif %}
-            {% endfor %}
-            {% if pv|length > 3 %}<span class="plan-more"> + {{ pv|length - 3 }} more months</span>{% endif %}
-        </p>
-        {% endif %}
-        <div class="pinned-actions" data-reveal>
-            <a class="btn" href="/plan">Open my plan</a>
-            <a class="btn btn-outline" href="/plan_extend">Extend it</a>
-        </div>
-        {% if is_admin %}
-        <div class="leave-plan-wrap">
-            <p class="leave-warning">You are currently admin-bound to this plan. Unlock it to leave the plan.</p>
-            <form method="POST" action="/leave_plan" onsubmit="return confirm('Unlock your plan?');">
-                <button type="submit" class="btn btn-leave">Unlock plan</button>
-            </form>
-        </div>
-        {% endif %}
-    </section>
     {% endif %}
 
     <!-- FOOTER CTA -->
@@ -156,7 +170,11 @@
             <div class="section-label">Begin</div>
             <h2 class="cta-title">Your next move<br>is mapped.</h2>
             <p>Three minutes in. A year of direction out.</p>
-            <a class="btn" href="/onboarding">Start your roadmap</a>
+            {% if locked_plan %}
+            <a class="btn rb-magnetic" href="/plan">Open my plan</a>
+            {% else %}
+            <a class="btn rb-magnetic" href="/onboarding">Start your roadmap</a>
+            {% endif %}
         </div>
     </section>
 </body>

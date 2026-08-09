@@ -21,6 +21,34 @@
     --font-body:'Inter',Segoe UI,sans-serif;
 }
 
+/* ---- Reveal pre-hide: GSAP-owned elements are invisible from the
+       very first paint, so they appear "from nowhere" — never flash
+       visible-then-hidden, never double-reveal. The html.rb-anim
+       class is added by brand.js (JS present). If GSAP can't load,
+       brand.js removes the class and everything stays visible. ---- */
+html.rb-anim [data-reveal],
+html.rb-anim [data-reveal-stagger] > *:not([data-reveal]){
+    opacity:0;
+}
+
+html.rb-anim [data-reveal-lines]{
+    overflow:hidden;
+}
+
+html.rb-anim [data-reveal-lines] > span{
+    transform:translateY(115%);
+}
+
+@media (prefers-reduced-motion: reduce){
+    html.rb-anim [data-reveal],
+    html.rb-anim [data-reveal-stagger] > *:not([data-reveal]){
+        opacity:1;
+    }
+    html.rb-anim [data-reveal-lines] > span{
+        transform:none;
+    }
+}
+
 html{
     scroll-behavior:smooth;
 }

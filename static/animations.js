@@ -100,10 +100,19 @@
     '[data-reveal]'
   ].join(',');
 
+  /* Elements owned by the GSAP layer (brand.js) must never be touched
+     here — otherwise they flash visible, get re-hidden, then replayed. */
+  function isGsapOwned(el) {
+    return !!(el && el.closest &&
+      el.closest('[data-reveal],[data-reveal-stagger],[data-reveal-lines]'));
+  }
+
   function initScrollReveal() {
     if (reduced) return;
     if (!window.IntersectionObserver) return;
-    var candidates = document.querySelectorAll(REVEAL_SEL);
+    var candidates = Array.prototype.slice.call(
+      document.querySelectorAll(REVEAL_SEL)
+    ).filter(function (el) { return !isGsapOwned(el); });
     if (!candidates.length) return;
 
     var io = new IntersectionObserver(function (entries) {
@@ -140,10 +149,11 @@
     muts.forEach(function (mut) {
       Array.prototype.slice.call(mut.addedNodes).forEach(function (node) {
         if (node.nodeType !== 1) return;
-        if (node.matches && node.matches(DYNAMIC_SEL)) targets.push(node);
+        if (isGsapOwned(node)) return;
+        if (node.matches && node.matches(DYNAMIC_SEL) && !isGsapOwned(node)) targets.push(node);
         if (node.querySelectorAll) {
           Array.prototype.slice.call(node.querySelectorAll(DYNAMIC_SEL))
-            .forEach(function (n) { targets.push(n); });
+            .forEach(function (n) { if (!isGsapOwned(n)) targets.push(n); });
         }
       });
     });
@@ -601,7 +611,8 @@
 
       /* Animate elements already visible on load */
       var onLoad = Array.prototype.slice.call(document.querySelectorAll(REVEAL_SEL))
-        .filter(function (el) { return !el.dataset._animDone && el.offsetParent !== null; });
+        .filter(function (el) { return !el.dataset._animDone && el.offsetParent !== null; })
+        .filter(function (el) { return !isGsapOwned(el); });
       if (onLoad.length) {
         onLoad.forEach(function (el) {
           el.style.opacity = '0';

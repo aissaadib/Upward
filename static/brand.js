@@ -10,6 +10,18 @@
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce){ return; }
 
+    /* Activate the CSS pre-hide gate: reveal elements are invisible
+       from first paint, so they appear "from nowhere" when GSAP runs. */
+    document.documentElement.classList.add('rb-anim');
+
+    /* Safety net: if GSAP never loads, drop the gate so no content
+       stays hidden forever. */
+    setTimeout(function(){
+        if (typeof gsap === 'undefined'){
+            document.documentElement.classList.remove('rb-anim');
+        }
+    }, 2000);
+
     function initGsap(){
         if (typeof gsap === 'undefined'){ setTimeout(initGsap, 60); return; }
         if (typeof ScrollTrigger !== 'undefined'){ gsap.registerPlugin(ScrollTrigger); }

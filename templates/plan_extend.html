@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
 <link rel="stylesheet" href="/static/brand.css">
+<link rel="stylesheet" href="/static/reactbits.css">
 </head>
 <body>
 {% include '_navbar.html' %}
@@ -137,7 +138,7 @@ function renderPlan(p){
         </div>` : ""}
 
         <div class="card">
-            <div class="section-title">${p.timeline_months || phases.length || 6}-month roadmap</div>
+            <div class="section-title"><span data-count="${p.timeline_months || phases.length || 6}" data-count-duration="1.2">0</span>-month roadmap</div>
             ${phases.map(ph => `
                 <div class="phase">
                     <div class="phase-head">
@@ -377,6 +378,7 @@ async function load(){
         renderPlan(window.planData);
         // Stagger-reveal all plan sections after injection
         if(typeof revealPlan === "function") revealPlan(contentEl);
+        if(typeof window.RB === "object") window.RB.refresh();
     }else{
         // Generate a new extended plan via the API
         try{
@@ -389,6 +391,7 @@ async function load(){
             renderPlan(json.plan);
             // Stagger-reveal all plan sections after injection
             if(typeof revealPlan === "function") revealPlan(contentEl);
+            if(typeof window.RB === "object") window.RB.refresh();
         }catch(e){
             document.getElementById("loading").style.display = "none";
             document.getElementById("error").style.display = "block";
@@ -406,5 +409,6 @@ load();
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
 <script src="/static/brand.js" defer></script>
+<script src="/static/reactbits.js" defer></script>
 </body>
 </html>

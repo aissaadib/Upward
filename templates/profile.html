@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
 <link rel="stylesheet" href="/static/brand.css">
+<link rel="stylesheet" href="/static/reactbits.css">
 </head>
 <body>
 {% include '_navbar.html' %}
@@ -27,7 +28,7 @@
 
     <section class="section">
 
-        <div class="section-block">
+        <div class="section-block rb-spotlight rb-spotlight-border">
             <h2>Account</h2>
             <div class="info-line">
                 <span class="info-label">Email</span>
@@ -43,7 +44,7 @@
             </div>
         </div>
 
-        <div class="section-block">
+        <div class="section-block rb-spotlight rb-spotlight-border">
             <h2>Bank Account (for course sales)</h2>
             <form method="POST" action="/profile/bank-account" onsubmit="return validateRib()">
                 {{ csrf_input|safe }}
@@ -67,7 +68,7 @@
             </script>
         </div>
 
-        <div class="section-block">
+        <div class="section-block rb-spotlight rb-spotlight-border">
             <h2>Update Username &amp; Resume</h2>
             <form method="POST" action="/profile/update" enctype="multipart/form-data">
                 {{ csrf_input|safe }}
@@ -87,7 +88,7 @@
             </form>
         </div>
 
-        <div class="section-block">
+        <div class="section-block rb-spotlight rb-spotlight-border">
             <h2>Change Password</h2>
             <form method="POST" action="/profile/change-password">
                 {{ csrf_input|safe }}
@@ -112,5 +113,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
 <script src="/static/brand.js" defer></script>
+<script src="/static/reactbits.js" defer></script>
 </body>
 </html>

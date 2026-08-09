@@ -7,7 +7,7 @@
     </div>
     <div class="nav-right">
         {% if locked_plan %}
-        <a class="username" href="/plan_extend">{{ locked_plan.title }}</a>
+        <a class="username" href="/plan">{{ (locked_plan.basic or locked_plan.extended or {}).title or 'My plan' }}</a>
         {% endif %}
         <a class="username" href="/profile">{{ username }}</a>
         <a class="logout" href="/logout">Logout</a>

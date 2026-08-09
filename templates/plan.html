@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
 <link rel="stylesheet" href="/static/brand.css">
+<link rel="stylesheet" href="/static/reactbits.css">
 </head>
 <body>
 {% include '_navbar.html' %}
@@ -42,7 +43,7 @@
 
     {% if p.phases %}
     <section class="sec" data-reveal>
-        <div class="section-title">{{ p.timeline_months or p.phases|length }}-month roadmap</div>
+        <div class="section-title"><span data-count="{{ p.timeline_months or p.phases|length }}" data-count-duration="1.2">0</span>-month roadmap</div>
         {% for ph in p.phases %}
         <div class="phase">
             <div class="phase-head">
@@ -127,5 +128,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
 <script src="/static/brand.js" defer></script>
+<script src="/static/reactbits.js" defer></script>
 </body>
 </html>

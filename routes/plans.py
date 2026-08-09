@@ -73,6 +73,13 @@ def plan_extend():
 
     locked_value = locked[0]["locked"] if locked else 0
 
+    already = db.execute(
+        "SELECT id FROM locked_plans WHERE user_id = ?",
+        user_id
+    )
+    if already:
+        locked_value = 1
+
     user = db.execute(
         "SELECT name, plan_access FROM users WHERE id = ?",
         user_id
@@ -675,9 +682,9 @@ def plan_view():
     locked_plan = get_locked_plan(session["user_id"])
     if not locked_plan:
         return redirect("/advice")
-    user = db.execute("SELECT name, locked FROM users WHERE id = ?", session["user_id"])
+    user = db.execute("SELECT name FROM users WHERE id = ?", session["user_id"])
     username = user[0]["name"] if user else "User"
-    locked_value = user[0]["locked"] if user else 0
+    locked_value = 1 if locked_plan else 0
     suggestion = locked_plan["extended"] or locked_plan["basic"]
     return render_template("plan_extend.html", username=username, suggestion=suggestion, locked=locked_value, plan_data=locked_plan["extended"] or locked_plan["basic"], plan=locked_plan)
 

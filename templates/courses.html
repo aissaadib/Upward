@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" crossorigin="anonymous" defer></script>
     <script src="/static/animations.js" defer></script>
 <link rel="stylesheet" href="/static/brand.css">
+<link rel="stylesheet" href="/static/reactbits.css">
 </head>
 
 <body>
@@ -49,7 +50,7 @@
             {% set is_purchased = item.id in purchased_ids %}
             {% set is_owned = item.id in owned_ids %}
             {% set has_access = is_purchased or is_owned or item.is_owner %}
-            <div class="course-card{% if not has_access and item.price > 0 %} locked{% endif %}{% if has_access %} clickable{% endif %}" data-search="{{ (item.title + ' ' + (item.description or '') + ' ' + (item.tags or ''))|lower }}"{% if has_access %} onclick="if(event.target.closest('.course-actions,.tag'))return;window.location='/lessons/{{ item.id }}'"{% endif %}>
+            <div class="course-card rb-spotlight{% if not has_access and item.price > 0 %} locked{% endif %}{% if has_access %} clickable{% endif %}" data-search="{{ (item.title + ' ' + (item.description or '') + ' ' + (item.tags or ''))|lower }}"{% if has_access %} onclick="if(event.target.closest('.course-actions,.tag'))return;window.location='/lessons/{{ item.id }}'"{% endif %}>
                 <div class="course-title">{{ item.title }}</div>
 
                 {% if item.tags %}
@@ -326,7 +327,7 @@ function loadOnlineCourses(){
                 const badge = c.free
                     ? '<span class="online-card-free">Free</span>'
                     : '<span class="online-card-paid">Paid</span>';
-                return `<div class="online-card">
+                return `<div class="online-card rb-spotlight">
                     <div class="online-card-top">
                         <div class="online-card-title">${c.title.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
                         ${badge}
@@ -394,5 +395,6 @@ document.addEventListener("DOMContentLoaded", function(){
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
 <script src="/static/brand.js" defer></script>
+<script src="/static/reactbits.js" defer></script>
 </body>
 </html>
