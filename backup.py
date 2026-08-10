@@ -34,7 +34,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key-change-this")
 Session(app)
 
 db = SQL("sqlite:///upward.db")
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY") or "missing-groq-key")
 
 SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")

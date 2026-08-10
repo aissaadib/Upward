@@ -7,5 +7,5 @@ from groq import Groq
 db = SQL("sqlite:///upward.db")
 
 groq_client = Groq(
-    api_key=os.environ.get("GROQ_API_KEY")
+    api_key=os.environ.get("GROQ_API_KEY") or "missing-groq-key"
 )

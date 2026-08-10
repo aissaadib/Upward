@@ -4,6 +4,7 @@ import os
 import json
 import time
 import secrets
+import tempfile
 from functools import wraps
 from collections import defaultdict
 from cs50 import SQL
@@ -131,7 +132,17 @@ if IS_POSTGRES:
     dbx.init_app(app)
 else:
     app.config["SESSION_TYPE"] = "filesystem"
-    app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "flask_session")
+    _session_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "flask_session")
+    try:
+        os.makedirs(_session_dir, exist_ok=True)
+        _probe = os.path.join(_session_dir, ".wprobe")
+        with open(_probe, "w") as _fh:
+            _fh.write("ok")
+        os.remove(_probe)
+    except OSError:
+        # Read-only filesystems (e.g. serverless) -> use the writable temp dir
+        _session_dir = os.path.join(tempfile.gettempdir(), "flask_session")
+    app.config["SESSION_FILE_DIR"] = _session_dir
 
 Session(app)
 
@@ -247,7 +258,7 @@ PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
 PAYPAL_MODE = os.environ.get("PAYPAL_MODE", "sandbox")
 PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com" if PAYPAL_MODE == "sandbox" else "https://api-m.paypal.com"
 
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY") or "missing-groq-key")
 
 SMTP_EMAIL    = os.environ.get("SMTP_EMAIL", "aissa.daoud2010@gmail.com")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
