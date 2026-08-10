@@ -1,6 +1,7 @@
 Flask==3.1.2
 Flask-Session==0.8.0
 cs50==9.5.0
+greenlet==3.5.4
 groq==1.4.0
 PyPDF2==3.0.1
 requests==2.33.1
