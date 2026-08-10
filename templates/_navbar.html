@@ -6,10 +6,14 @@
         {% if is_admin or (request is defined and request.path.startswith('/admin')) %}<a class="nav-link" href="/admin">Admin</a>{% endif %}
     </div>
     <div class="nav-right">
+        {% if session.get('user_id') %}
         {% if locked_plan %}
         <a class="username" href="/plan">{{ (locked_plan.basic or locked_plan.extended or {}).title or 'My plan' }}</a>
         {% endif %}
         <a class="username" href="/profile">{{ username }}</a>
         <a class="logout" href="/logout">Logout</a>
+        {% else %}
+        <a class="nav-login" href="/login">Login</a>
+        {% endif %}
     </div>
 </nav>
