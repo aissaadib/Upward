@@ -1,6 +1,6 @@
 """Agent route — AI career chatbot with persistent chat history."""
 
-from app import app, db, groq_client, login_required, check_rate_limit
+from app import app, db, groq_client, login_required, check_rate_limit, _ddl
 from flask import render_template, session, jsonify, Response, stream_with_context, request
 from routes.plans import get_locked_plan
 import json
@@ -9,7 +9,7 @@ import time
 
 def init_db():
     """Create the chat_messages table if it does not exist."""
-    db.execute("""
+    db.execute(_ddl("""
         CREATE TABLE IF NOT EXISTS chat_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -17,7 +17,7 @@ def init_db():
             content TEXT NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """))
 init_db()
 
 

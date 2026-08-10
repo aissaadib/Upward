@@ -535,7 +535,7 @@ def plan_lock():
     existing = db.execute("SELECT id FROM locked_plans WHERE user_id = ?", user_id)
     if existing:
         db.execute(
-            "UPDATE locked_plans SET basic_plan = ?, extended_plan = ?, locked_at = datetime('now') WHERE user_id = ?",
+            "UPDATE locked_plans SET basic_plan = ?, extended_plan = ?, locked_at = CURRENT_TIMESTAMP WHERE user_id = ?",
             json.dumps(basic), json.dumps(extended), user_id
         )
     else:

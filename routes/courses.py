@@ -1,6 +1,6 @@
 """Courses routes — list, view, subscribe/unsubscribe, delete, PayPal payments, and AI online course recommendations."""
 
-from app import app, db, login_required, groq_client, check_rate_limit, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE
+from app import app, db, login_required, groq_client, check_rate_limit, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE, _ddl
 from flask import render_template, session, redirect, jsonify, request
 from collections import Counter
 from datetime import datetime, timezone, timedelta
@@ -21,7 +21,7 @@ def paypal_headers():
 
 def init_db():
     """Create the courses and owners tables if they do not exist."""
-    db.execute("""
+    db.execute(_ddl("""
         CREATE TABLE IF NOT EXISTS courses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             owner_id INTEGER,
@@ -31,7 +31,7 @@ def init_db():
             price INTEGER,
             rating REAL
         )
-    """)
+    """))
     db.execute("""
         CREATE TABLE IF NOT EXISTS owners (
             course_id INTEGER,

@@ -83,17 +83,62 @@ def admin_required(f):
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 hours
-app.config["SESSION_TYPE"] = "filesystem"
-app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "flask_session")
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 secret_key = os.environ.get("SECRET_KEY")
 if not secret_key:
-    raise RuntimeError("SECRET_KEY environment variable is required. Set it in .env or the environment.")
+    print("[warn] SECRET_KEY not set — using a per-boot random key will reset sessions on restart. "
+          "Set SECRET_KEY in the environment (Vercel: Settings -> Environment Variables) for stable sessions.")
+    secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
 
+# ── Database: SQLite by default (local), PostgreSQL when DATABASE_URL is set (Vercel) ──
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+IS_POSTGRES = DATABASE_URL.startswith("postgres")
+
+
+def _ddl(sql):
+    """Adapt CREATE TABLE DDL to the active dialect."""
+    if IS_POSTGRES:
+        return sql.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+    return sql
+
+
+db = SQL(DATABASE_URL if IS_POSTGRES else "sqlite:///upward.db")
+
+
+def add_col(table, coldef):
+    """Create a column if it is missing (safe on both dialects)."""
+    if IS_POSTGRES:
+        db.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {coldef}")
+    else:
+        try:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN {coldef}")
+        except Exception:
+            pass
+
+
+# Sessions: DB-backed on PostgreSQL (persists on serverless), filesystem locally
+if IS_POSTGRES:
+    from flask_sqlalchemy import SQLAlchemy
+
+    dbx = SQLAlchemy()
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SESSION_TYPE"] = "sqlalchemy"
+    app.config["SESSION_SQLALCHEMY"] = dbx
+    dbx.init_app(app)
+else:
+    app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "flask_session")
+
 Session(app)
+
+if IS_POSTGRES:
+    # Create the sessions table (and any app models on the extension)
+    with app.app_context():
+        dbx.create_all()
 
 # ── CSRF validation ──────────────────────────────────────────────
 def csrf_required(f):
@@ -124,46 +169,29 @@ def add_security_headers(response):
         pass
     return response
 
-db = SQL("sqlite:///upward.db")
-
 # Ensure required tables exist
-db.execute("""CREATE TABLE IF NOT EXISTS users (
+db.execute(_ddl("""CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     hash TEXT NOT NULL,
     resume TEXT,
     locked INTEGER DEFAULT 0
-)""")
+)"""))
 
 # Add admin column silently (safe for existing DBs)
-try:
-    db.execute("ALTER TABLE users ADD COLUMN admin INTEGER DEFAULT 0")
-except Exception:
-    pass
+add_col("users", "admin INTEGER DEFAULT 0")
 
 # Add plan_access column silently (safe for existing DBs)
-try:
-    db.execute("ALTER TABLE users ADD COLUMN plan_access INTEGER DEFAULT 0")
-except Exception:
-    pass
+add_col("users", "plan_access INTEGER DEFAULT 0")
 
 # Add thumbnail and created_at to courses (for existing DBs)
-try:
-    db.execute("ALTER TABLE courses ADD COLUMN thumbnail TEXT DEFAULT ''")
-except Exception:
-    pass
-try:
-    db.execute("ALTER TABLE courses ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP")
-except Exception:
-    pass
-try:
-    db.execute("ALTER TABLE courses ADD COLUMN stripe_price_id TEXT DEFAULT ''")
-except Exception:
-    pass
+add_col("courses", "thumbnail TEXT DEFAULT ''")
+add_col("courses", "created_at TEXT DEFAULT CURRENT_TIMESTAMP")
+add_col("courses", "stripe_price_id TEXT DEFAULT ''")
 
 # Create purchases table for Stripe payments
-db.execute("""CREATE TABLE IF NOT EXISTS purchases (
+db.execute(_ddl("""CREATE TABLE IF NOT EXISTS purchases (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
@@ -175,25 +203,16 @@ db.execute("""CREATE TABLE IF NOT EXISTS purchases (
     status TEXT DEFAULT 'completed',
     current_period_end TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)""")
+)"""))
 
-try:
-    db.execute("ALTER TABLE purchases ADD COLUMN subscription_id TEXT")
-except Exception:
-    pass
-try:
-    db.execute("ALTER TABLE purchases ADD COLUMN current_period_end TEXT")
-except Exception:
-    pass
+add_col("purchases", "subscription_id TEXT")
+add_col("purchases", "current_period_end TEXT")
 
 # Add bank_account column for creator payouts
-try:
-    db.execute("ALTER TABLE users ADD COLUMN bank_account TEXT DEFAULT ''")
-except Exception:
-    pass
+add_col("users", "bank_account TEXT DEFAULT ''")
 
 # Create creator_earnings table
-db.execute("""CREATE TABLE IF NOT EXISTS creator_earnings (
+db.execute(_ddl("""CREATE TABLE IF NOT EXISTS creator_earnings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
@@ -201,16 +220,16 @@ db.execute("""CREATE TABLE IF NOT EXISTS creator_earnings (
     amount INTEGER NOT NULL,
     paid INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)""")
+)"""))
 
 # Create locked_plans table if missing
-db.execute("""CREATE TABLE IF NOT EXISTS locked_plans (
+db.execute(_ddl("""CREATE TABLE IF NOT EXISTS locked_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
     basic_plan TEXT NOT NULL,
     extended_plan TEXT,
     locked_at TEXT DEFAULT CURRENT_TIMESTAMP
-)""")
+)"""))
 
 # Stripe configuration
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")

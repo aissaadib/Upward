@@ -1,8 +1,10 @@
 Flask==3.1.2
 Flask-Session==0.8.0
+Flask-SQLAlchemy==3.1.1
 cs50==9.5.0
 greenlet==3.5.4
 groq==1.4.0
+psycopg2-binary==2.9.12
 PyPDF2==3.0.1
 requests==2.33.1
 stripe==15.3.0
