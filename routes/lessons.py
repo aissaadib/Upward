@@ -1,6 +1,6 @@
 """Lessons routes — create, read, update, delete lessons and extract content from files."""
 
-from app import app, db, login_required, groq_client, csrf_required, _ddl, add_col
+from app import app, db, login_required, groq_client, csrf_required, run_boot_ddl, add_col
 from flask import render_template, request, session, redirect, jsonify
 import PyPDF2
 from services.ai import parse_ai_json
@@ -9,14 +9,14 @@ from routes.purchases import has_course_access
 
 def init_lessons_db():
     """Create the lessons table if it does not exist; backfill missing title column for older schemas."""
-    db.execute(_ddl("""
+    run_boot_ddl("""
         CREATE TABLE IF NOT EXISTS lessons (
             num INTEGER PRIMARY KEY AUTOINCREMENT,
             course_id INTEGER,
             title TEXT,
             content TEXT
         )
-    """))
+    """)
     add_col("lessons", "title TEXT")
 
 init_lessons_db()

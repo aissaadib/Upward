@@ -108,16 +108,43 @@ def _ddl(sql):
 
 db = SQL(DATABASE_URL if IS_POSTGRES else "sqlite:///upward.db")
 
+# On PostgreSQL, run boot DDL on its own autocommit connection: a failed
+# statement rolls back instantly instead of poisoning the pooled session
+# (which otherwise breaks the next cs50 "BEGIN" — the classic serverless
+# cold-start race where many instances create the same tables at once).
+if IS_POSTGRES:
+    from sqlalchemy import create_engine, text
+
+    _pg_boot = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+    def _pg_boot_exec(sql):
+        try:
+            with _pg_boot.connect() as _conn:
+                _conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(sql))
+        except Exception as e:
+            print(f"[ddl] skipped: {e}")
+
+
+def run_boot_ddl(sql):
+    """Execute bootstrap DDL safely on the active dialect."""
+    if IS_POSTGRES:
+        _pg_boot_exec(_ddl(sql))
+    else:
+        try:
+            db.execute(_ddl(sql))
+        except Exception:
+            pass
+
 
 def add_col(table, coldef):
     """Create a column if it is missing (safe on both dialects)."""
-    try:
-        if IS_POSTGRES:
-            db.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {coldef}")
-        else:
+    if IS_POSTGRES:
+        run_boot_ddl(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {coldef}")
+    else:
+        try:
             db.execute(f"ALTER TABLE {table} ADD COLUMN {coldef}")
-    except Exception:
-        pass
+        except Exception:
+            pass
 
 
 # Sessions: DB-backed on PostgreSQL (persists on serverless), filesystem locally
@@ -181,14 +208,14 @@ def add_security_headers(response):
     return response
 
 # Ensure required tables exist
-db.execute(_ddl("""CREATE TABLE IF NOT EXISTS users (
+run_boot_ddl("""CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     hash TEXT NOT NULL,
     resume TEXT,
     locked INTEGER DEFAULT 0
-)"""))
+)""")
 
 # Add admin column silently (safe for existing DBs)
 add_col("users", "admin INTEGER DEFAULT 0")
@@ -202,7 +229,7 @@ add_col("courses", "created_at TEXT DEFAULT CURRENT_TIMESTAMP")
 add_col("courses", "stripe_price_id TEXT DEFAULT ''")
 
 # Create purchases table for Stripe payments
-db.execute(_ddl("""CREATE TABLE IF NOT EXISTS purchases (
+run_boot_ddl("""CREATE TABLE IF NOT EXISTS purchases (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
@@ -214,7 +241,7 @@ db.execute(_ddl("""CREATE TABLE IF NOT EXISTS purchases (
     status TEXT DEFAULT 'completed',
     current_period_end TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)"""))
+)""")
 
 add_col("purchases", "subscription_id TEXT")
 add_col("purchases", "current_period_end TEXT")
@@ -223,7 +250,7 @@ add_col("purchases", "current_period_end TEXT")
 add_col("users", "bank_account TEXT DEFAULT ''")
 
 # Create creator_earnings table
-db.execute(_ddl("""CREATE TABLE IF NOT EXISTS creator_earnings (
+run_boot_ddl("""CREATE TABLE IF NOT EXISTS creator_earnings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
@@ -231,16 +258,16 @@ db.execute(_ddl("""CREATE TABLE IF NOT EXISTS creator_earnings (
     amount INTEGER NOT NULL,
     paid INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)"""))
+)""")
 
 # Create locked_plans table if missing
-db.execute(_ddl("""CREATE TABLE IF NOT EXISTS locked_plans (
+run_boot_ddl("""CREATE TABLE IF NOT EXISTS locked_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
     basic_plan TEXT NOT NULL,
     extended_plan TEXT,
     locked_at TEXT DEFAULT CURRENT_TIMESTAMP
-)"""))
+)""")
 
 # Stripe configuration
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
