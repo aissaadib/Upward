@@ -111,13 +111,13 @@ db = SQL(DATABASE_URL if IS_POSTGRES else "sqlite:///upward.db")
 
 def add_col(table, coldef):
     """Create a column if it is missing (safe on both dialects)."""
-    if IS_POSTGRES:
-        db.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {coldef}")
-    else:
-        try:
+    try:
+        if IS_POSTGRES:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {coldef}")
+        else:
             db.execute(f"ALTER TABLE {table} ADD COLUMN {coldef}")
-        except Exception:
-            pass
+    except Exception:
+        pass
 
 
 # Sessions: DB-backed on PostgreSQL (persists on serverless), filesystem locally

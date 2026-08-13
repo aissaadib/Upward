@@ -1,6 +1,6 @@
 """Courses routes — list, view, subscribe/unsubscribe, delete, PayPal payments, and AI online course recommendations."""
 
-from app import app, db, login_required, groq_client, check_rate_limit, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE, _ddl
+from app import app, db, login_required, groq_client, check_rate_limit, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE, _ddl, add_col
 from flask import render_template, session, redirect, jsonify, request
 from collections import Counter
 from datetime import datetime, timezone, timedelta
@@ -32,6 +32,9 @@ def init_db():
             rating REAL
         )
     """))
+    add_col("courses", "thumbnail TEXT DEFAULT ''")
+    add_col("courses", "created_at TEXT DEFAULT CURRENT_TIMESTAMP")
+    add_col("courses", "stripe_price_id TEXT DEFAULT ''")
     db.execute("""
         CREATE TABLE IF NOT EXISTS owners (
             course_id INTEGER,

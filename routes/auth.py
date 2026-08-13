@@ -6,6 +6,9 @@ import os
 import random
 import smtplib
 import json
+import secrets
+import requests
+from urllib.parse import urlencode
 from email.mime.text import MIMEText
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -59,7 +62,17 @@ def login():
         if ADMIN_EMAIL and rows[0]["email"].lower().strip() == ADMIN_EMAIL:
             db.execute("UPDATE users SET admin = 1 WHERE id = ?", rows[0]["id"])
         return redirect("/")
-    return render_template("login.html")
+    _google_errors = {
+        "google_not_configured": "Google login is not set up yet.",
+        "google_denied": "Google sign-in was cancelled.",
+        "google_state": "Google sign-in failed. Please try again.",
+        "google_token": "Google sign-in failed. Please try again.",
+        "google_error": "Google sign-in failed. Please try again later.",
+        "google_no_email": "Your Google account has no email address.",
+        "google_unverified": "Please verify your Google email address first.",
+    }
+    gerr = request.args.get("error")
+    return render_template("login.html", error=_google_errors.get(gerr) if gerr else None)
 
 @app.route("/register", methods=["GET", "POST"])
 @csrf_required
@@ -138,7 +151,90 @@ def logout():
 
 @app.route("/login/google")
 def login_google():
-    """Placeholder for Google OAuth login — redirects to home."""
+    """Start Google OAuth 2.0 login."""
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    if not client_id:
+        return redirect("/login?error=google_not_configured")
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI") or (
+        request.host_url.rstrip("/") + "/login/google/callback"
+    )
+    state = secrets.token_hex(16)
+    session["_oauth_state"] = state
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "prompt": "select_account",
+    }
+    return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
+
+
+@app.route("/login/google/callback")
+def login_google_callback():
+    """Handle the Google OAuth callback: exchange code, upsert user, log in."""
+    error = request.args.get("error")
+    if error:
+        return redirect("/login?error=google_denied")
+    code = request.args.get("code")
+    state = request.args.get("state")
+    if not code or not state or state != session.get("_oauth_state"):
+        return redirect("/login?error=google_state")
+    session.pop("_oauth_state", None)
+
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI") or (
+        request.host_url.rstrip("/") + "/login/google/callback"
+    )
+    try:
+        token_resp = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code",
+            },
+            timeout=15,
+        )
+        token_resp.raise_for_status()
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            return redirect("/login?error=google_token")
+
+        info_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=15,
+        )
+        info_resp.raise_for_status()
+        info = info_resp.json()
+    except Exception as e:
+        print(f"Google OAuth error: {e}")
+        return redirect("/login?error=google_error")
+
+    email = (info.get("email") or "").strip().lower()
+    if not email:
+        return redirect("/login?error=google_no_email")
+    if info.get("email_verified") is False:
+        return redirect("/login?error=google_unverified")
+    name = (info.get("name") or info.get("given_name") or email.split("@")[0]).strip()[:100]
+
+    rows = db.execute("SELECT * FROM users WHERE email = ?", email)
+    if rows:
+        user = rows[0]
+    else:
+        db.execute("INSERT INTO users (name, email, hash, resume, locked) VALUES (?, ?, ?, ?, ?)",
+                   name, email, "__google__", None, 0)
+        user = db.execute("SELECT * FROM users WHERE email = ?", email)[0]
+
+    session["user_id"] = user["id"]
+    session["username"] = user["name"] or name
+    if ADMIN_EMAIL and email == ADMIN_EMAIL:
+        db.execute("UPDATE users SET admin = 1 WHERE id = ?", user["id"])
     return redirect("/")
 
 @app.route("/verify", methods=["GET", "POST"])
